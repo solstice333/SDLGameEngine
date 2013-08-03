@@ -3,6 +3,9 @@ Abstract layer on top of SDL that allows for simple and automated use when creat
 
 ##Dependencies##
 SDL
+
 SDL_image
+
 SDL_ttf
+
 SDL_mixer 
