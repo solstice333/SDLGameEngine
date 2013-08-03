@@ -296,14 +296,14 @@ private:
    /*
     * Description: the base gravity value specifying pixels covered per frame when in freefall
     */
-   int gravity;
+   double gravity;
 
    /*
     * Description: the jump strength of the Figure if required to jump. Jump strength
     * in this context is a multiplier that is multiplied with speed and height
     * of the image
     */
-   int jumpStrength;
+   double jumpStrength;
 
    /*
     * Description: true if gravity is enabled, false if Figure is intended to float
@@ -390,23 +390,23 @@ public:
     * Parameter: Surface& left is the image to show when Figure is moving to the left
     * Parameter: Surface& right is the image to show when Figure is moving to the right
     * Parameter: SDL_Surface* screen is the software screen active in system memory
-    * Parameter: int speed is the movement speed of the Figure in terms of percentage
+    * Parameter: double speed is the movement speed of the Figure in terms of percentage
     * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
     * would indicate move 50% of the Figure width every frame
     *
     * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
     * or not for the Figure
     *
-    * Parameter: int gravity is set to 1 by default and describes how strong the
+    * Parameter: double gravity is set to 1 by default and describes how strong the
     * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
     * no matter what value is passed in for gravity
     *
-    * Parameter: int jumpStrength is set to 1 by default and describes the jump
+    * Parameter: double jumpStrength is set to 1 by default and describes the jump
     * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
     * no matter what value is passed in for jumpStrength
     */
    Figure(int x, int y, Surface& left, Surface& right, SDL_Surface* screen,
-         int speed, Gravity gravityEnabled, int gravity = 1, int jumpStrength =
+         double speed, Gravity gravityEnabled, double gravity = 1, double jumpStrength =
                1);
 
    /*
@@ -416,21 +416,24 @@ public:
     * Parameter: Surface& left is the image to show when Figure is moving to the left
     * Parameter: Surface& right is the image to show when Figure is moving to the right
     * Parameter: SDL_Surface* screen is the software screen active in system memory
-    * Parameter: double speed is the movement speed of the Figure.
+    * Parameter: double speed is the movement speed of the Figure in terms of percentage
+    * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
+    * would indicate move 50% of the Figure width every frame
+    *
     * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
     * or not for the Figure
     *
-    * Parameter: int gravity is set to 1 by default and describes how strong the
+    * Parameter: double gravity is set to 1 by default and describes how strong the
     * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
     * no matter what value is passed in for gravity
     *
-    * Parameter: int jumpStrength is set to 1 by default and describes the jump
+    * Parameter: double jumpStrength is set to 1 by default and describes the jump
     * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
     * no matter what value is passed in for jumpStrength
     */
    void setFigure(int x, int y, Surface& left, Surface& right,
-         SDL_Surface* screen, int speed, Gravity gravityEnabled,
-         int gravity = 1, int jumpStrength = 1);
+         SDL_Surface* screen, double speed, Gravity gravityEnabled,
+         double gravity = 1, double jumpStrength = 1);
 
    /*
     * Description: obtains the width of the Figure
@@ -459,7 +462,7 @@ public:
    /*
     * Description: show() applies the Figure to the screen
     */
-   void show();
+   void show(SDL_Rect* clip = NULL);
 };
 
 /*
@@ -600,6 +603,15 @@ bool isHeldDown(SDL_Event& event);
  * Parameter: Surface::Color color is the color to fill the screen with
  */
 void fillScreen(SDL_Surface* screen, Surface::Color color);
+
+/*
+ * Description: delays the frame based on timer and user defined fps. Be sure to start timer
+ * at the beginning of the event loop
+ *
+ * Parameter: Timer timer is the timer being used to time the frame period
+ * Parameter: int fps is the framerate requirement of the user
+ */
+void delayFrame(Timer timer, int fps);
 
 /*
  * Description: init initializes all SDL subsystems, sets the video mode, and sets the caption

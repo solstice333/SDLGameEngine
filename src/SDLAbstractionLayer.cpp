@@ -3,6 +3,8 @@
 #include <iostream>
 using namespace std;
 
+const bool DEBUG = true;
+
 Surface::Surface() :
       s(NULL) {
 }
@@ -147,7 +149,7 @@ Figure::Figure() {
 }
 
 Figure::Figure(int x, int y, Surface& left, Surface& right, SDL_Surface* screen,
-      int speed, Gravity gravityEnabled, int gravity, int jumpStrength) :
+      double speed, Gravity gravityEnabled, double gravity, double jumpStrength) :
       width((left.getSDL_Surface()->w + right.getSDL_Surface()->w) / 2), height(
             (left.getSDL_Surface()->h + right.getSDL_Surface()->h) / 2), gravity(
             gravity), speed(speed), jumpStrength(jumpStrength), l(false), r(
@@ -172,8 +174,8 @@ Figure::Figure(int x, int y, Surface& left, Surface& right, SDL_Surface* screen,
 }
 
 void Figure::setFigure(int x, int y, Surface& left, Surface& right,
-      SDL_Surface* screen, int speed, Gravity gravityEnabled, int gravity,
-      int jumpStrength) {
+      SDL_Surface* screen, double speed, Gravity gravityEnabled, double gravity,
+      double jumpStrength) {
    width = (left.getSDL_Surface()->w + right.getSDL_Surface()->w) / 2;
    height = (left.getSDL_Surface()->h + right.getSDL_Surface()->h) / 2;
    this->gravity = gravity;
@@ -273,9 +275,6 @@ void Figure::move() {
          calculateGravity();
    }
 
-   cout << "v.y: " << v.y << endl;
-   cout << "u: " << u << endl;
-
    p.y += v.y;
    if (p.y > screen->h - height)
       p.y = screen->h - height;
@@ -283,13 +282,24 @@ void Figure::move() {
       p.y = 0;
 }
 
-void Figure::show() {
+void Figure::show(SDL_Rect* clip) {
    if (l)
       current = left;
    else if (r)
       current = right;
 
-   applySurface(p.x, p.y, *current, screen);
+   applySurface(p.x, p.y, *current, screen, clip);
+
+   if (DEBUG) {
+      if (l || r) {
+         cout << "p.x: " << p.x << endl;
+         cout << "v.x: " << v.x << endl;
+      }
+      if (u || d) {
+         cout << "p.y: " << p.y << endl;
+         cout << "v.y: " << v.y << endl;
+      }
+   }
 }
 
 SDL_Surface* optimizeImage(SDL_Surface* s) {
@@ -436,6 +446,11 @@ bool isHeldDown(SDL_Event& event) {
 void fillScreen(SDL_Surface* screen, Surface::Color color) {
    SDL_Color c = parseColor(color);
    SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, c.r, c.g, c.b));
+}
+
+void delayFrame(Timer timer, int fps) {
+   if (timer.getTicks() < 1000 / fps)
+      SDL_Delay(1000 / fps - timer.getTicks());
 }
 
 SDL_Surface* init(int w, int h, string title) {
