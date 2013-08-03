@@ -390,7 +390,10 @@ public:
     * Parameter: Surface& left is the image to show when Figure is moving to the left
     * Parameter: Surface& right is the image to show when Figure is moving to the right
     * Parameter: SDL_Surface* screen is the software screen active in system memory
-    * Parameter: double speed is the movement speed of the Figure.
+    * Parameter: int speed is the movement speed of the Figure in terms of percentage
+    * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
+    * would indicate move 50% of the Figure width every frame
+    *
     * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
     * or not for the Figure
     *
