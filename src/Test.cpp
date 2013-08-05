@@ -19,8 +19,10 @@ using namespace std;
 
 const int WIDTH = 1191;
 const int HEIGHT = 670;
-const int FPS = 24;
-const double SPEED = 5;
+const int FPS = 50;
+const double SPEED = 1;
+const int GRAVITY = 1;
+const double JUMPSTRENGTH = 2.5;
 const bool GRAVITY_ENABLED = true;
 
 int main(int argc, char* argv[]) {
@@ -31,15 +33,16 @@ int main(int argc, char* argv[]) {
    Surface bgnd("images/bgnd.jpg");
    Surface left("images/x97_left.png", Surface::RED);
    Surface right("images/x97_right.png", Surface::RED);
+   vector<Figure> v;
 
    Figure slug;
 
    if (GRAVITY_ENABLED)
       slug.setFigure(0, screen->h - right.getSDL_Surface()->h, left, right, screen,
-            SPEED, Figure::GRAVITY_ENABLED, 2, 5);
+           Figure::GRAVITY_ENABLED, SPEED, GRAVITY, JUMPSTRENGTH);
    else
       slug.setFigure(0, screen->h - right.getSDL_Surface()->h, left, right, screen,
-            SPEED, Figure::GRAVITY_DISABLED);
+            Figure::GRAVITY_DISABLED, SPEED, GRAVITY, JUMPSTRENGTH);
 
    Timer fps;
 
@@ -65,7 +68,7 @@ int main(int argc, char* argv[]) {
       //dotFigure.show();
 
       applySurface(0, 0, bgnd, screen);
-      slug.move();
+      slug.move(v);
       slug.show();
 
       flip(screen);

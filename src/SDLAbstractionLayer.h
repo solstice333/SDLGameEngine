@@ -6,6 +6,7 @@
 #include "SDL/SDL_image.h"
 #include "SDL/SDL_mixer.h"
 #include <string>
+#include <vector>
 using namespace std;
 
 //struct describing current position on both x and y components
@@ -286,12 +287,23 @@ public:
  * objects on the screen.
  */
 class Figure {
+public:
+
+   /*
+    * Desciption: Enum Gravity represents if gravity is enabled or disabled
+    */
+   enum Gravity {
+      GRAVITY_DISABLED, GRAVITY_ENABLED
+   };
+
 private:
 
    /*
-    * Description: average dimensions of the Figure
+    * Description: SDL_Rect posDim holds the current x, y position and dimensions of
+    * the Figure. If there are two Surface images (a left and right) then the average is taken
+    * for each respective dimension i.e. an average width and an average height.
     */
-   int width, height;
+   SDL_Rect posDim;
 
    /*
     * Description: the base gravity value specifying pixels covered per frame when in freefall
@@ -306,9 +318,19 @@ private:
    double jumpStrength;
 
    /*
+    * Description: frame counter
+    */
+   int frame;
+
+   /*
     * Description: true if gravity is enabled, false if Figure is intended to float
     */
    bool gravityEnabled;
+
+   /*
+    * Description: pauses gravity if collision on top
+    */
+   bool pauseGravity;
 
    /*
     * Description: speed is the fraction of dimensions covered per frame when Figure is moving. In other
@@ -325,11 +347,6 @@ private:
     * Surface* left image is rendered as a result
     */
    bool l, r, u, d;
-
-   /*
-    * Description: holds the current x, y position of the Figure
-    */
-   Position p;
 
    /*
     * Descrption: holds the current x, y velocity of the Figure. Velocity in this context describes
@@ -369,14 +386,42 @@ private:
     */
    int calculateGravity();
 
-public:
+   /*
+    * Description: initialize function
+    * Parameter: int x is the starting x coordinate of the Figure
+    * Parameter: int y is the starting y coordinate of the Figure
+    * Parameter: double gravity is the value for gravity
+    * Parameter: double speed is the value for speed
+    * Parameter: double jumpStrength is the value for the jump strength
+    * Parameter: SDL_Surface* screen is the display screen
+    * Parameter: Gravity gravityEnabled is the enum describing whether or not to enable
+    * gravity or not
+    */
+   void initialize(int x, int y, double gravity, double speed,
+         double jumpStrength, SDL_Surface* screen, Gravity gravityEnabled);
 
    /*
-    * Desciption: Enum Gravity represents if gravity is enabled or disabled
+    * Description: xMovement() adjusts the current x position of the Figure while taking
+    * into account colliding with Figure& other
+    *
+    * Parameter: Figure& other is the other Figure that cannot be collided with
     */
-   enum Gravity {
-      GRAVITY_DISABLED, GRAVITY_ENABLED
-   };
+   void xMovement(vector<Figure>& other);
+
+   /*
+    * Description: yMovement() adjusts the current y position of the Figure while taking
+    * into account colliding with Figure& other
+    *
+    * Parameter: Figure& other is the other Figure that cannot be collided with
+    */
+   void yMovement(vector<Figure>& other);
+
+   /*
+    * Description: debug() prints the current x and y positions and velocities real time
+    */
+   void debug();
+
+public:
 
    /*
     * Description: Default constructor
@@ -384,7 +429,9 @@ public:
    Figure();
 
    /*
-    * Description: Figure constructor parameterized
+    * Description: Overloading Figure constructor for Figures that need an image when
+    * moving left and right
+    *
     * Parameter: int x is the x coordinate starting position of the Figure
     * Parameter: int y is the y coordinate starting position of the Figure
     * Parameter: Surface& left is the image to show when Figure is moving to the left
@@ -397,7 +444,7 @@ public:
     * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
     * or not for the Figure
     *
-    * Parameter: double gravity is set to 1 by default and describes how strong the
+    * Parameter: int gravity is set to 1 by default and describes how strong the
     * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
     * no matter what value is passed in for gravity
     *
@@ -406,8 +453,33 @@ public:
     * no matter what value is passed in for jumpStrength
     */
    Figure(int x, int y, Surface& left, Surface& right, SDL_Surface* screen,
-         double speed, Gravity gravityEnabled, double gravity = 1, double jumpStrength =
-               1);
+         Gravity gravityEnabled, double speed = 0, int gravity = 1,
+         double jumpStrength = 1);
+
+   /*
+    * Description: Overloading Figure constructor for Figures that only need one image
+    * Parameter: int x is the x coordinate starting position of the Figure
+    * Parameter: int y is the y coordinate starting position of the Figure
+    * Parameter: Surface& image is the image to show
+    * Parameter: SDL_Surface* screen is the software screen active in system memory
+    * Parameter: double speed is the movement speed of the Figure in terms of percentage
+    * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
+    * would indicate move 50% of the Figure width every frame
+    *
+    * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
+    * or not for the Figure
+    *
+    * Parameter: int gravity is set to 1 by default and describes how strong the
+    * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
+    * no matter what value is passed in for gravity
+    *
+    * Parameter: double jumpStrength is set to 1 by default and describes the jump
+    * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
+    * no matter what value is passed in for jumpStrength
+    */
+   Figure(int x, int y, Surface& image, SDL_Surface* screen,
+         Gravity gravityEnabled, double speed = 0, int gravity = 1,
+         double jumpStrength = 1);
 
    /*
     * Description: sets Figure
@@ -423,7 +495,7 @@ public:
     * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
     * or not for the Figure
     *
-    * Parameter: double gravity is set to 1 by default and describes how strong the
+    * Parameter: int gravity is set to 1 by default and describes how strong the
     * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
     * no matter what value is passed in for gravity
     *
@@ -432,8 +504,33 @@ public:
     * no matter what value is passed in for jumpStrength
     */
    void setFigure(int x, int y, Surface& left, Surface& right,
-         SDL_Surface* screen, double speed, Gravity gravityEnabled,
-         double gravity = 1, double jumpStrength = 1);
+         SDL_Surface* screen, Gravity gravityEnabled, double speed = 0,
+         int gravity = 1, double jumpStrength = 1);
+
+   /*
+       * Description: sets Figure
+       * Parameter: int x is the x coordinate starting position of the Figure
+       * Parameter: int y is the y coordinate starting position of the Figure
+       * Parameter: Surface& image is the image to show when Figure is moving
+       * Parameter: SDL_Surface* screen is the software screen active in system memory
+       * Parameter: double speed is the movement speed of the Figure in terms of percentage
+       * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
+       * would indicate move 50% of the Figure width every frame
+       *
+       * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
+       * or not for the Figure
+       *
+       * Parameter: int gravity is set to 1 by default and describes how strong the
+       * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
+       * no matter what value is passed in for gravity
+       *
+       * Parameter: double jumpStrength is set to 1 by default and describes the jump
+       * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
+       * no matter what value is passed in for jumpStrength
+       */
+   void setFigure(int x, int y, Surface& image, SDL_Surface* screen,
+         Gravity gravityEnabled, double speed = 0, int gravity = 1,
+         double jumpStrength = 1);
 
    /*
     * Description: obtains the width of the Figure
@@ -446,6 +543,15 @@ public:
    int getHeight();
 
    /*
+    * Description: checks if collided with other Figure
+    * Parameter: Figure other is the Figure being compared to this Figure if collision
+    * has occurred
+    *
+    * Return: true if collided, false otherwise
+    */
+   bool isCollided(vector<Figure>& other, int& count);
+
+   /*
     * Description: handleInput() handles all input when dequeued from the event queue
     * using SDL_PollEvent()
     *
@@ -456,8 +562,11 @@ public:
    /*
     * Description; move() changes the current position based on the velocities
     * determined in handleInput() or in the internal calculateGravity() method
+    *
+    * Parameter: Figure other is the object that this Figure cannot pass through i.e.
+    * collision is taken into account
     */
-   void move();
+   void move(vector<Figure> other);
 
    /*
     * Description: show() applies the Figure to the screen

@@ -137,57 +137,27 @@ bool Timer::isPaused() {
 }
 
 int Figure::calculateGravity() {
-   if (p.y < screen->h - height)
-      v.y += gravity + abs(v.y * 0.05);
+   if (posDim.y < screen->h - posDim.h)
+      v.y += gravity + abs(v.y * 0.01);
    else
       v.y = 0;
 
    return v.y;
 }
 
-Figure::Figure() {
-}
+void Figure::initialize(int x, int y, double gravity, double speed,
+      double jumpStrength, SDL_Surface* screen, Gravity gravityEnabled) {
+   posDim.x = x;
+   posDim.y = y;
+   frame = 0;
 
-Figure::Figure(int x, int y, Surface& left, Surface& right, SDL_Surface* screen,
-      double speed, Gravity gravityEnabled, double gravity, double jumpStrength) :
-      width((left.getSDL_Surface()->w + right.getSDL_Surface()->w) / 2), height(
-            (left.getSDL_Surface()->h + right.getSDL_Surface()->h) / 2), gravity(
-            gravity), speed(speed), jumpStrength(jumpStrength), l(false), r(
-            false), u(false), d(false), screen(screen), left(&left), right(
-            &right) {
-   p.x = x, p.y = y;
-   v.x = 0, v.y = 0;
-   current = this->right;
-
-   switch (gravityEnabled) {
-   case GRAVITY_ENABLED:
-      this->gravityEnabled = true;
-      break;
-   case GRAVITY_DISABLED:
-      this->gravityEnabled = false;
-      this->jumpStrength = 1;
-      break;
-   default:
-      throw GravityException();
-      break;
-   }
-}
-
-void Figure::setFigure(int x, int y, Surface& left, Surface& right,
-      SDL_Surface* screen, double speed, Gravity gravityEnabled, double gravity,
-      double jumpStrength) {
-   width = (left.getSDL_Surface()->w + right.getSDL_Surface()->w) / 2;
-   height = (left.getSDL_Surface()->h + right.getSDL_Surface()->h) / 2;
    this->gravity = gravity;
    this->speed = speed;
    this->jumpStrength = jumpStrength;
    l = r = u = d = false;
    this->screen = screen;
-   this->left = &left;
-   this->right = &right;
 
-   p.x = x, p.y = y;
-   v.x = 0, v.y = 0;
+   v.x = v.y = 0;
    current = this->right;
 
    switch (gravityEnabled) {
@@ -204,31 +174,177 @@ void Figure::setFigure(int x, int y, Surface& left, Surface& right,
    }
 }
 
+void Figure::xMovement(vector<Figure>& other) {
+   int count;
+
+   posDim.x += v.x;
+   if (posDim.x > screen->w - posDim.w)
+      posDim.x = screen->w - posDim.w;
+   else if (posDim.x < 0)
+      posDim.x = 0;
+   else if (isCollided(other, count))
+      posDim.x -= v.x;
+}
+
+void Figure::yMovement(vector<Figure>& other) {
+   pauseGravity = false;
+   int count = 0;
+
+   if (gravityEnabled && !u && !pauseGravity)
+         calculateGravity();
+
+   posDim.y += v.y;
+   if (posDim.y > screen->h - posDim.h)
+      posDim.y = screen->h - posDim.h;
+   else if (posDim.y < 0)
+      posDim.y = 0;
+   else if (isCollided(other, count)) {
+      int movebackTop = abs(posDim.y + posDim.h - other[count].posDim.y);
+      int movebackBot = abs(
+            other[count].posDim.y + other[count].posDim.h - posDim.y);
+
+      if (movebackTop < movebackBot) {
+         pauseGravity = true;
+         posDim.y -= movebackTop + 1;
+      }
+      else
+         posDim.y += movebackBot + 1;
+   }
+
+   if (gravityEnabled && u && frame < 3) {
+      v.y -= posDim.h * speed / 100 * jumpStrength;
+      frame++;
+   }
+   else {
+      frame = 0;
+      u = false;
+   }
+}
+
+void Figure::debug() {
+   if (l || r) {
+      cout << "posDim.x: " << posDim.x << endl;
+      cout << "v.x: " << v.x << endl;
+   }
+   cout << "posDim.y: " << posDim.y << endl;
+   cout << "v.y: " << v.y << endl;
+}
+
+Figure::Figure() {
+}
+
+Figure::Figure(int x, int y, Surface& left, Surface& right, SDL_Surface* screen,
+      Gravity gravityEnabled, double speed, int gravity, double jumpStrength) :
+      left(&left), right(&right) {
+
+   posDim.w = (left.getSDL_Surface()->w + right.getSDL_Surface()->w) / 2;
+   posDim.h = (left.getSDL_Surface()->h + right.getSDL_Surface()->h) / 2;
+
+   initialize(x, y, gravity, speed, jumpStrength, screen, gravityEnabled);
+}
+
+Figure::Figure(int x, int y, Surface& image, SDL_Surface* screen,
+      Gravity gravityEnabled, double speed, int gravity, double jumpStrength) :
+      left(&image), right(&image) {
+
+   posDim.w = image.getSDL_Surface()->w;
+   posDim.h = image.getSDL_Surface()->h;
+
+   initialize(x, y, gravity, speed, jumpStrength, screen, gravityEnabled);
+}
+
+void Figure::setFigure(int x, int y, Surface& left, Surface& right,
+      SDL_Surface* screen, Gravity gravityEnabled, double speed, int gravity,
+      double jumpStrength) {
+
+   posDim.w = (left.getSDL_Surface()->w + right.getSDL_Surface()->w) / 2;
+   posDim.h = (left.getSDL_Surface()->h + right.getSDL_Surface()->h) / 2;
+   this->left = &left;
+   this->right = &right;
+
+   initialize(x, y, gravity, speed, jumpStrength, screen, gravityEnabled);
+}
+
+void Figure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
+      Gravity gravityEnabled, double speed, int gravity, double jumpStrength) {
+
+   posDim.w = image.getSDL_Surface()->w;
+   posDim.h = image.getSDL_Surface()->h;
+   this->left = &image;
+   this->right = &image;
+
+   initialize(x, y, gravity, speed, jumpStrength, screen, gravityEnabled);
+}
+
 int Figure::getWidth() {
-   return width;
+   return posDim.w;
 }
 
 int Figure::getHeight() {
-   return height;
+   return posDim.h;
+}
+
+//TODO debug list of Figures for collision pass in
+bool Figure::isCollided(vector<Figure>& other, int& count) {
+   if (other.size() > 0) {
+      for (vector<Figure>::iterator i = other.begin(), end = other.end();
+            i != end; i++) {
+
+         int left1 = posDim.x;
+         int right1 = posDim.x + posDim.w;
+         int top1 = posDim.y;
+         int bot1 = posDim.y + posDim.h;
+
+         int left2 = i->posDim.x;
+         int right2 = i->posDim.x + i->posDim.w;
+         int top2 = i->posDim.y;
+         int bot2 = i->posDim.y + i->posDim.h;
+
+         if (top1 > bot2) {
+            count++;
+            continue;
+         }
+
+         if (bot1 < top2) {
+            count++;
+            continue;
+         }
+
+         if (right1 < left2) {
+            count++;
+            continue;
+         }
+
+         if (left1 > right2) {
+            count++;
+            continue;
+         }
+
+         return true;
+      }
+   }
+
+   return false;
 }
 
 void Figure::handleInput(SDL_Event& event) {
    if (event.type == SDL_KEYDOWN) {
       switch (event.key.keysym.sym) {
       case SDLK_UP:
-         v.y -= height * speed / 100 * jumpStrength;
+         if (posDim.y > 0)
+            v.y -= posDim.h * speed / 100 * jumpStrength;
          u = true;
          break;
       case SDLK_DOWN:
-         v.y += height * speed / 100;
+         v.y += posDim.h * speed / 100;
          d = true;
          break;
       case SDLK_LEFT:
-         v.x -= width * speed / 100;
+         v.x -= posDim.w * speed / 100;
          l = true;
          break;
       case SDLK_RIGHT:
-         v.x += width * speed / 100;
+         v.x += posDim.w * speed / 100;
          r = true;
          break;
       default:
@@ -239,22 +355,21 @@ void Figure::handleInput(SDL_Event& event) {
    else if (event.type == SDL_KEYUP) {
       switch (event.key.keysym.sym) {
       case SDLK_UP:
-         if (gravityEnabled)
-            v.y += height * speed / 100 * (jumpStrength - (jumpStrength - 1));
-         else
-            v.y += height * speed / 100 * jumpStrength;
-         u = false;
+         if (!gravityEnabled) {
+            v.y += posDim.h * speed / 100 * jumpStrength;
+            u = false;
+         }
          break;
       case SDLK_DOWN:
-         v.y -= height * speed / 100;
+         v.y -= posDim.h * speed / 100;
          d = false;
          break;
       case SDLK_LEFT:
-         v.x += width * speed / 100;
+         v.x += posDim.w * speed / 100;
          l = false;
          break;
       case SDLK_RIGHT:
-         v.x -= width * speed / 100;
+         v.x -= posDim.w * speed / 100;
          r = false;
          break;
       default:
@@ -263,23 +378,12 @@ void Figure::handleInput(SDL_Event& event) {
    }
 }
 
-void Figure::move() {
-   p.x += v.x;
-   if (p.x > screen->w - width)
-      p.x = screen->w - width;
-   else if (p.x < 0)
-      p.x = 0;
+void Figure::move(vector<Figure> other) {
+   xMovement(other);
+   yMovement(other);
 
-   if (gravityEnabled) {
-      if (!u)
-         calculateGravity();
-   }
-
-   p.y += v.y;
-   if (p.y > screen->h - height)
-      p.y = screen->h - height;
-   else if (p.y < 0)
-      p.y = 0;
+   if (DEBUG)
+      debug();
 }
 
 void Figure::show(SDL_Rect* clip) {
@@ -288,18 +392,7 @@ void Figure::show(SDL_Rect* clip) {
    else if (r)
       current = right;
 
-   applySurface(p.x, p.y, *current, screen, clip);
-
-   if (DEBUG) {
-      if (l || r) {
-         cout << "p.x: " << p.x << endl;
-         cout << "v.x: " << v.x << endl;
-      }
-      if (u || d) {
-         cout << "p.y: " << p.y << endl;
-         cout << "v.y: " << v.y << endl;
-      }
-   }
+   applySurface(posDim.x, posDim.y, *current, screen, clip);
 }
 
 SDL_Surface* optimizeImage(SDL_Surface* s) {
@@ -337,7 +430,7 @@ SDL_Color parseColor(Surface::Color color) {
       c = setRGBColor(0, 255, 0);
       break;
    case Surface::BLUE:
-      c = setRGBColor(0, 255, 0);
+      c = setRGBColor(0, 0, 255);
       break;
    case Surface::CYAN:
       c = setRGBColor(0, 255, 255);
