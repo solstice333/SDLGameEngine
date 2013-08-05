@@ -33,16 +33,22 @@ int main(int argc, char* argv[]) {
    Surface bgnd("images/bgnd.jpg");
    Surface left("images/x97_left.png", Surface::RED);
    Surface right("images/x97_right.png", Surface::RED);
-   vector<Figure> v;
+   vector<Figure> f;
+
+   Surface rect("images/rectangle.png");
+   Figure rectFig(300, 400, rect, screen, Figure::GRAVITY_DISABLED);
+   Figure rectFig2(900, 100, rect, screen, Figure::GRAVITY_DISABLED);
+   f.push_back(rectFig);
+   f.push_back(rectFig2);
 
    Figure slug;
 
    if (GRAVITY_ENABLED)
-      slug.setFigure(0, screen->h - right.getSDL_Surface()->h, left, right, screen,
-           Figure::GRAVITY_ENABLED, SPEED, GRAVITY, JUMPSTRENGTH);
+      slug.setFigure(0, screen->h - right.getSDL_Surface()->h, left, right,
+            screen, Figure::GRAVITY_ENABLED, SPEED, GRAVITY, JUMPSTRENGTH);
    else
-      slug.setFigure(0, screen->h - right.getSDL_Surface()->h, left, right, screen,
-            Figure::GRAVITY_DISABLED, SPEED, GRAVITY, JUMPSTRENGTH);
+      slug.setFigure(0, screen->h - right.getSDL_Surface()->h, left, right,
+            screen, Figure::GRAVITY_DISABLED, SPEED, GRAVITY, JUMPSTRENGTH);
 
    Timer fps;
 
@@ -68,7 +74,9 @@ int main(int argc, char* argv[]) {
       //dotFigure.show();
 
       applySurface(0, 0, bgnd, screen);
-      slug.move(v);
+      rectFig.show();
+      rectFig2.show();
+      slug.move(f);
       slug.show();
 
       flip(screen);
