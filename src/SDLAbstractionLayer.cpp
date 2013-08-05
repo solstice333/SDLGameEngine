@@ -190,9 +190,6 @@ void Figure::yMovement(vector<Figure>& other) {
    pauseGravity = false;
    int count = 0;
 
-   if (gravityEnabled && !u && !pauseGravity)
-         calculateGravity();
-
    posDim.y += v.y;
    if (posDim.y > screen->h - posDim.h)
       posDim.y = screen->h - posDim.h;
@@ -210,6 +207,9 @@ void Figure::yMovement(vector<Figure>& other) {
       else
          posDim.y += movebackBot + 1;
    }
+
+   if (gravityEnabled && !u && !pauseGravity)
+      calculateGravity();
 
    if (gravityEnabled && u && frame < 3) {
       v.y -= posDim.h * speed / 100 * jumpStrength;
