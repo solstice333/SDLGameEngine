@@ -280,6 +280,13 @@ public:
     * Return: true if paused, false otherwise
     */
    bool isPaused();
+
+   /*
+    * Description: delays frame with respect to user specified framerate
+    * Parameter: int fps is the user specified framerate
+    * Return: returns the the amount of time that needs to be delayed in milliseconds
+    */
+   int delayFrame(int fps);
 };
 
 /*

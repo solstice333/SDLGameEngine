@@ -136,6 +136,15 @@ bool Timer::isPaused() {
    return paused;
 }
 
+int Timer::delayFrame(int fps) {
+   int delay;
+
+   if (this->getTicks() < 1000 / fps)
+      SDL_Delay(delay = 1000 / fps - this->getTicks());
+
+   return delay;
+}
+
 int Figure::calculateGravity() {
    if (posDim.y < screen->h - posDim.h)
       v.y += gravity + abs(v.y * 0.01);
@@ -285,7 +294,6 @@ int Figure::getHeight() {
    return posDim.h;
 }
 
-//TODO debug list of Figures for collision pass in
 bool Figure::isCollided(vector<Figure>& other, int& count) {
    if (other.size() > 0) {
       for (vector<Figure>::iterator i = other.begin(), end = other.end();
@@ -540,11 +548,6 @@ bool isHeldDown(SDL_Event& event) {
 void fillScreen(SDL_Surface* screen, Surface::Color color) {
    SDL_Color c = parseColor(color);
    SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, c.r, c.g, c.b));
-}
-
-void delayFrame(Timer timer, int fps) {
-   if (timer.getTicks() < 1000 / fps)
-      SDL_Delay(1000 / fps - timer.getTicks());
 }
 
 SDL_Surface* init(int w, int h, string title) {

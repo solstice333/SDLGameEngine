@@ -81,8 +81,7 @@ int main(int argc, char* argv[]) {
 
       flip(screen);
 
-      if (fps.getTicks() < 1000 / FPS)
-         SDL_Delay(1000 / FPS - fps.getTicks());
+      fps.delayFrame(FPS);
    }
 
    cleanUp();
