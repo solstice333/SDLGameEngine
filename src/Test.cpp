@@ -21,7 +21,7 @@ const int WIDTH = 1191;
 const int HEIGHT = 670;
 const int FPS = 50;
 const double SPEED = 25;
-const int GRAVITY = 2;
+const int GRAVITY = 1;
 const double JUMPSTRENGTH = 1;
 //const bool GRAVITY_ENABLED = true;
 
@@ -35,17 +35,16 @@ int main(int argc, char* argv[]) {
     */
 
    vector<Figure> f;
-   vector<Figure> empty;
 
    Surface rect("images/rectangle.png");
-   Figure rectFig(100, 15, rect, screen, Figure::GRAVITY_ENABLED);
-   Figure rectFig2(500, 5, rect, screen, Figure::GRAVITY_ENABLED);
-   Figure rectFig3(600, 5, rect, screen, Figure::GRAVITY_ENABLED);
-   Figure rectFig4(700, 5, rect, screen, Figure::GRAVITY_ENABLED);
-   Figure rectFig5(800, 5, rect, screen, Figure::GRAVITY_ENABLED);
+
+   Figure rectFig(500, 100, rect, screen, Figure::GRAVITY_DISABLED);
+   Figure rectFig5(800, 250, rect, screen,
+         Figure::GRAVITY_DISABLED);
 
    Surface circ("images/dot.bmp", Surface::CYAN);
-   Figure circFig(900, 240, circ, screen, Figure::GRAVITY_ENABLED);
+   Figure circFig(900, screen->h - circ.getSDL_Surface()->h, circ, screen,
+         Figure::GRAVITY_DISABLED);
 
    /*
     Figure slug;
@@ -63,8 +62,8 @@ int main(int argc, char* argv[]) {
    clip.w = 20;
    clip.h = 20;
 
-   Figure squareFig(100, 0, square,
-         screen, Figure::GRAVITY_ENABLED, SPEED, JUMPSTRENGTH);
+   Figure squareFig(100, 0, square, screen, Figure::GRAVITY_ENABLED, SPEED,
+         JUMPSTRENGTH);
 
    Timer fps;
 
@@ -85,28 +84,16 @@ int main(int argc, char* argv[]) {
 
       //applySurface(0, 0, bgnd, screen);
       fillScreen(screen, Surface::WHITE);
-      rectFig.move(empty);
-      rectFig2.move(empty);
-      rectFig3.move(empty);
-      rectFig4.move(empty);
-      rectFig5.move(empty);
-      circFig.move(empty);
 
       f.clear();
       f.push_back(rectFig);
-      f.push_back(rectFig2);
-      f.push_back(rectFig3);
-      f.push_back(rectFig4);
       f.push_back(rectFig5);
       f.push_back(circFig);
 
       squareFig.move(f);
 
-      rectFig.show();
-      rectFig2.show();
-      rectFig3.show();
-      rectFig4.show();
       rectFig5.show();
+      rectFig.show();
       circFig.show();
       squareFig.show();
 

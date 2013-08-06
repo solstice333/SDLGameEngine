@@ -3,7 +3,7 @@
 #include <iostream>
 using namespace std;
 
-const bool DEBUG = true;
+const bool DEBUG = false;
 
 Surface::Surface() :
       s(NULL) {
@@ -191,40 +191,30 @@ void Figure::xMovement(vector<Figure>& other) {
    int count;
 
    posDim.x += v.x;
-   if (posDim.x > screen->w - posDim.w)
+   if (isCollided(other, count))
+      posDim.x -= v.x;
+   else if (posDim.x > screen->w - posDim.w)
       posDim.x = screen->w - posDim.w;
    else if (posDim.x < 0)
       posDim.x = 0;
-   else if (isCollided(other, count))
-      posDim.x -= v.x;
+
 }
 
 void Figure::yMovement(vector<Figure>& other) {
-   pauseGravity = false;
+   if (gravityEnabled && !u)
+      calculateGravity();
+
    int count = 0;
 
    posDim.y += v.y;
-   if (posDim.y > screen->h - posDim.h)
+   if (isCollided(other, count)) {
+      posDim.y -= v.y;
+      v.y = 0;
+   }
+   else if (posDim.y > screen->h - posDim.h)
       posDim.y = screen->h - posDim.h;
    else if (posDim.y < 0)
       posDim.y = 0;
-   else if (isCollided(other, count)) {
-      int movebackTop = abs(posDim.y + posDim.h - other[count].posDim.y);
-      int movebackBot = abs(
-            other[count].posDim.y + other[count].posDim.h - posDim.y);
-
-      if (movebackTop < movebackBot) {
-         pauseGravity = true;
-         if (gravityEnabled)
-            v.y = 0;
-         posDim.y -= movebackTop + 1;
-      }
-      else
-         posDim.y += movebackBot + 1;
-   }
-
-   if (gravityEnabled && !u && !pauseGravity)
-      calculateGravity();
 
    if (gravityEnabled && u && frame < 3) {
       v.y -= posDim.h * speed / 100 * jumpStrength;

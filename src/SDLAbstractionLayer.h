@@ -335,11 +335,6 @@ private:
    bool gravityEnabled;
 
    /*
-    * Description: pauses gravity if collision on top
-    */
-   bool pauseGravity;
-
-   /*
     * Description: speed is the fraction of dimensions covered per frame when Figure is moving. In other
     * words, in terms of horizontal movement along the x axis, a Figure could be 100 pixels
     * in width, so that would mean that if the speed is a value of 0.5, then the Figure
