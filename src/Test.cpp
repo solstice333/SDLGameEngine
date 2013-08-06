@@ -20,35 +20,53 @@ using namespace std;
 const int WIDTH = 1191;
 const int HEIGHT = 670;
 const int FPS = 50;
-const double SPEED = 1;
-const int GRAVITY = 1;
-const double JUMPSTRENGTH = 2.5;
-const bool GRAVITY_ENABLED = true;
+const double SPEED = 35;
+const int GRAVITY = 2;
+const double JUMPSTRENGTH = 25;
+//const bool GRAVITY_ENABLED = true;
 
 int main(int argc, char* argv[]) {
    SDL_Surface* screen = init(WIDTH, HEIGHT, "SDL Motion");
-   //Surface dot("images/lesson16/dot.bmp", Surface::WHITE);
-   //Figure dotFigure(dot, dot, screen);
 
-   Surface bgnd("images/bgnd.jpg");
-   Surface left("images/x97_left.png", Surface::RED);
-   Surface right("images/x97_right.png", Surface::RED);
+   /*
+    Surface bgnd("images/bgnd.jpg");
+    Surface left("images/x97_left.png", Surface::RED);
+    Surface right("images/x97_right.png", Surface::RED);
+    */
+
    vector<Figure> f;
+   vector<Figure> empty;
 
    Surface rect("images/rectangle.png");
-   Figure rectFig(100, 600, rect, screen, Figure::GRAVITY_DISABLED);
-   Figure rectFig2(1000, 500, rect, screen, Figure::GRAVITY_DISABLED);
+   Figure rectFig(100, 5, rect, screen, Figure::GRAVITY_ENABLED);
+   Figure rectFig2(1000, 5, rect, screen, Figure::GRAVITY_ENABLED);
+
+   Surface circ("images/dot.bmp", Surface::CYAN);
+   Figure circFig(900, 240, circ, screen, Figure::GRAVITY_ENABLED);
+
    f.push_back(rectFig);
    f.push_back(rectFig2);
+   f.push_back(circFig);
 
-   Figure slug;
+   /*
+    Figure slug;
 
-   if (GRAVITY_ENABLED)
-      slug.setFigure(350, screen->h - right.getSDL_Surface()->h, left, right,
-            screen, Figure::GRAVITY_ENABLED, SPEED, GRAVITY, JUMPSTRENGTH);
-   else
-      slug.setFigure(350, screen->h - right.getSDL_Surface()->h, left, right,
-            screen, Figure::GRAVITY_DISABLED, SPEED, GRAVITY, JUMPSTRENGTH);
+    if (GRAVITY_ENABLED)
+    slug.setFigure(350, screen->h - right.getSDL_Surface()->h, left, right,
+    screen, Figure::GRAVITY_ENABLED, SPEED, GRAVITY, JUMPSTRENGTH);
+    else
+    slug.setFigure(350, screen->h - right.getSDL_Surface()->h, left, right,
+    screen, Figure::GRAVITY_DISABLED, SPEED, GRAVITY, JUMPSTRENGTH);
+    */
+
+   Surface square("images/square.bmp");
+   SDL_Rect clip;
+   clip.w = 20;
+   clip.h = 20;
+
+   Figure squareFig(getHorizontalMiddlePosition(square, screen),
+         getVerticalMiddlePosition(square, screen), square, screen,
+         Figure::GRAVITY_ENABLED, SPEED);
 
    Timer fps;
 
@@ -64,20 +82,26 @@ int main(int argc, char* argv[]) {
             break;
          }
 
-         //dotFigure.handleInput(event);
-         slug.handleInput(event);
-
+         squareFig.handleInput(event);
       }
 
-      //fillScreen(screen, Surface::CYAN);
-      //dotFigure.move();
-      //dotFigure.show();
+      //applySurface(0, 0, bgnd, screen);
+      fillScreen(screen, Surface::WHITE);
+      rectFig.move(empty);
+      rectFig2.move(empty);
+      circFig.move(empty);
 
-      applySurface(0, 0, bgnd, screen);
+      f.clear();
+      f.push_back(rectFig);
+      f.push_back(rectFig2);
+      f.push_back(circFig);
+
+      squareFig.move(f);
+
       rectFig.show();
       rectFig2.show();
-      slug.move(f);
-      slug.show();
+      circFig.show();
+      squareFig.show();
 
       flip(screen);
 

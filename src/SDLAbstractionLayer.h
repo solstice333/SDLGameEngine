@@ -460,7 +460,7 @@ public:
     * no matter what value is passed in for jumpStrength
     */
    Figure(int x, int y, Surface& left, Surface& right, SDL_Surface* screen,
-         Gravity gravityEnabled, double speed = 0, int gravity = 1,
+         Gravity gravityEnabled, double speed = 5, int gravity = 1,
          double jumpStrength = 1);
 
    /*
@@ -485,7 +485,7 @@ public:
     * no matter what value is passed in for jumpStrength
     */
    Figure(int x, int y, Surface& image, SDL_Surface* screen,
-         Gravity gravityEnabled, double speed = 0, int gravity = 1,
+         Gravity gravityEnabled, double speed = 5, int gravity = 1,
          double jumpStrength = 1);
 
    /*
@@ -511,7 +511,7 @@ public:
     * no matter what value is passed in for jumpStrength
     */
    void setFigure(int x, int y, Surface& left, Surface& right,
-         SDL_Surface* screen, Gravity gravityEnabled, double speed = 0,
+         SDL_Surface* screen, Gravity gravityEnabled, double speed = 5,
          int gravity = 1, double jumpStrength = 1);
 
    /*
@@ -536,7 +536,7 @@ public:
        * no matter what value is passed in for jumpStrength
        */
    void setFigure(int x, int y, Surface& image, SDL_Surface* screen,
-         Gravity gravityEnabled, double speed = 0, int gravity = 1,
+         Gravity gravityEnabled, double speed = 5, int gravity = 1,
          double jumpStrength = 1);
 
    /*

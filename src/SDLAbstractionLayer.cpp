@@ -211,7 +211,8 @@ void Figure::yMovement(vector<Figure>& other) {
 
       if (movebackTop < movebackBot) {
          pauseGravity = true;
-         v.y = 0;
+         if (gravityEnabled)
+            v.y = 0;
          posDim.y -= movebackTop + 1;
       }
       else
