@@ -162,7 +162,11 @@ void Figure::initialize(int x, int y, double gravity, double speed,
 
    this->gravity = gravity;
    this->speed = speed;
+   if (jumpStrength < 1)
+      this->jumpStrength = 1;
+
    this->jumpStrength = jumpStrength;
+
    l = r = u = d = false;
    this->screen = screen;
 
