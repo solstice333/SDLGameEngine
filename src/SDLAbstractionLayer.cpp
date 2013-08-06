@@ -294,6 +294,14 @@ int Figure::getHeight() {
    return posDim.h;
 }
 
+int Figure::getX() {
+   return posDim.x;
+}
+
+int Figure::getY() {
+   return posDim.y;
+}
+
 bool Figure::isCollided(vector<Figure>& other, int& count) {
    if (other.size() > 0) {
       for (vector<Figure>::iterator i = other.begin(), end = other.end();

@@ -282,9 +282,9 @@ public:
    bool isPaused();
 
    /*
-    * Description: delays frame with respect to user specified framerate
+    * Description: delays the frame according to user defined framerate fps
     * Parameter: int fps is the user specified framerate
-    * Return: returns the the amount of time that needs to be delayed in milliseconds
+    * Return: returns the amount of time delayed in milliseconds
     */
    int delayFrame(int fps);
 };
@@ -550,6 +550,16 @@ public:
    int getHeight();
 
    /*
+    * Description: obtains the x position of the Figure
+    */
+   int getX();
+
+   /*
+    * Description: obtains the y position of the Figure
+    */
+   int getY();
+
+   /*
     * Description: checks if collided with other Figure
     * Parameter: Figure other is the Figure being compared to this Figure if collision
     * has occurred
@@ -719,15 +729,6 @@ bool isHeldDown(SDL_Event& event);
  * Parameter: Surface::Color color is the color to fill the screen with
  */
 void fillScreen(SDL_Surface* screen, Surface::Color color);
-
-/*
- * Description: delays the frame based on timer and user defined fps. Be sure to start timer
- * at the beginning of the event loop
- *
- * Parameter: Timer timer is the timer being used to time the frame period
- * Parameter: int fps is the framerate requirement of the user
- */
-void delayFrame(Timer timer, int fps);
 
 /*
  * Description: init initializes all SDL subsystems, sets the video mode, and sets the caption
