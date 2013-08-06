@@ -36,18 +36,18 @@ int main(int argc, char* argv[]) {
    vector<Figure> f;
 
    Surface rect("images/rectangle.png");
-   Figure rectFig(300, 400, rect, screen, Figure::GRAVITY_DISABLED);
-   Figure rectFig2(900, 100, rect, screen, Figure::GRAVITY_DISABLED);
+   Figure rectFig(100, 600, rect, screen, Figure::GRAVITY_DISABLED);
+   Figure rectFig2(1000, 500, rect, screen, Figure::GRAVITY_DISABLED);
    f.push_back(rectFig);
    f.push_back(rectFig2);
 
    Figure slug;
 
    if (GRAVITY_ENABLED)
-      slug.setFigure(0, screen->h - right.getSDL_Surface()->h, left, right,
+      slug.setFigure(350, screen->h - right.getSDL_Surface()->h, left, right,
             screen, Figure::GRAVITY_ENABLED, SPEED, GRAVITY, JUMPSTRENGTH);
    else
-      slug.setFigure(0, screen->h - right.getSDL_Surface()->h, left, right,
+      slug.setFigure(350, screen->h - right.getSDL_Surface()->h, left, right,
             screen, Figure::GRAVITY_DISABLED, SPEED, GRAVITY, JUMPSTRENGTH);
 
    Timer fps;
