@@ -1,9 +1,12 @@
 #include "Exception.h"
 #include "SDLAbstractionLayer.h"
 #include <iostream>
+#include <string>
+#include <cmath>
+
 using namespace std;
 
-const bool DEBUG = false;
+const bool DEBUG = true;
 
 Surface::Surface() :
       s(NULL) {
@@ -187,20 +190,20 @@ void Figure::initialize(int x, int y, double gravity, double speed,
    }
 }
 
-void Figure::xMovement(vector<Figure>& other) {
-   int count;
+void Figure::xMovement(vector<Figure*>& other) {
+   int count = 0;
 
    posDim.x += v.x;
+
    if (isCollided(other, count))
       posDim.x -= v.x;
    else if (posDim.x > screen->w - posDim.w)
       posDim.x = screen->w - posDim.w;
    else if (posDim.x < 0)
       posDim.x = 0;
-
 }
 
-void Figure::yMovement(vector<Figure>& other) {
+void Figure::yMovement(vector<Figure*>& other) {
    if (gravityEnabled && !u)
       calculateGravity();
 
@@ -209,7 +212,9 @@ void Figure::yMovement(vector<Figure>& other) {
    posDim.y += v.y;
    if (isCollided(other, count)) {
       posDim.y -= v.y;
-      v.y = 0;
+
+      if (gravityEnabled)
+         v.y = 0;
    }
    else if (posDim.y > screen->h - posDim.h)
       posDim.y = screen->h - posDim.h;
@@ -297,43 +302,35 @@ int Figure::getY() {
    return posDim.y;
 }
 
-bool Figure::isCollided(vector<Figure>& other, int& count) {
-   if (other.size() > 0) {
-      for (vector<Figure>::iterator i = other.begin(), end = other.end();
-            i != end; i++) {
+bool Figure::checkCollision(Figure* f) {
+   RectFigure* r;
+   CircFigure* c;
 
-         int left1 = posDim.x;
-         int right1 = posDim.x + posDim.w;
-         int top1 = posDim.y;
-         int bot1 = posDim.y + posDim.h;
-
-         int left2 = i->posDim.x;
-         int right2 = i->posDim.x + i->posDim.w;
-         int top2 = i->posDim.y;
-         int bot2 = i->posDim.y + i->posDim.h;
-
-         if (top1 > bot2) {
-            count++;
-            continue;
-         }
-
-         if (bot1 < top2) {
-            count++;
-            continue;
-         }
-
-         if (right1 < left2) {
-            count++;
-            continue;
-         }
-
-         if (left1 > right2) {
-            count++;
-            continue;
-         }
-
+   if (f->getClassName() == "RectFigure") {
+      r = static_cast<RectFigure*>(f);
+      if (checkCollision(r))
          return true;
+   }
+   else if (f->getClassName() == "CircFigure") {
+      c = static_cast<CircFigure*>(f);
+      if (checkCollision(c))
+         return true;
+   }
+   else
+      throw FigureException();
+
+   return false;
+}
+
+bool Figure::isCollided(vector<Figure*>& other, int& count) {
+   if (!other.empty()) {
+      for (vector<Figure*>::iterator i = other.begin(), end = other.end();
+            i != end; i++) {
+         if (checkCollision(*i))
+            return true;
       }
+
+      count++;
    }
 
    return false;
@@ -390,7 +387,7 @@ void Figure::handleInput(SDL_Event& event) {
    }
 }
 
-void Figure::move(vector<Figure> other) {
+void Figure::move(vector<Figure*>& other) {
    xMovement(other);
    yMovement(other);
 
@@ -405,6 +402,201 @@ void Figure::show(SDL_Rect* clip) {
       current = right;
 
    applySurface(posDim.x, posDim.y, *current, screen, clip);
+}
+
+string Figure::getClassName() {
+   return className;
+}
+
+Figure::~Figure() {
+}
+
+RectFigure::RectFigure() {
+   className = "RectFigure";
+}
+
+RectFigure::RectFigure(int x, int y, Surface& left, Surface& right,
+      SDL_Surface* screen, Gravity gravityEnabled, double speed, int gravity,
+      double jumpStrength) :
+      Figure(x, y, left, right, screen, gravityEnabled, speed, gravity,
+            jumpStrength) {
+   className = "RectFigure";
+}
+
+RectFigure::RectFigure(int x, int y, Surface& image, SDL_Surface* screen,
+      Gravity gravityEnabled, double speed, int gravity, double jumpStrength) :
+      Figure(x, y, image, screen, gravityEnabled, speed, gravity, jumpStrength) {
+   className = "RectFigure";
+}
+
+bool RectFigure::checkCollision(RectFigure* r) {
+   int left1 = posDim.x;
+   int right1 = posDim.x + posDim.w;
+   int top1 = posDim.y;
+   int bot1 = posDim.y + posDim.h;
+
+   int left2 = r->posDim.x;
+   int right2 = r->posDim.x + r->posDim.w;
+   int top2 = r->posDim.y;
+   int bot2 = r->posDim.y + r->posDim.h;
+
+   if (!(bot1 < top2 || top1 > bot2 || right1 < left2 || left1 > right2))
+      return true;
+   return false;
+}
+
+bool RectFigure::checkCollision(CircFigure* c) {
+   int cx, cy;
+
+   if (c->getX() < posDim.x)
+      cx = posDim.x;
+   else if (c->getX() > posDim.x + posDim.w)
+      cx = posDim.x + posDim.w;
+   else
+      cx = c->getX();
+
+   if (c->getY() < posDim.y)
+      cy = posDim.y;
+   else if (c->getY() > posDim.y + posDim.h)
+      cy = posDim.y + posDim.h;
+   else
+      cy = c->getY();
+
+   Point closestPoint = { cx, cy };
+   Point circle = { c->getX(), c->getY() };
+   if (dist(closestPoint, circle) < c->getR())
+      return true;
+
+   return false;
+}
+
+void CircFigure::xMovement(vector<Figure*>& other) {
+   int count = 0;
+
+   posDim.x += v.x;
+
+   if (isCollided(other, count))
+      posDim.x -= v.x;
+   else if (posDim.x > screen->w - r)
+      posDim.x = screen->w - r;
+   else if (posDim.x < r)
+      posDim.x = r;
+}
+
+void CircFigure::yMovement(vector<Figure*>& other) {
+   if (gravityEnabled && !u)
+      calculateGravity();
+
+   int count = 0;
+
+   posDim.y += v.y;
+   if (isCollided(other, count)) {
+      posDim.y -= v.y;
+
+      if (gravityEnabled)
+         v.y = 0;
+   }
+   else if (posDim.y > screen->h - r)
+      posDim.y = screen->h - r;
+   else if (posDim.y < r)
+      posDim.y = r;
+
+   if (gravityEnabled && u && frame < 3) {
+      v.y -= posDim.h * speed / 100 * jumpStrength;
+      frame++;
+   }
+   else {
+      frame = 0;
+      u = false;
+   }
+}
+
+CircFigure::CircFigure() {
+   className = "CircFigure";
+}
+
+CircFigure::CircFigure(int x, int y, Surface& left, Surface& right,
+      SDL_Surface* screen, Gravity gravityEnabled, double speed, int gravity,
+      double jumpStrength) :
+      Figure(x, y, left, right, screen, gravityEnabled, speed, gravity,
+            jumpStrength) {
+   className = "CircFigure";
+   r = (left.getSDL_Surface()->w + right.getSDL_Surface()->w) / 4;
+}
+
+CircFigure::CircFigure(int x, int y, Surface& image, SDL_Surface* screen,
+      Gravity gravityEnabled, double speed, int gravity, double jumpStrength) :
+      Figure(x, y, image, screen, gravityEnabled, speed, gravity, jumpStrength) {
+   className = "CircFigure";
+   r = image.getSDL_Surface()->w / 2;
+}
+
+void CircFigure::setFigure(int x, int y, Surface& left, Surface& right,
+      SDL_Surface* screen, Gravity gravityEnabled, double speed, int gravity,
+      double jumpStrength) {
+   Figure::setFigure(x, y, right, screen, gravityEnabled, speed, gravity,
+         jumpStrength);
+   r = (left.getSDL_Surface()->w + right.getSDL_Surface()->w) / 4;
+}
+
+void CircFigure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
+      Gravity gravityEnabled, double speed, int gravity, double jumpStrength) {
+   Figure::setFigure(x, y, image, screen, gravityEnabled, speed, gravity,
+         jumpStrength);
+   r = image.getSDL_Surface()->w / 2;
+}
+
+int CircFigure::getR() {
+   return r;
+}
+
+void CircFigure::show(SDL_Rect* clip) {
+   if (l)
+      current = left;
+   else if (r)
+      current = right;
+
+   applySurface(posDim.x - r, posDim.y - r, *current, screen, clip);
+}
+
+bool CircFigure::checkCollision(RectFigure* r) {
+   int cx, cy;
+
+   if (posDim.x < r->getX())
+      cx = r->getX();
+   else if (posDim.x > r->getX() + r->getWidth())
+      cx = r->getX() + r->getWidth();
+   else
+      cx = posDim.x;
+
+   if (posDim.y < r->getY())
+      cy = r->getY();
+   else if (posDim.y > r->getY() + r->getHeight())
+      cy = r->getY() + r->getHeight();
+   else
+      cy = posDim.y;
+
+   Point p1 = { posDim.x, posDim.y };
+   Point p2 = { cx, cy };
+   if (dist(p1, p2) < this->r)
+      return true;
+
+   return false;
+}
+
+bool CircFigure::checkCollision(CircFigure* c) {
+   Point thisCenter = { posDim.x, posDim.y };
+   Point otherCenter = { c->posDim.x, c->posDim.y };
+
+   if (dist(thisCenter, otherCenter) < this->r + c->r) {
+      return true;
+   }
+
+   return false;
+}
+
+double dist(Point p1, Point p2) {
+   return sqrt(pow(p2.x - p1.x, 2) + pow(p2.y - p1.y, 2));
 }
 
 SDL_Surface* optimizeImage(SDL_Surface* s) {
@@ -516,7 +708,7 @@ void applySurface(int x, int y, Surface& source, SDL_Surface* destination,
 
    offset.x = x;
    offset.y = y;
-
+   //I wonder if you will ever find this comment... =P
    SDL_BlitSurface(source.getSDL_Surface(), clip, destination, &offset);
 }
 

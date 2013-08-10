@@ -1,14 +1,14 @@
 //============================================================================
-// Name        : SDLMotion.cpp
+// Name        : SDLReviseFigureClass.cpp
 // Author      : Kevin Navero
 // Version     :
 // Copyright   : 
-// Description :
+// Description : Revising Figure class to include inheritance
 //============================================================================
 
 #include <iostream>
 #include <string>
-#include <sstream>
+#include <vector>
 #include "SDL/SDL.h"
 #include "SDL/SDL_image.h"
 #include "SDL/SDL_ttf.h"
@@ -17,89 +17,76 @@
 
 using namespace std;
 
-const int WIDTH = 1191;
-const int HEIGHT = 670;
-const int FPS = 50;
+const int WIDTH = 640;
+const int HEIGHT = 480;
+const int FPS = 40;
 const double SPEED = 25;
-const int GRAVITY = 1;
-const double JUMPSTRENGTH = 1;
-//const bool GRAVITY_ENABLED = true;
+const int GRAVITY = 2;
+const double JUMPSTRENGTH = 1.5;
+const bool CHOOSE_SQUARE = false; //change this to true or false to switch from having
+                                 //user control with a circle or square
+
+//uncomment or comment the two lines below if you want to disable or enable gravity for the
+//user controlled objects
+const Figure::Gravity G = Figure::GRAVITY_ENABLED;
+//const Figure::Gravity G = Figure::GRAVITY_DISABLED;
 
 int main(int argc, char* argv[]) {
-   SDL_Surface* screen = init(WIDTH, HEIGHT, "SDL Motion");
+   SDL_Surface* screen = init(WIDTH, HEIGHT, "Test");
 
-   /*
-    Surface bgnd("images/bgnd.jpg");
-    Surface left("images/x97_left.png", Surface::RED);
-    Surface right("images/x97_right.png", Surface::RED);
-    */
+   Surface s("images/square.bmp");
+   Surface r("images/rectangle.png");
+   Surface c("images/dot.bmp", Surface::CYAN);
 
-   vector<Figure> f;
-
-   Surface rect("images/rectangle.png");
-
-   Figure rectFig(500, 100, rect, screen, Figure::GRAVITY_DISABLED);
-   Figure rectFig5(800, 250, rect, screen,
-         Figure::GRAVITY_DISABLED);
-
-   Surface circ("images/dot.bmp", Surface::CYAN);
-   Figure circFig(900, screen->h - circ.getSDL_Surface()->h, circ, screen,
-         Figure::GRAVITY_DISABLED);
-
-   /*
-    Figure slug;
-
-    if (GRAVITY_ENABLED)
-    slug.setFigure(350, screen->h - right.getSDL_Surface()->h, left, right,
-    screen, Figure::GRAVITY_ENABLED, SPEED, GRAVITY, JUMPSTRENGTH);
-    else
-    slug.setFigure(350, screen->h - right.getSDL_Surface()->h, left, right,
-    screen, Figure::GRAVITY_DISABLED, SPEED, GRAVITY, JUMPSTRENGTH);
-    */
-
-   Surface square("images/square.bmp");
-   SDL_Rect clip;
-   clip.w = 20;
-   clip.h = 20;
-
-   Figure squareFig(100, 0, square, screen, Figure::GRAVITY_ENABLED, SPEED,
+   RectFigure sFig(0, 0, s, screen, G, SPEED, GRAVITY,
+         JUMPSTRENGTH);
+   RectFigure rFig(300, 100, r, screen, Figure::GRAVITY_DISABLED);
+   RectFigure rFig1(500, -100, r, screen, Figure::GRAVITY_DISABLED);
+   CircFigure cFig(100, 400, c, screen, Figure::GRAVITY_DISABLED, SPEED,
+         GRAVITY, JUMPSTRENGTH);
+   CircFigure cFig1(10, 10, c, screen, G, SPEED, GRAVITY,
          JUMPSTRENGTH);
 
-   Timer fps;
+   vector<Figure*> collisions;
+   collisions.push_back(&rFig);
+   collisions.push_back(&rFig1);
+   collisions.push_back(&cFig);
 
-   bool quit = false;
    SDL_Event event;
+   bool quit = false;
+   Timer t;
 
    while (!quit) {
-      fps.start();
-
-      while (SDL_PollEvent(&event)) {
+      if (SDL_PollEvent(&event)) {
          if (event.type == SDL_QUIT) {
             quit = true;
             break;
          }
 
-         squareFig.handleInput(event);
+         if (CHOOSE_SQUARE)
+            sFig.handleInput(event);
+         else
+            cFig1.handleInput(event);
       }
 
-      //applySurface(0, 0, bgnd, screen);
+      if (CHOOSE_SQUARE)
+         sFig.move(collisions);
+      else
+         cFig1.move(collisions);
+
       fillScreen(screen, Surface::WHITE);
+      rFig.show();
+      rFig1.show();
+      cFig.show();
 
-      f.clear();
-      f.push_back(rectFig);
-      f.push_back(rectFig5);
-      f.push_back(circFig);
-
-      squareFig.move(f);
-
-      rectFig5.show();
-      rectFig.show();
-      circFig.show();
-      squareFig.show();
+      if (CHOOSE_SQUARE)
+         sFig.show();
+      else
+         cFig1.show();
 
       flip(screen);
 
-      fps.delayFrame(FPS);
+      t.delayFrame(FPS);
    }
 
    cleanUp();

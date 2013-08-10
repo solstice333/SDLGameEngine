@@ -19,6 +19,10 @@ struct Velocity {
    int x, y;
 };
 
+struct Point {
+   int x, y;
+};
+
 /*
  * Description: The Surface class provides easy management with instantiating SDL_Surfaces
  * and clean up. Also included, is automatic color key by sending in the Color
@@ -290,6 +294,21 @@ public:
 };
 
 /*
+ * Desription: Figure predeclaration
+ */
+class Figure;
+
+/*
+ * Description: RectFigure predeclaraation
+ */
+class RectFigure;
+
+/*
+ * Description: CircFigure predeclaration
+ */
+class CircFigure;
+
+/*
  * Description: The Figure class is a convenience class for creating dynamic moveable
  * objects on the screen.
  */
@@ -304,6 +323,13 @@ public:
    };
 
 private:
+
+   /*
+    * Description: copy constructor placed in private to prevent object slicing
+    */
+   Figure(const Figure& other);
+
+protected:
 
    /*
     * Description: SDL_Rect posDim holds the current x, y position and dimensions of
@@ -325,6 +351,14 @@ private:
    double jumpStrength;
 
    /*
+    * Description: speed is the fraction of dimensions covered per frame when Figure is moving. In other
+    * words, in terms of horizontal movement along the x axis, a Figure could be 100 pixels
+    * in width, so that would mean that if the speed is a value of 0.5, then the Figure
+    * move 50 pixels per frame
+    */
+   double speed;
+
+   /*
     * Description: frame counter
     */
    int frame;
@@ -335,14 +369,6 @@ private:
    bool gravityEnabled;
 
    /*
-    * Description: speed is the fraction of dimensions covered per frame when Figure is moving. In other
-    * words, in terms of horizontal movement along the x axis, a Figure could be 100 pixels
-    * in width, so that would mean that if the speed is a value of 0.5, then the Figure
-    * move 50 pixels per frame
-    */
-   double speed;
-
-   /*
     * Description: bool l, r, u, d describes a flag that can be set in order to transmit a state
     * from the handleInput() method to any other method of the class. For example, when
     * the left button is pressed, the l flag is set, and in the show() method, the
@@ -351,13 +377,18 @@ private:
    bool l, r, u, d;
 
    /*
+    * Description: contains the class name of the subclass instantiated
+    */
+   string className;
+
+   /*
     * Descrption: holds the current x, y velocity of the Figure. Velocity in this context describes
     * how many pixels the Figure will cover within the next frame i.e. pixels per frame
     */
    Velocity v;
 
-   /* 
-    * Description: holds the pointer to screen. this is needed when grabbing the width and height
+   /*
+    * Description: holds the pointer to screen. This is needed when grabbing the width and height
     * of the software display
     */
    SDL_Surface* screen;
@@ -381,7 +412,7 @@ private:
 
    /*
     * Description: private method for calculating the velocity in the y component as a result from gravity.
-    * Makes direct changes to v.y in Figure instance, and thus it is not necessary to store the return value 
+    * Makes direct changes to v.y in Figure instance, and thus it is not necessary to store the return value
     * to a location.
     *
     * Return: velocity of the Figure in the y component
@@ -403,20 +434,18 @@ private:
          double jumpStrength, SDL_Surface* screen, Gravity gravityEnabled);
 
    /*
-    * Description: xMovement() adjusts the current x position of the Figure while taking
-    * into account colliding with Figure& other
-    *
-    * Parameter: Figure& other is the other Figure that cannot be collided with
+    * Description: describes how the current x position should be updated
+    * Parameter: vector<Figure*>& other is the reference to a vector containing Figure pointers
+    * that are to be detected for collision
     */
-   void xMovement(vector<Figure>& other);
+   virtual void xMovement(vector<Figure*>& other);
 
    /*
-    * Description: yMovement() adjusts the current y position of the Figure while taking
-    * into account colliding with Figure& other
-    *
-    * Parameter: Figure& other is the other Figure that cannot be collided with
+    * Description: describes how the current y position should be updated
+    * Parameter: vector<Figure*>& other is the reference to a vector containing Figure pointers
+    * that are to be detected for collision
     */
-   void yMovement(vector<Figure>& other);
+   virtual void yMovement(vector<Figure*>& other);
 
    /*
     * Description: debug() prints the current x and y positions and velocities real time
@@ -439,12 +468,12 @@ public:
     * Parameter: Surface& left is the image to show when Figure is moving to the left
     * Parameter: Surface& right is the image to show when Figure is moving to the right
     * Parameter: SDL_Surface* screen is the software screen active in system memory
-    * Parameter: double speed is the movement speed of the Figure in terms of percentage
-    * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
-    * would indicate move 50% of the Figure width every frame
-    *
     * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
     * or not for the Figure
+    *
+    * Parameter: double speed is the movement speed of the Figure in terms of percentage
+    * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
+    * would indicate move 50% of the Figure width every frame. Default is 5.
     *
     * Parameter: int gravity is set to 1 by default and describes how strong the
     * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
@@ -464,12 +493,12 @@ public:
     * Parameter: int y is the y coordinate starting position of the Figure
     * Parameter: Surface& image is the image to show
     * Parameter: SDL_Surface* screen is the software screen active in system memory
-    * Parameter: double speed is the movement speed of the Figure in terms of percentage
-    * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
-    * would indicate move 50% of the Figure width every frame
-    *
     * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
     * or not for the Figure
+    *
+    * Parameter: double speed is the movement speed of the Figure in terms of percentage
+    * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
+    * would indicate move 50% of the Figure width every frame. Default is 5.
     *
     * Parameter: int gravity is set to 1 by default and describes how strong the
     * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
@@ -490,12 +519,12 @@ public:
     * Parameter: Surface& left is the image to show when Figure is moving to the left
     * Parameter: Surface& right is the image to show when Figure is moving to the right
     * Parameter: SDL_Surface* screen is the software screen active in system memory
-    * Parameter: double speed is the movement speed of the Figure in terms of percentage
-    * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
-    * would indicate move 50% of the Figure width every frame
-    *
     * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
     * or not for the Figure
+    *
+    * Parameter: double speed is the movement speed of the Figure in terms of percentage
+    * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
+    * would indicate move 50% of the Figure width every frame. Default is 5.
     *
     * Parameter: int gravity is set to 1 by default and describes how strong the
     * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
@@ -505,86 +534,387 @@ public:
     * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
     * no matter what value is passed in for jumpStrength
     */
-   void setFigure(int x, int y, Surface& left, Surface& right,
+   virtual void setFigure(int x, int y, Surface& left, Surface& right,
          SDL_Surface* screen, Gravity gravityEnabled, double speed = 5,
          int gravity = 1, double jumpStrength = 1);
 
    /*
-       * Description: sets Figure
-       * Parameter: int x is the x coordinate starting position of the Figure
-       * Parameter: int y is the y coordinate starting position of the Figure
-       * Parameter: Surface& image is the image to show when Figure is moving
-       * Parameter: SDL_Surface* screen is the software screen active in system memory
-       * Parameter: double speed is the movement speed of the Figure in terms of percentage
-       * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
-       * would indicate move 50% of the Figure width every frame
-       *
-       * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
-       * or not for the Figure
-       *
-       * Parameter: int gravity is set to 1 by default and describes how strong the
-       * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
-       * no matter what value is passed in for gravity
-       *
-       * Parameter: double jumpStrength is set to 1 by default and describes the jump
-       * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
-       * no matter what value is passed in for jumpStrength
-       */
-   void setFigure(int x, int y, Surface& image, SDL_Surface* screen,
+    * Description: sets Figure
+    * Parameter: int x is the x coordinate starting position of the Figure
+    * Parameter: int y is the y coordinate starting position of the Figure
+    * Parameter: Surface& image is the image to show when Figure is moving
+    * Parameter: SDL_Surface* screen is the software screen active in system memory
+    * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
+    * or not for the Figure
+    *
+    * Parameter: double speed is the movement speed of the Figure in terms of percentage
+    * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
+    * would indicate move 50% of the Figure width every frame. Default is 5.
+    *
+    * Parameter: int gravity is set to 1 by default and describes how strong the
+    * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
+    * no matter what value is passed in for gravity
+    *
+    * Parameter: double jumpStrength is set to 1 by default and describes the jump
+    * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
+    * no matter what value is passed in for jumpStrength
+    */
+   virtual void setFigure(int x, int y, Surface& image, SDL_Surface* screen,
          Gravity gravityEnabled, double speed = 5, int gravity = 1,
          double jumpStrength = 1);
 
    /*
     * Description: obtains the width of the Figure
     */
-   int getWidth();
+   virtual int getWidth();
 
    /*
     * Description: obtains the height of the Figure
     */
-   int getHeight();
+   virtual int getHeight();
 
    /*
     * Description: obtains the x position of the Figure
     */
-   int getX();
+   virtual int getX();
 
    /*
     * Description: obtains the y position of the Figure
     */
-   int getY();
+   virtual int getY();
 
    /*
-    * Description: checks if collided with other Figure
-    * Parameter: Figure other is the Figure being compared to this Figure if collision
-    * has occurred
+    * Description: parses through the subclasses to see what kind of Figure the this instance is colliding with, then calls
+    * the respective checkCollision.
     *
-    * Return: true if collided, false otherwise
+    * Parameter: Figure* f is the pointer to Figure of who is being checked for collision with the this instance
+    * Return: true if collision occurs with Figure* f, false otherwise
     */
-   bool isCollided(vector<Figure>& other, int& count);
+   virtual bool checkCollision(Figure* f);
 
    /*
-    * Description: handleInput() handles all input when dequeued from the event queue
-    * using SDL_PollEvent()
+    * Description: checks if collided with a RectFigure. Requires implementation in subclass.
+    * Parameter: RectFigure* r is the pointer to RectFigure that is being checked for
+    * collision with the this instance
     *
-    * Parameter: SDL_Event& event is the event polled
+    * Return: true if collision occurs with RectFigure* r, false otherwise
     */
-   void handleInput(SDL_Event& event);
+   virtual bool checkCollision(RectFigure* r) = 0;
 
    /*
-    * Description; move() changes the current position based on the velocities
-    * determined in handleInput() or in the internal calculateGravity() method
+    * Description: checks if collided with a CircFigure. Requires implementation in subclass.
+    * Parameter: CircFigure* c is the pointer to CircFigure that is being checked for
+    * collision with the this instance
     *
-    * Parameter: Figure other is the object that this Figure cannot pass through i.e.
-    * collision is taken into account
+    * Return: true if collision occurs with CircFigure* c, false otherwise
     */
-   void move(vector<Figure> other);
+   virtual bool checkCollision(CircFigure* c) = 0;
 
    /*
-    * Description: show() applies the Figure to the screen
+    * Description: accepts a reference to a vector containing the pointer to Figures in
+    * where the Figures need to be parsed through to check for collision with the this Figure.
+    *
+    * Parameter: vector<Figure*>& other is the reference to a vector holding the Figure pointers
+    * that require parsing for collision detection
+    *
+    * Parameter: int& count is the reference to the counter describing which index of the vector
+    * the collision occurred on
+    *
+    * Return: true if collision occurred, false otherwise
     */
-   void show(SDL_Rect* clip = NULL);
+   virtual bool isCollided(vector<Figure*>& other, int& count);
+
+   /*
+    * Description: handles input with directional keys and adjusts the velocity respectively
+    * Parameter: SDL_Event& event is the reference to the SDL_Event type in the event loop
+    */
+   virtual void handleInput(SDL_Event& event);
+
+   /*
+    * Description: moves by adding the velocity to the current position while checking for
+    * collision
+    *
+    * Parameter: vector<Figure*>& other is the reference to a vector holding the Figure pointers
+    * that require parsing for collision detection
+    */
+   virtual void move(vector<Figure*>& other);
+
+   /*
+    * Description: applies the current image (left or right) to the screen. Does not flip the
+    * video buffers. That should be done manually.
+    *
+    * Parameter: SDL_Rect* clip is the portion of the image you would like to crop out
+    */
+   virtual void show(SDL_Rect* clip = NULL);
+
+   /*
+    * Description: obtains the class name of the subclass instance
+    * Return: the class name of the subclass instantiated
+    */
+   string getClassName();
+
+   /*
+    * Description: destructor
+    */
+   virtual ~Figure();
 };
+
+/*
+ * Description: RectFigure extends Figure class in being a convenience class that handles
+ * Rectangular Figures and thus making them dynamic movable objects on the screen aware
+ * of collision with other Figures
+ */
+class RectFigure: public Figure {
+public:
+
+   /*
+    * Description: Default RectFigure() constructor
+    */
+   RectFigure();
+
+   /*
+    * Description: Overloading parameterized constructor
+    * Parameter: int x is the horizontal position specifying the upper left corner
+    * Parameter: int y is the vertical position specifying the upper left corner
+    * Parameter: Surface& left is the image to display when moving left
+    * Parameter: Surface& right is the image to display when moving right
+    * Parameter: SDL_Surface* screen is the software screen active in system memory
+    * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
+    * or not for the Figure
+    *
+    * Parameter: double speed is the movement speed of the Figure in terms of percentage
+    * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
+    * would indicate move 50% of the Figure width every frame. Default is 5;
+    *
+    * Parameter: int gravity is set to 1 by default and describes how strong the
+    * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
+    * no matter what value is passed in for gravity
+    *
+    * Parameter: double jumpStrength is set to 1 by default and describes the jump
+    * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
+    * no matter what value is passed in for jumpStrength
+    */
+   RectFigure(int x, int y, Surface& left, Surface& right, SDL_Surface* screen,
+         Gravity gravityEnabled, double speed = 5, int gravity = 1,
+         double jumpStrength = 1);
+
+   /*
+    * Description: Overloading parameterized constructor
+    * Parameter: int x is the horizontal position specifying the upper left corner
+    * Parameter: int y is the vertical position specifying the upper left corner
+    * Parameter: Surface& image is the image to display when moving
+    * Parameter: SDL_Surface* screen is the software screen active in system memory
+    * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
+    * or not for the Figure
+    *
+    * Parameter: double speed is the movement speed of the Figure in terms of percentage
+    * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
+    * would indicate move 50% of the Figure width every frame. Default is 5;
+    *
+    * Parameter: int gravity is set to 1 by default and describes how strong the
+    * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
+    * no matter what value is passed in for gravity
+    *
+    * Parameter: double jumpStrength is set to 1 by default and describes the jump
+    * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
+    * no matter what value is passed in for jumpStrength
+    */
+   RectFigure(int x, int y, Surface& image, SDL_Surface* screen,
+         Gravity gravityEnabled, double speed = 5, int gravity = 1,
+         double jumpStrength = 1);
+
+   /*
+    * Description: checks for RectFigure to RectFigure collision
+    * Parameter: RectFigure* r is the pointer to the RectFigure that is being checked for collision with
+    * the this instance
+    * Return: true if collision occurs with RectFigure* r, false otherwise
+    */
+   virtual bool checkCollision(RectFigure* r);
+
+   /*
+    * Description: checks for RectFigure to CircFigure collision
+    * Parameter: CircFigure* c is the pointer to the CircFigure that is being checked for collision with
+    * the this instance
+    *
+    * Return: true if collision occurs with CircFigure* c, false otherwise
+    */
+   virtual bool checkCollision(CircFigure* c);
+};
+
+/*
+ * Description: CircFigure extends Figure class in being a convenience class that handles
+ * Circular Figures and thus making them dynamic movable objects on the screen aware
+ * of collision with other Figures
+ */
+class CircFigure: public Figure {
+private:
+
+   /*
+    * Description: int r is the radius of the CircFigure
+    */
+   int r;
+
+   /*
+    * Description: describes how the current x position should be updated
+    * Parameter: vector<Figure*>& other is the reference to a vector containing Figure pointers
+    * that are to be detected for collision
+    */
+   virtual void xMovement(vector<Figure*>& other);
+
+   /*
+    * Description: describes how the current y position should be updated
+    * Parameter: vector<Figure*>& other is the reference to a vector containing Figure pointers
+    * that are to be detected for collision
+    */
+   virtual void yMovement(vector<Figure*>& other);
+
+public:
+
+   /*
+    * Description: default constructor for CircFigure
+    */
+   CircFigure();
+
+   /*
+    * Description: Overloading parameterized constructor
+    * Parameter: int x is the horizontal position specifying the center of the circle
+    * Parameter: int y is the vertical position specifying the center of the circle
+    * Parameter: Surface& left is the image to display when moving left
+    * Parameter: Surface& right is the image to display when moving right
+    * Parameter: SDL_Surface* screen is the software screen active in system memory
+    * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
+    * or not for the Figure
+    *
+    * Parameter: double speed is the movement speed of the Figure in terms of percentage
+    * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
+    * would indicate move 50% of the Figure width every frame. Default is 5;
+    *
+    * Parameter: int gravity is set to 1 by default and describes how strong the
+    * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
+    * no matter what value is passed in for gravity
+    *
+    * Parameter: double jumpStrength is set to 1 by default and describes the jump
+    * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
+    * no matter what value is passed in for jumpStrength
+    */
+   CircFigure(int x, int y, Surface& left, Surface& right, SDL_Surface* screen,
+         Gravity gravityEnabled, double speed = 5, int gravity = 1,
+         double jumpStrength = 1);
+
+   /*
+    * Description: Overloading parameterized constructor
+    * Parameter: int x is the horizontal position specifying the center of the circle
+    * Parameter: int y is the vertical position specifying the center of the circle
+    * Parameter: Surface& image is the image to display when moving
+    * Parameter: SDL_Surface* screen is the software screen active in system memory
+    * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
+    * or not for the Figure
+    *
+    * Parameter: double speed is the movement speed of the Figure in terms of percentage
+    * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
+    * would indicate move 50% of the Figure width every frame. Default is 5;
+    *
+    * Parameter: int gravity is set to 1 by default and describes how strong the
+    * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
+    * no matter what value is passed in for gravity
+    *
+    * Parameter: double jumpStrength is set to 1 by default and describes the jump
+    * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
+    * no matter what value is passed in for jumpStrength
+    */
+   CircFigure(int x, int y, Surface& image, SDL_Surface* screen,
+         Gravity gravityEnabled, double speed = 5, int gravity = 1,
+         double jumpStrength = 1);
+
+   /*
+    * Description: Overloading parameterized constructor
+    * Parameter: int x is the horizontal position specifying the center of the circle
+    * Parameter: int y is the vertical position specifying the center of the circle
+    * Parameter: Surface& left is the image to display when moving left
+    * Parameter: Surface& right is the image to display when moving right
+    * Parameter: SDL_Surface* screen is the software screen active in system memory
+    * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
+    * or not for the Figure
+    *
+    * Parameter: double speed is the movement speed of the Figure in terms of percentage
+    * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
+    * would indicate move 50% of the Figure width every frame. Default is 5;
+    *
+    * Parameter: int gravity is set to 1 by default and describes how strong the
+    * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
+    * no matter what value is passed in for gravity
+    *
+    * Parameter: double jumpStrength is set to 1 by default and describes the jump
+    * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
+    * no matter what value is passed in for jumpStrength
+    */
+   virtual void setFigure(int x, int y, Surface& left, Surface& right,
+         SDL_Surface* screen, Gravity gravityEnabled, double speed = 5,
+         int gravity = 1, double jumpStrength = 1);
+
+   /*
+    * Description: Overloading parameterized constructor
+    * Parameter: int x is the horizontal position specifying the center of the circle
+    * Parameter: int y is the vertical position specifying the center of the circle
+    * Parameter: Surface& image is the image to display when moving
+    * Parameter: SDL_Surface* screen is the software screen active in system memory
+    * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
+    * or not for the Figure
+    *
+    * Parameter: double speed is the movement speed of the Figure in terms of percentage
+    * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
+    * would indicate move 50% of the Figure width every frame. Default is 5;
+    *
+    * Parameter: int gravity is set to 1 by default and describes how strong the
+    * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
+    * no matter what value is passed in for gravity
+    *
+    * Parameter: double jumpStrength is set to 1 by default and describes the jump
+    * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
+    * no matter what value is passed in for jumpStrength
+    */
+   virtual void setFigure(int x, int y, Surface& image, SDL_Surface* screen,
+         Gravity gravityEnabled, double speed = 5, int gravity = 1,
+         double jumpStrength = 1);
+
+   /*
+    * Description: obtains the radius of the circle
+    * Return: radius of the circle
+    */
+   int getR();
+
+   /*
+    * Description: applies the current image (left or right) to the screen. Does not flip the
+    * video buffers. That should be done manually.
+    *
+    * Parameter: SDL_Rect* clip is the portion of the image you would like to crop out
+    */
+   virtual void show(SDL_Rect* clip = NULL);
+
+   /*
+    * Description: checks for CircFigure to RectFigure collision
+    * Parameter: RectFigure* r is the pointer to the RectFigure that is being checked for collision with
+    * the this instance
+    * Return: true if collision occurs with RectFigure* r, false otherwise
+    */
+   virtual bool checkCollision(RectFigure* r);
+
+   /*
+    * Description: checks for CircFigure to CircFigure collision
+    * Parameter: CircFigure* r is the pointer to the CircFigure that is being checked for collision with
+    * the this instance
+    * Return: true if collision occurs with CircFigure* c, false otherwise
+    */
+   virtual bool checkCollision(CircFigure* c);
+};
+
+/*
+ * Description: returns the distance between Point p1 and Point p2
+ * Parameter: Point p1 is point 1
+ * Parameter: Point p2 is point 2
+ * Return: the distance between the two points
+ */
+double dist(Point p1, Point p2);
 
 /*
  * Description: optimizes the image to match the pixel format and colors

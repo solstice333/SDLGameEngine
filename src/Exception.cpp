@@ -43,3 +43,7 @@ const char* SoundException::what() const throw () {
 const char* GravityException::what() const throw () {
    return "Error: Invalid Gravity enum \n";
 }
+
+const char* FigureException::what() const throw () {
+   return "Error: Invalid Figure \n";
+}

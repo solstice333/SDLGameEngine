@@ -60,4 +60,9 @@ public:
    virtual const char* what() const throw();
 };
 
+class FigureException : public exception {
+public:
+   virtual const char* what() const throw();
+};
+
 #endif
