@@ -294,17 +294,17 @@ public:
 };
 
 /*
- * Desription: Figure predeclaration
+ * Description: Figure pre-declaration
  */
 class Figure;
 
 /*
- * Description: RectFigure predeclaraation
+ * Description: RectFigure pre-declaration
  */
 class RectFigure;
 
 /*
- * Description: CircFigure predeclaration
+ * Description: CircFigure pre-declaration
  */
 class CircFigure;
 
@@ -316,10 +316,17 @@ class Figure {
 public:
 
    /*
-    * Desciption: Enum Gravity represents if gravity is enabled or disabled
+    * Description: Enum Gravity represents if gravity is enabled or disabled
     */
    enum Gravity {
       GRAVITY_DISABLED, GRAVITY_ENABLED
+   };
+
+   /*
+    * Description: Status describes whether the Figure is moving left or right
+    */
+   enum Status {
+      LEFT, RIGHT
    };
 
 private:
@@ -359,9 +366,34 @@ protected:
    double speed;
 
    /*
-    * Description: frame counter
+    * Description: frame counter to smoothen jump motion
     */
-   int frame;
+   int jumpFrame;
+
+   /*
+    * Description: frame counter used for advancing the next clip in the animation
+    */
+   double animationFrame;
+
+   /*
+    * Description: number of clips associated to animating a Figure
+    */
+   int numClips;
+
+   /*
+    * Description: status of Figure if its moving left or right
+    */
+   Status status;
+
+   /*
+    * Description: holds the clips to animate the Figure when Figure is moving left
+    */
+   SDL_Rect* cl;
+
+   /*
+    * Description: holds the clips to animate the Figure when Figure is moving right
+    */
+   SDL_Rect* cr;
 
    /*
     * Description: true if gravity is enabled, false if Figure is intended to float
@@ -394,21 +426,10 @@ protected:
    SDL_Surface* screen;
 
    /*
-    * Description: left Surface image to render when the Figure is moving to the left
+    * Description: holds the pointer the Surface that contains the clips to be displayed
+    * to screen
     */
-   Surface* left;
-
-   /*
-    * Description: right Surface image to render when the Figure is moving to the right
-    */
-   Surface* right;
-
-   /*
-    * Description: current Surface* image is the pointer to the most recent image rendered. This is
-    * needed in the case where if the up button is pressed, then bool l and r are not set,
-    * and the most recent image facing the most recent direction needs to be rendered
-    */
-   Surface* current;
+   Surface* image;
 
    /*
     * Description: private method for calculating the velocity in the y component as a result from gravity.
@@ -417,7 +438,7 @@ protected:
     *
     * Return: velocity of the Figure in the y component
     */
-   int calculateGravity();
+   virtual int calculateGravity();
 
    /*
     * Description: initialize function
@@ -431,7 +452,13 @@ protected:
     * gravity or not
     */
    void initialize(int x, int y, double gravity, double speed,
-         double jumpStrength, SDL_Surface* screen, Gravity gravityEnabled);
+         double jumpStrength, SDL_Surface* screen, Gravity gravityEnabled,
+         int numClips);
+
+   /*
+    * Description: sets the clips to enable animation
+    */
+   void setClips(int clipWidth, int clipHeight);
 
    /*
     * Description: describes how the current x position should be updated
@@ -460,34 +487,6 @@ public:
    Figure();
 
    /*
-    * Description: Overloading Figure constructor for Figures that need an image when
-    * moving left and right
-    *
-    * Parameter: int x is the x coordinate starting position of the Figure
-    * Parameter: int y is the y coordinate starting position of the Figure
-    * Parameter: Surface& left is the image to show when Figure is moving to the left
-    * Parameter: Surface& right is the image to show when Figure is moving to the right
-    * Parameter: SDL_Surface* screen is the software screen active in system memory
-    * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
-    * or not for the Figure
-    *
-    * Parameter: double speed is the movement speed of the Figure in terms of percentage
-    * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
-    * would indicate move 50% of the Figure width every frame. Default is 5.
-    *
-    * Parameter: int gravity is set to 1 by default and describes how strong the
-    * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
-    * no matter what value is passed in for gravity
-    *
-    * Parameter: double jumpStrength is set to 1 by default and describes the jump
-    * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
-    * no matter what value is passed in for jumpStrength
-    */
-   Figure(int x, int y, Surface& left, Surface& right, SDL_Surface* screen,
-         Gravity gravityEnabled, double speed = 5, int gravity = 1,
-         double jumpStrength = 1);
-
-   /*
     * Description: Overloading Figure constructor for Figures that only need one image
     * Parameter: int x is the x coordinate starting position of the Figure
     * Parameter: int y is the y coordinate starting position of the Figure
@@ -507,36 +506,15 @@ public:
     * Parameter: double jumpStrength is set to 1 by default and describes the jump
     * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
     * no matter what value is passed in for jumpStrength
+    *
+    * Parameter: int numClips describes the number of clips existing on the sprite sheet
+    * for one single direction i.e. for the left direction, if there are four parts to
+    * animate the left movement then numClips would be a value of 4. If this were the case,
+    * then the right direction must also have four parts as well. Default is 1.
     */
    Figure(int x, int y, Surface& image, SDL_Surface* screen,
          Gravity gravityEnabled, double speed = 5, int gravity = 1,
-         double jumpStrength = 1);
-
-   /*
-    * Description: sets Figure
-    * Parameter: int x is the x coordinate starting position of the Figure
-    * Parameter: int y is the y coordinate starting position of the Figure
-    * Parameter: Surface& left is the image to show when Figure is moving to the left
-    * Parameter: Surface& right is the image to show when Figure is moving to the right
-    * Parameter: SDL_Surface* screen is the software screen active in system memory
-    * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
-    * or not for the Figure
-    *
-    * Parameter: double speed is the movement speed of the Figure in terms of percentage
-    * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
-    * would indicate move 50% of the Figure width every frame. Default is 5.
-    *
-    * Parameter: int gravity is set to 1 by default and describes how strong the
-    * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
-    * no matter what value is passed in for gravity
-    *
-    * Parameter: double jumpStrength is set to 1 by default and describes the jump
-    * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
-    * no matter what value is passed in for jumpStrength
-    */
-   virtual void setFigure(int x, int y, Surface& left, Surface& right,
-         SDL_Surface* screen, Gravity gravityEnabled, double speed = 5,
-         int gravity = 1, double jumpStrength = 1);
+         double jumpStrength = 1, int numClips = 1);
 
    /*
     * Description: sets Figure
@@ -558,10 +536,15 @@ public:
     * Parameter: double jumpStrength is set to 1 by default and describes the jump
     * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
     * no matter what value is passed in for jumpStrength
+    *
+    * Parameter: int numClips describes the number of clips existing on the sprite sheet
+    * for one single direction i.e. for the left direction, if there are four parts to
+    * animate the left movement then numClips would be a value of 4. If this were the case,
+    * then the right direction must also have four parts as well. Default is 1.
     */
    virtual void setFigure(int x, int y, Surface& image, SDL_Surface* screen,
          Gravity gravityEnabled, double speed = 5, int gravity = 1,
-         double jumpStrength = 1);
+         double jumpStrength = 1, int numClips = 1);
 
    /*
     * Description: obtains the width of the Figure
@@ -676,32 +659,6 @@ public:
     * Description: Overloading parameterized constructor
     * Parameter: int x is the horizontal position specifying the upper left corner
     * Parameter: int y is the vertical position specifying the upper left corner
-    * Parameter: Surface& left is the image to display when moving left
-    * Parameter: Surface& right is the image to display when moving right
-    * Parameter: SDL_Surface* screen is the software screen active in system memory
-    * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
-    * or not for the Figure
-    *
-    * Parameter: double speed is the movement speed of the Figure in terms of percentage
-    * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
-    * would indicate move 50% of the Figure width every frame. Default is 5;
-    *
-    * Parameter: int gravity is set to 1 by default and describes how strong the
-    * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
-    * no matter what value is passed in for gravity
-    *
-    * Parameter: double jumpStrength is set to 1 by default and describes the jump
-    * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
-    * no matter what value is passed in for jumpStrength
-    */
-   RectFigure(int x, int y, Surface& left, Surface& right, SDL_Surface* screen,
-         Gravity gravityEnabled, double speed = 5, int gravity = 1,
-         double jumpStrength = 1);
-
-   /*
-    * Description: Overloading parameterized constructor
-    * Parameter: int x is the horizontal position specifying the upper left corner
-    * Parameter: int y is the vertical position specifying the upper left corner
     * Parameter: Surface& image is the image to display when moving
     * Parameter: SDL_Surface* screen is the software screen active in system memory
     * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
@@ -718,10 +675,15 @@ public:
     * Parameter: double jumpStrength is set to 1 by default and describes the jump
     * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
     * no matter what value is passed in for jumpStrength
+    *
+    * Parameter: int numClips describes the number of clips existing on the sprite sheet
+    * for one single direction i.e. for the left direction, if there are four parts to
+    * animate the left movement then numClips would be a value of 4. If this were the case,
+    * then the right direction must also have four parts as well. Default is 1.
     */
    RectFigure(int x, int y, Surface& image, SDL_Surface* screen,
          Gravity gravityEnabled, double speed = 5, int gravity = 1,
-         double jumpStrength = 1);
+         double jumpStrength = 1, int numClips = 1);
 
    /*
     * Description: checks for RectFigure to RectFigure collision
@@ -755,6 +717,11 @@ private:
    int r;
 
    /*
+    * Description: calculates gravity with respect to circle figures
+    */
+   virtual int calculateGravity();
+
+   /*
     * Description: describes how the current x position should be updated
     * Parameter: vector<Figure*>& other is the reference to a vector containing Figure pointers
     * that are to be detected for collision
@@ -779,32 +746,6 @@ public:
     * Description: Overloading parameterized constructor
     * Parameter: int x is the horizontal position specifying the center of the circle
     * Parameter: int y is the vertical position specifying the center of the circle
-    * Parameter: Surface& left is the image to display when moving left
-    * Parameter: Surface& right is the image to display when moving right
-    * Parameter: SDL_Surface* screen is the software screen active in system memory
-    * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
-    * or not for the Figure
-    *
-    * Parameter: double speed is the movement speed of the Figure in terms of percentage
-    * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
-    * would indicate move 50% of the Figure width every frame. Default is 5;
-    *
-    * Parameter: int gravity is set to 1 by default and describes how strong the
-    * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
-    * no matter what value is passed in for gravity
-    *
-    * Parameter: double jumpStrength is set to 1 by default and describes the jump
-    * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
-    * no matter what value is passed in for jumpStrength
-    */
-   CircFigure(int x, int y, Surface& left, Surface& right, SDL_Surface* screen,
-         Gravity gravityEnabled, double speed = 5, int gravity = 1,
-         double jumpStrength = 1);
-
-   /*
-    * Description: Overloading parameterized constructor
-    * Parameter: int x is the horizontal position specifying the center of the circle
-    * Parameter: int y is the vertical position specifying the center of the circle
     * Parameter: Surface& image is the image to display when moving
     * Parameter: SDL_Surface* screen is the software screen active in system memory
     * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
@@ -821,36 +762,15 @@ public:
     * Parameter: double jumpStrength is set to 1 by default and describes the jump
     * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
     * no matter what value is passed in for jumpStrength
+    *
+    * Parameter: int numClips describes the number of clips existing on the sprite sheet
+    * for one single direction i.e. for the left direction, if there are four parts to
+    * animate the left movement then numClips would be a value of 4. If this were the case,
+    * then the right direction must also have four parts as well. Default is 1.
     */
    CircFigure(int x, int y, Surface& image, SDL_Surface* screen,
          Gravity gravityEnabled, double speed = 5, int gravity = 1,
-         double jumpStrength = 1);
-
-   /*
-    * Description: Overloading parameterized constructor
-    * Parameter: int x is the horizontal position specifying the center of the circle
-    * Parameter: int y is the vertical position specifying the center of the circle
-    * Parameter: Surface& left is the image to display when moving left
-    * Parameter: Surface& right is the image to display when moving right
-    * Parameter: SDL_Surface* screen is the software screen active in system memory
-    * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
-    * or not for the Figure
-    *
-    * Parameter: double speed is the movement speed of the Figure in terms of percentage
-    * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
-    * would indicate move 50% of the Figure width every frame. Default is 5;
-    *
-    * Parameter: int gravity is set to 1 by default and describes how strong the
-    * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
-    * no matter what value is passed in for gravity
-    *
-    * Parameter: double jumpStrength is set to 1 by default and describes the jump
-    * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
-    * no matter what value is passed in for jumpStrength
-    */
-   virtual void setFigure(int x, int y, Surface& left, Surface& right,
-         SDL_Surface* screen, Gravity gravityEnabled, double speed = 5,
-         int gravity = 1, double jumpStrength = 1);
+         double jumpStrength = 1, int numClips = 1);
 
    /*
     * Description: Overloading parameterized constructor
@@ -872,10 +792,15 @@ public:
     * Parameter: double jumpStrength is set to 1 by default and describes the jump
     * strength. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
     * no matter what value is passed in for jumpStrength
+    *
+    * Parameter: int numClips describes the number of clips existing on the sprite sheet
+    * for one single direction i.e. for the left direction, if there are four parts to
+    * animate the left movement then numClips would be a value of 4. If this were the case,
+    * then the right direction must also have four parts as well. Default is 1.
     */
    virtual void setFigure(int x, int y, Surface& image, SDL_Surface* screen,
          Gravity gravityEnabled, double speed = 5, int gravity = 1,
-         double jumpStrength = 1);
+         double jumpStrength = 1, int numClips = 1);
 
    /*
     * Description: obtains the radius of the circle

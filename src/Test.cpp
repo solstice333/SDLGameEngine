@@ -1,95 +1,111 @@
 //============================================================================
-// Name        : SDLReviseFigureClass.cpp
+// Name        : SDLAnimation.cpp
 // Author      : Kevin Navero
 // Version     :
 // Copyright   : 
-// Description : Revising Figure class to include inheritance
+// Description :
 //============================================================================
 
 #include <iostream>
-#include <string>
-#include <vector>
 #include "SDL/SDL.h"
-#include "SDL/SDL_image.h"
-#include "SDL/SDL_ttf.h"
-#include "SDL/SDL_mixer.h"
 #include "SDLAbstractionLayer.h"
 
 using namespace std;
 
-const int WIDTH = 640;
-const int HEIGHT = 480;
-const int FPS = 40;
-const double SPEED = 25;
-const int GRAVITY = 2;
-const double JUMPSTRENGTH = 1.5;
-const bool CHOOSE_SQUARE = false; //change this to true or false to switch from having
-                                 //user control with a circle or square
+const int FRAMERATECAP = 40;
+const double SPEED = 5;
+const double JUMPSTRENGTH = 0.5;
+const int GRAVITY = 1;
+const int NUMCLIPS_DOT = 1;
+const int NUMCLIPS_FOO = 4;
+const bool CHOOSE_FOO = true;
 
-//uncomment or comment the two lines below if you want to disable or enable gravity for the
-//user controlled objects
-const Figure::Gravity G = Figure::GRAVITY_ENABLED;
-//const Figure::Gravity G = Figure::GRAVITY_DISABLED;
-
+/*
+ * Description: this is a sanity test to verify constructors, setFigure methods, and collision
+ * detection characteristics with the additional animation features. The user
+ * can change the const bool CHOOSE_FOO to either true or false, to model CircFigure or
+ * RectFigure animation capabilities.
+ */
 int main(int argc, char* argv[]) {
-   SDL_Surface* screen = init(WIDTH, HEIGHT, "Test");
+   SDL_Surface* screen = init(640, 640, "SDL Animation Testing");
 
-   Surface s("images/square.bmp");
-   Surface r("images/rectangle.png");
-   Surface c("images/dot.bmp", Surface::CYAN);
+   Surface foo("images/foo.png", Surface::CYAN);
+   Surface dot("images/dot.png", Surface::CYAN);
 
-   RectFigure sFig(0, 0, s, screen, G, SPEED, GRAVITY,
-         JUMPSTRENGTH);
-   RectFigure rFig(300, 100, r, screen, Figure::GRAVITY_DISABLED);
-   RectFigure rFig1(500, -100, r, screen, Figure::GRAVITY_DISABLED);
-   CircFigure cFig(100, 400, c, screen, Figure::GRAVITY_DISABLED, SPEED,
-         GRAVITY, JUMPSTRENGTH);
-   CircFigure cFig1(10, 10, c, screen, G, SPEED, GRAVITY,
-         JUMPSTRENGTH);
+   RectFigure fooFig;
+   CircFigure circFig;
 
-   vector<Figure*> collisions;
-   collisions.push_back(&rFig);
-   collisions.push_back(&rFig1);
-   collisions.push_back(&cFig);
+   //test constructors
+   /*
+   RectFigure fooFig(0, screen->h - foo.getSDL_Surface()->h, foo, screen,
+            Figure::GRAVITY_ENABLED, SPEED, GRAVITY, JUMPSTRENGTH,
+            NUMCLIPS_FOO);
+   CircFigure circFig(0, screen->h - dot.getSDL_Surface()->h, dot, screen,
+         Figure::GRAVITY_ENABLED, SPEED*4, GRAVITY, JUMPSTRENGTH * 2,
+         NUMCLIPS_DOT);
+         */
 
-   SDL_Event event;
+   if (CHOOSE_FOO)
+      fooFig.setFigure(0, screen->h - foo.getSDL_Surface()->h, foo, screen,
+            Figure::GRAVITY_ENABLED, SPEED, GRAVITY, JUMPSTRENGTH,
+            NUMCLIPS_FOO);
+   else
+      circFig.setFigure(0, screen->h - dot.getSDL_Surface()->h, dot, screen,
+            Figure::GRAVITY_ENABLED, SPEED*4, GRAVITY, JUMPSTRENGTH * 2,
+            NUMCLIPS_DOT);
+
+   Surface rectangle("images/rectangle.png");
+   Surface circle("images/dot.png", Surface::CYAN);
+   RectFigure rf(300, 200, rectangle, screen, Figure::GRAVITY_DISABLED);
+   RectFigure rf1(500, 500, rectangle, screen, Figure::GRAVITY_DISABLED);
+   CircFigure cf(250, 200, circle, screen, Figure::GRAVITY_DISABLED);
+   CircFigure cf1(100, 600, circle, screen, Figure::GRAVITY_DISABLED);
+
    bool quit = false;
-   Timer t;
+   SDL_Event event;
+   Timer timer;
+   vector<Figure*> coll;
+
+   coll.push_back(&rf);
+   coll.push_back(&rf1);
+   coll.push_back(&cf);
+   coll.push_back(&cf1);
 
    while (!quit) {
+      timer.start();
+
       if (SDL_PollEvent(&event)) {
          if (event.type == SDL_QUIT) {
-            quit = true;
+            quit = false;
             break;
          }
 
-         if (CHOOSE_SQUARE)
-            sFig.handleInput(event);
+         if (CHOOSE_FOO)
+            fooFig.handleInput(event);
          else
-            cFig1.handleInput(event);
+            circFig.handleInput(event);
       }
 
-      if (CHOOSE_SQUARE)
-         sFig.move(collisions);
+      if (CHOOSE_FOO)
+         fooFig.move(coll);
       else
-         cFig1.move(collisions);
+         circFig.move(coll);
 
       fillScreen(screen, Surface::WHITE);
-      rFig.show();
-      rFig1.show();
-      cFig.show();
+      rf.show();
+      rf1.show();
+      cf.show();
+      cf1.show();
 
-      if (CHOOSE_SQUARE)
-         sFig.show();
+      if (CHOOSE_FOO)
+         fooFig.show();
       else
-         cFig1.show();
+         circFig.show();
 
       flip(screen);
 
-      t.delayFrame(FPS);
+      timer.delayFrame(FRAMERATECAP);
    }
-
-   cleanUp();
 
    return 0;
 }

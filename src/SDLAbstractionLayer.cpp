@@ -158,10 +158,17 @@ int Figure::calculateGravity() {
 }
 
 void Figure::initialize(int x, int y, double gravity, double speed,
-      double jumpStrength, SDL_Surface* screen, Gravity gravityEnabled) {
+      double jumpStrength, SDL_Surface* screen, Gravity gravityEnabled,
+      int numClips) {
    posDim.x = x;
    posDim.y = y;
-   frame = 0;
+   jumpFrame = 0;
+   this->numClips = numClips;
+   cl = new SDL_Rect[numClips];
+   cr = new SDL_Rect[numClips];
+   status = RIGHT;
+
+   setClips(posDim.w, posDim.h);
 
    this->gravity = gravity;
    this->speed = speed;
@@ -174,7 +181,6 @@ void Figure::initialize(int x, int y, double gravity, double speed,
    this->screen = screen;
 
    v.x = v.y = 0;
-   current = this->right;
 
    switch (gravityEnabled) {
    case GRAVITY_ENABLED:
@@ -187,6 +193,20 @@ void Figure::initialize(int x, int y, double gravity, double speed,
    default:
       throw GravityException();
       break;
+   }
+}
+
+void Figure::setClips(int clipWidth, int clipHeight) {
+   for (int i = 0; i < numClips; i++) {
+      cr[i].w = clipWidth;
+      cr[i].h = clipHeight;
+      cr[i].x = clipWidth * i;
+      cr[i].y = 0;
+
+      cl[i].w = clipWidth;
+      cl[i].h = clipHeight;
+      cl[i].x = clipWidth * i;
+      cl[i].y = clipHeight;
    }
 }
 
@@ -221,12 +241,12 @@ void Figure::yMovement(vector<Figure*>& other) {
    else if (posDim.y < 0)
       posDim.y = 0;
 
-   if (gravityEnabled && u && frame < 3) {
+   if (gravityEnabled && u && jumpFrame < 3) {
       v.y -= posDim.h * speed / 100 * jumpStrength;
-      frame++;
+      jumpFrame++;
    }
    else {
-      frame = 0;
+      jumpFrame = 0;
       u = false;
    }
 }
@@ -243,47 +263,30 @@ void Figure::debug() {
 Figure::Figure() {
 }
 
-Figure::Figure(int x, int y, Surface& left, Surface& right, SDL_Surface* screen,
-      Gravity gravityEnabled, double speed, int gravity, double jumpStrength) :
-      left(&left), right(&right) {
-
-   posDim.w = (left.getSDL_Surface()->w + right.getSDL_Surface()->w) / 2;
-   posDim.h = (left.getSDL_Surface()->h + right.getSDL_Surface()->h) / 2;
-
-   initialize(x, y, gravity, speed, jumpStrength, screen, gravityEnabled);
-}
-
+//TODO change how posDim.w and posDim.h are set i.e. it is no longer the size of the image
+//but the size of the clipWidth and clipHeight
 Figure::Figure(int x, int y, Surface& image, SDL_Surface* screen,
-      Gravity gravityEnabled, double speed, int gravity, double jumpStrength) :
-      left(&image), right(&image) {
+      Gravity gravityEnabled, double speed, int gravity, double jumpStrength,
+      int numClips) :
+      image(&image) {
 
-   posDim.w = image.getSDL_Surface()->w;
-   posDim.h = image.getSDL_Surface()->h;
+   posDim.w = image.getSDL_Surface()->w / numClips;
+   posDim.h = image.getSDL_Surface()->h / 2;
 
-   initialize(x, y, gravity, speed, jumpStrength, screen, gravityEnabled);
-}
-
-void Figure::setFigure(int x, int y, Surface& left, Surface& right,
-      SDL_Surface* screen, Gravity gravityEnabled, double speed, int gravity,
-      double jumpStrength) {
-
-   posDim.w = (left.getSDL_Surface()->w + right.getSDL_Surface()->w) / 2;
-   posDim.h = (left.getSDL_Surface()->h + right.getSDL_Surface()->h) / 2;
-   this->left = &left;
-   this->right = &right;
-
-   initialize(x, y, gravity, speed, jumpStrength, screen, gravityEnabled);
+   initialize(x, y, gravity, speed, jumpStrength, screen, gravityEnabled,
+         numClips);
 }
 
 void Figure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
-      Gravity gravityEnabled, double speed, int gravity, double jumpStrength) {
+      Gravity gravityEnabled, double speed, int gravity, double jumpStrength,
+      int numClips) {
 
-   posDim.w = image.getSDL_Surface()->w;
-   posDim.h = image.getSDL_Surface()->h;
-   this->left = &image;
-   this->right = &image;
+   posDim.w = image.getSDL_Surface()->w / numClips;
+   posDim.h = image.getSDL_Surface()->h / 2;
+   this->image = &image;
 
-   initialize(x, y, gravity, speed, jumpStrength, screen, gravityEnabled);
+   initialize(x, y, gravity, speed, jumpStrength, screen, gravityEnabled,
+         numClips);
 }
 
 int Figure::getWidth() {
@@ -396,12 +399,28 @@ void Figure::move(vector<Figure*>& other) {
 }
 
 void Figure::show(SDL_Rect* clip) {
-   if (l)
-      current = left;
-   else if (r)
-      current = right;
+   if (numClips > 0) {
+      if (v.x < 0) {
+         status = LEFT;
+         animationFrame += 0.25;
+      }
+      else if (v.x > 0) {
+         status = RIGHT;
+         animationFrame += 0.25;
+      }
+      else
+         animationFrame = 0;
 
-   applySurface(posDim.x, posDim.y, *current, screen, clip);
+      if (animationFrame >= numClips)
+         animationFrame = 0;
+
+      if (status == LEFT)
+         applySurface(posDim.x, posDim.y, *image, screen,
+               &cl[static_cast<int>(animationFrame)]);
+      else if (status == RIGHT)
+         applySurface(posDim.x, posDim.y, *image, screen,
+               &cr[static_cast<int>(animationFrame)]);
+   }
 }
 
 string Figure::getClassName() {
@@ -415,17 +434,11 @@ RectFigure::RectFigure() {
    className = "RectFigure";
 }
 
-RectFigure::RectFigure(int x, int y, Surface& left, Surface& right,
-      SDL_Surface* screen, Gravity gravityEnabled, double speed, int gravity,
-      double jumpStrength) :
-      Figure(x, y, left, right, screen, gravityEnabled, speed, gravity,
-            jumpStrength) {
-   className = "RectFigure";
-}
-
 RectFigure::RectFigure(int x, int y, Surface& image, SDL_Surface* screen,
-      Gravity gravityEnabled, double speed, int gravity, double jumpStrength) :
-      Figure(x, y, image, screen, gravityEnabled, speed, gravity, jumpStrength) {
+      Gravity gravityEnabled, double speed, int gravity, double jumpStrength,
+      int numClips) :
+      Figure(x, y, image, screen, gravityEnabled, speed, gravity, jumpStrength,
+            numClips) {
    className = "RectFigure";
 }
 
@@ -470,6 +483,15 @@ bool RectFigure::checkCollision(CircFigure* c) {
    return false;
 }
 
+int CircFigure::calculateGravity() {
+   if (posDim.y < screen->h - r)
+      v.y += gravity + abs(v.y * 0.01);
+   else
+      v.y = 0;
+
+   return v.y;
+}
+
 void CircFigure::xMovement(vector<Figure*>& other) {
    int count = 0;
 
@@ -501,12 +523,12 @@ void CircFigure::yMovement(vector<Figure*>& other) {
    else if (posDim.y < r)
       posDim.y = r;
 
-   if (gravityEnabled && u && frame < 3) {
+   if (gravityEnabled && u && jumpFrame < 5) {
       v.y -= posDim.h * speed / 100 * jumpStrength;
-      frame++;
+      jumpFrame++;
    }
    else {
-      frame = 0;
+      jumpFrame = 0;
       u = false;
    }
 }
@@ -515,35 +537,29 @@ CircFigure::CircFigure() {
    className = "CircFigure";
 }
 
-CircFigure::CircFigure(int x, int y, Surface& left, Surface& right,
-      SDL_Surface* screen, Gravity gravityEnabled, double speed, int gravity,
-      double jumpStrength) :
-      Figure(x, y, left, right, screen, gravityEnabled, speed, gravity,
-            jumpStrength) {
-   className = "CircFigure";
-   r = (left.getSDL_Surface()->w + right.getSDL_Surface()->w) / 4;
-}
-
 CircFigure::CircFigure(int x, int y, Surface& image, SDL_Surface* screen,
-      Gravity gravityEnabled, double speed, int gravity, double jumpStrength) :
-      Figure(x, y, image, screen, gravityEnabled, speed, gravity, jumpStrength) {
+      Gravity gravityEnabled, double speed, int gravity, double jumpStrength,
+      int numClips) :
+      Figure(x, y, image, screen, gravityEnabled, speed, gravity, jumpStrength,
+            numClips) {
    className = "CircFigure";
-   r = image.getSDL_Surface()->w / 2;
-}
 
-void CircFigure::setFigure(int x, int y, Surface& left, Surface& right,
-      SDL_Surface* screen, Gravity gravityEnabled, double speed, int gravity,
-      double jumpStrength) {
-   Figure::setFigure(x, y, right, screen, gravityEnabled, speed, gravity,
-         jumpStrength);
-   r = (left.getSDL_Surface()->w + right.getSDL_Surface()->w) / 4;
+   if (posDim.w > posDim.h)
+      r = posDim.w / 2;
+   else
+      r = posDim.h / 2;
 }
 
 void CircFigure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
-      Gravity gravityEnabled, double speed, int gravity, double jumpStrength) {
+      Gravity gravityEnabled, double speed, int gravity, double jumpStrength,
+      int numClips) {
    Figure::setFigure(x, y, image, screen, gravityEnabled, speed, gravity,
-         jumpStrength);
-   r = image.getSDL_Surface()->w / 2;
+         jumpStrength, numClips);
+
+   if (posDim.w > posDim.h)
+      r = posDim.w / 2;
+   else
+      r = posDim.h / 2;
 }
 
 int CircFigure::getR() {
@@ -551,12 +567,28 @@ int CircFigure::getR() {
 }
 
 void CircFigure::show(SDL_Rect* clip) {
-   if (l)
-      current = left;
-   else if (r)
-      current = right;
+   if (numClips > 0) {
+      if (v.x < 0) {
+         status = LEFT;
+         animationFrame += 0.25;
+      }
+      else if (v.x > 0) {
+         status = RIGHT;
+         animationFrame += 0.25;
+      }
+      else
+         animationFrame = 0;
 
-   applySurface(posDim.x - r, posDim.y - r, *current, screen, clip);
+      if (animationFrame >= numClips)
+         animationFrame = 0;
+
+      if (status == LEFT)
+         applySurface(posDim.x - r, posDim.y - r, *image, screen,
+               &cl[static_cast<int>(animationFrame)]);
+      else if (status == RIGHT)
+         applySurface(posDim.x - r, posDim.y - r, *image, screen,
+               &cr[static_cast<int>(animationFrame)]);
+   }
 }
 
 bool CircFigure::checkCollision(RectFigure* r) {
@@ -708,7 +740,6 @@ void applySurface(int x, int y, Surface& source, SDL_Surface* destination,
 
    offset.x = x;
    offset.y = y;
-   //I wonder if you will ever find this comment... =P
    SDL_BlitSurface(source.getSDL_Surface(), clip, destination, &offset);
 }
 
