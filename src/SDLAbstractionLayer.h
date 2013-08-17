@@ -409,6 +409,12 @@ protected:
    bool l, r, u, d;
 
    /*
+    * Description: describes whether a Figure is to be followed by the camera or not. If
+    * followed by the camera, the Figure is considered to be the leader
+    */
+   bool leader;
+
+   /*
     * Description: contains the class name of the subclass instantiated
     */
    string className;
@@ -432,6 +438,18 @@ protected:
    Surface* image;
 
    /*
+    * Description: camera is the pointer to SDL_Rect that contains the x and y offset
+    * (upper left corner) of where the camera is supposed to be within the level
+    * boundaries, and the width and height matching the screen dimensions
+    */
+   SDL_Rect* camera;
+
+   /*
+    * Description: lw and lh are the level width and the level height
+    */
+   int lw, lh;
+
+   /*
     * Description: private method for calculating the velocity in the y component as a result from gravity.
     * Makes direct changes to v.y in Figure instance, and thus it is not necessary to store the return value
     * to a location.
@@ -450,10 +468,22 @@ protected:
     * Parameter: SDL_Surface* screen is the display screen
     * Parameter: Gravity gravityEnabled is the enum describing whether or not to enable
     * gravity or not
+    *
+    * Parameter: bool leader is true if the camera is to follow the this instance of
+    * Figure (i.e. in most cases, the camera follows the Figure controlled
+    * by the player), false otherwise.
+    *
+    * Parameter: int numClips describes the number of clips existing on the sprite sheet
+    * for one single direction i.e. for the left direction, if there are four parts to
+    * animate the left movement then numClips would be a value of 4. If this were the case,
+    * then the right direction must also have four parts as well.
+    *
+    * Parameter: int levelWidth is the width of the level
+    * Parameter: int levelHeight is the height of the level
     */
    void initialize(int x, int y, double gravity, double speed,
          double jumpStrength, SDL_Surface* screen, Gravity gravityEnabled,
-         int numClips);
+         bool leader, int numClips, int levelWidth, int levelHeight);
 
    /*
     * Description: sets the clips to enable animation
@@ -475,7 +505,14 @@ protected:
    virtual void yMovement(vector<Figure*>& other);
 
    /*
-    * Description: debug() prints the current x and y positions and velocities real time
+    * Description: setCamera() sets the camera position to a new position
+    */
+   virtual void setCamera();
+
+   /*
+    * Description: debug() contains debugging information after a Figure constructor or
+    * setFigure() has been called. This, mostly, performs a sanity check on the set
+    * values of the private variables
     */
    void debug();
 
@@ -495,6 +532,10 @@ public:
     * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
     * or not for the Figure
     *
+    * Parameter: bool leader is true if the camera is to follow the this instance of
+    * Figure (i.e. in most cases, the camera follows the Figure controlled
+    * by the player), false otherwise. Default value is false.
+    *
     * Parameter: double speed is the movement speed of the Figure in terms of percentage
     * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
     * would indicate move 50% of the Figure width every frame. Default is 5.
@@ -511,10 +552,14 @@ public:
     * for one single direction i.e. for the left direction, if there are four parts to
     * animate the left movement then numClips would be a value of 4. If this were the case,
     * then the right direction must also have four parts as well. Default is 1.
+    *
+    * Parameter: int levelWidth is the width of the level. Default is -1.
+    * Parameter: int levelHeight is the height of the level. Default is -1.
     */
    Figure(int x, int y, Surface& image, SDL_Surface* screen,
-         Gravity gravityEnabled, double speed = 5, int gravity = 1,
-         double jumpStrength = 1, int numClips = 1);
+         Gravity gravityEnabled, bool leader = false, double speed = 5,
+         int gravity = 1, double jumpStrength = 1, int numClips = 1,
+         int levelWidth = -1, int levelHeight = -1);
 
    /*
     * Description: sets Figure
@@ -525,6 +570,10 @@ public:
     * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
     * or not for the Figure
     *
+    * Parameter: bool leader is true if the camera is to follow the this instance of
+    * Figure (i.e. in most cases, the camera follows the Figure controlled
+    * by the player), false otherwise. Default value is false.
+    *
     * Parameter: double speed is the movement speed of the Figure in terms of percentage
     * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
     * would indicate move 50% of the Figure width every frame. Default is 5.
@@ -541,10 +590,14 @@ public:
     * for one single direction i.e. for the left direction, if there are four parts to
     * animate the left movement then numClips would be a value of 4. If this were the case,
     * then the right direction must also have four parts as well. Default is 1.
+    *
+    * Parameter: int levelWidth is the width of the level. Default is -1.
+    * Parameter: int levelHeight is the height of the level. Default is -1.
     */
    virtual void setFigure(int x, int y, Surface& image, SDL_Surface* screen,
-         Gravity gravityEnabled, double speed = 5, int gravity = 1,
-         double jumpStrength = 1, int numClips = 1);
+         Gravity gravityEnabled, bool leader = false, double speed = 5,
+         int gravity = 1, double jumpStrength = 1, int numClips = 1,
+         int levelWidth = -1, int levelHeight = -1);
 
    /*
     * Description: obtains the width of the Figure
@@ -626,9 +679,22 @@ public:
     * Description: applies the current image (left or right) to the screen. Does not flip the
     * video buffers. That should be done manually.
     *
-    * Parameter: SDL_Rect* clip is the portion of the image you would like to crop out
+    * Parameter: SDL_Rect* otherCamera is the camera belonging to the Figure being followed,
+    * i.e. the Figure controlled by the player. For example, RectFigure rf1 is a Figure that
+    * is not moving on the level/screen and RectFigure rf2 is a Figure controlled by
+    * the player. When showing rf1, it would look like this: rf1.show(rf2.getCameraClip()).
+    * Default value for otherCamera is NULL.
     */
-   virtual void show(SDL_Rect* clip = NULL);
+   virtual void show(SDL_Rect* otherCamera = NULL);
+
+   /*
+    * Description: obtains the SDL_Rect pointer to the camera belonging to the
+    * associating Figure. This is used primarily for non-leader Figures that are not
+    * followed by the camera. For example, RectFigure rf1 is a Figure that is not
+    * moving on the level/screen and RectFigure rf2 is a Figure controlled by the player.
+    * When showing rf1, it would look like this: rf1.show(rf2.getCameraClip())
+    */
+   virtual SDL_Rect* getCameraClip();
 
    /*
     * Description: obtains the class name of the subclass instance
@@ -664,6 +730,10 @@ public:
     * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
     * or not for the Figure
     *
+    * Parameter: bool leader is true if the camera is to follow the this instance of
+    * Figure (i.e. in most cases, the camera follows the Figure controlled
+    * by the player), false otherwise. Default value is false.
+    *
     * Parameter: double speed is the movement speed of the Figure in terms of percentage
     * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
     * would indicate move 50% of the Figure width every frame. Default is 5;
@@ -680,10 +750,14 @@ public:
     * for one single direction i.e. for the left direction, if there are four parts to
     * animate the left movement then numClips would be a value of 4. If this were the case,
     * then the right direction must also have four parts as well. Default is 1.
+    *
+    * Parameter: int levelWidth is the width of the level. Default is -1.
+    * Parameter: int levelHeight is the height of the level. Default is -1.
     */
    RectFigure(int x, int y, Surface& image, SDL_Surface* screen,
-         Gravity gravityEnabled, double speed = 5, int gravity = 1,
-         double jumpStrength = 1, int numClips = 1);
+         Gravity gravityEnabled, bool leader = false, double speed = 5,
+         int gravity = 1, double jumpStrength = 1, int numClips = 1,
+         int levelWidth = -1, int levelHeight = -1);
 
    /*
     * Description: checks for RectFigure to RectFigure collision
@@ -751,6 +825,10 @@ public:
     * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
     * or not for the Figure
     *
+    * Parameter: bool leader is true if the camera is to follow the this instance of
+    * Figure (i.e. in most cases, the camera follows the Figure controlled
+    * by the player), false otherwise. Default value is false.
+    *
     * Parameter: double speed is the movement speed of the Figure in terms of percentage
     * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
     * would indicate move 50% of the Figure width every frame. Default is 5;
@@ -767,10 +845,14 @@ public:
     * for one single direction i.e. for the left direction, if there are four parts to
     * animate the left movement then numClips would be a value of 4. If this were the case,
     * then the right direction must also have four parts as well. Default is 1.
+    *
+    * Parameter: int levelWidth is the width of the level. Default is -1.
+    * Parameter: int levelHeight is the height of the level. Default is -1.
     */
    CircFigure(int x, int y, Surface& image, SDL_Surface* screen,
-         Gravity gravityEnabled, double speed = 5, int gravity = 1,
-         double jumpStrength = 1, int numClips = 1);
+         Gravity gravityEnabled, bool leader = false, double speed = 5,
+         int gravity = 1, double jumpStrength = 1, int numClips = 1,
+         int levelWidth = -1, int levelHeight = -1);
 
    /*
     * Description: Overloading parameterized constructor
@@ -781,6 +863,10 @@ public:
     * Parameter: Gravity gravityEnabled is enum that specifies if gravity is enabled
     * or not for the Figure
     *
+    * Parameter: bool leader is true if the camera is to follow the this instance of
+    * Figure (i.e. in most cases, the camera follows the Figure controlled
+    * by the player), false otherwise. Default value is false.
+    *
     * Parameter: double speed is the movement speed of the Figure in terms of percentage
     * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
     * would indicate move 50% of the Figure width every frame. Default is 5;
@@ -797,10 +883,14 @@ public:
     * for one single direction i.e. for the left direction, if there are four parts to
     * animate the left movement then numClips would be a value of 4. If this were the case,
     * then the right direction must also have four parts as well. Default is 1.
+    *
+    * Parameter: int levelWidth is the width of the level. Default is -1.
+    * Parameter: int levelHeight is the height of the level. Default is -1.
     */
    virtual void setFigure(int x, int y, Surface& image, SDL_Surface* screen,
-         Gravity gravityEnabled, double speed = 5, int gravity = 1,
-         double jumpStrength = 1, int numClips = 1);
+         Gravity gravityEnabled, bool leader = false, double speed = 5,
+         int gravity = 1, double jumpStrength = 1, int numClips = 1,
+         int levelWidth = -1, int levelHeight = -1);
 
    /*
     * Description: obtains the radius of the circle
@@ -812,9 +902,13 @@ public:
     * Description: applies the current image (left or right) to the screen. Does not flip the
     * video buffers. That should be done manually.
     *
-    * Parameter: SDL_Rect* clip is the portion of the image you would like to crop out
+    * Parameter: SDL_Rect* otherCamera is the camera belonging to the Figure being followed,
+    * i.e. the Figure controlled by the player. For example, CircFigure cf1 is a Figure that
+    * is not moving on the level/screen and CircFigure cf2 is a Figure controlled by
+    * the player. When showing cf1, it would look like this: cf1.show(cf2.getCameraClip()).
+    * Default value for otherCamera is NULL.
     */
-   virtual void show(SDL_Rect* clip = NULL);
+   virtual void show(SDL_Rect* otherCamera = NULL);
 
    /*
     * Description: checks for CircFigure to RectFigure collision
@@ -913,10 +1007,11 @@ Mix_Chunk* loadChunk(string chunk);
  * coordinates and updates the destination surface
  *
  * Parameter: int x is the horizontal coordinate of where you want the image to be placed
- * starting from the upper left corner with positive values to the right
+ * on the destination surface starting from the upper left corner with
+ * positive values to the right
  *
  * Parameter: int y is the vertical coordinate of where you want the image to be placed
- * starting from the upper left corner with positive values down
+ * on the destination surface starting from the upper left corner with positive values down
  *
  * Parameter: Surface source is the surface to be blitted to the destination surface
  * Parameter: SDL_Surface* destination is the surface being blitted onto (usually the screen

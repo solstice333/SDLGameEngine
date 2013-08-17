@@ -6,7 +6,10 @@
 
 using namespace std;
 
-const bool DEBUG = true;
+const bool DEBUG_PRIVATES = false;
+const bool DEBUG_MOVE = false;
+const bool DEBUG_HANDLE_INPUT = false;
+const bool DEBUG_CAM = false;
 
 Surface::Surface() :
       s(NULL) {
@@ -149,7 +152,7 @@ int Timer::delayFrame(int fps) {
 }
 
 int Figure::calculateGravity() {
-   if (posDim.y < screen->h - posDim.h)
+   if (posDim.y < lh - posDim.h)
       v.y += gravity + abs(v.y * 0.01);
    else
       v.y = 0;
@@ -159,9 +162,11 @@ int Figure::calculateGravity() {
 
 void Figure::initialize(int x, int y, double gravity, double speed,
       double jumpStrength, SDL_Surface* screen, Gravity gravityEnabled,
-      int numClips) {
+      bool leader, int numClips, int levelWidth, int levelHeight) {
    posDim.x = x;
    posDim.y = y;
+   this->leader = leader;
+
    jumpFrame = 0;
    this->numClips = numClips;
    cl = new SDL_Rect[numClips];
@@ -194,6 +199,22 @@ void Figure::initialize(int x, int y, double gravity, double speed,
       throw GravityException();
       break;
    }
+
+   camera = new SDL_Rect;
+
+   if (levelWidth == -1)
+      lw = screen->w;
+   else
+      lw = levelWidth;
+
+   if (levelHeight == -1)
+      lh = screen->h;
+   else
+      lh = levelHeight;
+
+   camera->x = camera->y = 0;
+   camera->w = screen->w;
+   camera->h = screen->h;
 }
 
 void Figure::setClips(int clipWidth, int clipHeight) {
@@ -217,8 +238,8 @@ void Figure::xMovement(vector<Figure*>& other) {
 
    if (isCollided(other, count))
       posDim.x -= v.x;
-   else if (posDim.x > screen->w - posDim.w)
-      posDim.x = screen->w - posDim.w;
+   else if (posDim.x > lw - posDim.w)
+      posDim.x = lw - posDim.w;
    else if (posDim.x < 0)
       posDim.x = 0;
 }
@@ -236,12 +257,12 @@ void Figure::yMovement(vector<Figure*>& other) {
       if (gravityEnabled)
          v.y = 0;
    }
-   else if (posDim.y > screen->h - posDim.h)
-      posDim.y = screen->h - posDim.h;
+   else if (posDim.y > lh - posDim.h)
+      posDim.y = lh - posDim.h;
    else if (posDim.y < 0)
       posDim.y = 0;
 
-   if (gravityEnabled && u && jumpFrame < 3) {
+   if (gravityEnabled && u && jumpFrame < 5) {
       v.y -= posDim.h * speed / 100 * jumpStrength;
       jumpFrame++;
    }
@@ -251,42 +272,108 @@ void Figure::yMovement(vector<Figure*>& other) {
    }
 }
 
-void Figure::debug() {
-   if (l || r) {
-      cout << "posDim.x: " << posDim.x << endl;
-      cout << "v.x: " << v.x << endl;
+void Figure::setCamera() {
+   camera->x = posDim.x + posDim.w / 2 - camera->w / 2;
+   camera->y = posDim.y + posDim.h / 2 - camera->h / 2;
+
+   if (camera->x < 0)
+      camera->x = 0;
+   if (camera->y < 0)
+      camera->y = 0;
+   if (camera->x > lw - camera->w)
+      camera->x = lw - camera->w;
+   if (camera->y > lh - camera->h)
+      camera->y = lh - camera->h;
+
+   if (DEBUG_CAM) {
+      cout << "camera->x: " << camera->x << endl;
+      cout << "camera->y: " << camera->y << endl;
    }
+}
+
+void Figure::debug() {
+   cout << "posDim.x: " << posDim.x << endl;
    cout << "posDim.y: " << posDim.y << endl;
-   cout << "v.y: " << v.y << endl;
+   cout << "posDim.w: " << posDim.w << endl;
+   cout << "posDim.h: " << posDim.h << endl;
+   cout << "gravity: " << this->gravity << endl;
+   cout << "jumpstrength: " << this->jumpStrength << endl;
+   cout << "speed: " << this->speed << endl;
+   cout << "jumpframe: " << jumpFrame << endl;
+   cout << "animationframe: " << animationFrame << endl;
+   cout << "numClips: " << this->numClips << endl;
+   cout << "status: ";
+   switch (status) {
+   case LEFT:
+      cout << "LEFT" << endl;
+      break;
+   case RIGHT:
+      cout << "RIGHT" << endl;
+      break;
+   default:
+      cout << "ERROR: invalid enum" << endl;
+      break;
+   }
+   cout << "Checking cl and cr for validity. "
+         << "If program crashes here, then cl and cr are not initialized properly."
+         << endl;
+   cout << "cl[1].w: " << cl[1].w << endl;
+   cout << "cr[1].w: " << cr[1].w << endl;
+   cout << "gravityEnabled: " << gravityEnabled << endl;
+   cout << "l: " << l << endl;
+   cout << "r: " << r << endl;
+   cout << "u: " << u << endl;
+   cout << "d: " << d << endl;
+   cout << "className: " << className << endl;
+   cout << "Checking velocity for validity. "
+         << "If program crashes here, then v.x and v.y are not initialized properly."
+         << endl;
+   cout << "v.x, v.y: " << v.x << ", " << v.y << endl;
+   cout << "Checking screen for validity. "
+         << "If program crashes here, then screen is not initialized properly."
+         << endl;
+   cout << "screen->w: " << this->screen->w << endl;
+   cout << "Checking Surface* image for validity. "
+         << "If program crashes here, then image is not initialized properly. "
+         << endl;
+   cout << "Surface* image width: " << this->image->getSDL_Surface()->w << endl;
+   cout << "Checking SDL_Rect* camera for validity. "
+         << "If program crashes here, then camera is not initialized properly. "
+         << endl;
+   cout << "camera->w: " << this->camera->w << endl;
+   cout << "lw, lh: " << lw << ", " << lh << endl;
+   cout << "leader: " << leader << endl;
+   cout << endl;
 }
 
 Figure::Figure() {
 }
 
-//TODO change how posDim.w and posDim.h are set i.e. it is no longer the size of the image
-//but the size of the clipWidth and clipHeight
 Figure::Figure(int x, int y, Surface& image, SDL_Surface* screen,
-      Gravity gravityEnabled, double speed, int gravity, double jumpStrength,
-      int numClips) :
+      Gravity gravityEnabled, bool leader, double speed, int gravity,
+      double jumpStrength, int numClips, int levelWidth, int levelHeight) :
       image(&image) {
 
    posDim.w = image.getSDL_Surface()->w / numClips;
    posDim.h = image.getSDL_Surface()->h / 2;
 
    initialize(x, y, gravity, speed, jumpStrength, screen, gravityEnabled,
-         numClips);
+         leader, numClips, levelWidth, levelHeight);
 }
 
 void Figure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
-      Gravity gravityEnabled, double speed, int gravity, double jumpStrength,
-      int numClips) {
+      Gravity gravityEnabled, bool leader, double speed, int gravity,
+      double jumpStrength, int numClips, int levelWidth, int levelHeight) {
 
    posDim.w = image.getSDL_Surface()->w / numClips;
    posDim.h = image.getSDL_Surface()->h / 2;
    this->image = &image;
 
    initialize(x, y, gravity, speed, jumpStrength, screen, gravityEnabled,
-         numClips);
+         leader, numClips, levelWidth, levelHeight);
+
+   if (DEBUG_PRIVATES && this->className == "RectFigure")
+      debug();
 }
 
 int Figure::getWidth() {
@@ -388,17 +475,26 @@ void Figure::handleInput(SDL_Event& event) {
          break;
       }
    }
+
+   if (DEBUG_HANDLE_INPUT) {
+      cout << "v.x: " << v.x << endl;
+      cout << "v.y: " << v.y << endl;
+   }
 }
 
 void Figure::move(vector<Figure*>& other) {
    xMovement(other);
    yMovement(other);
 
-   if (DEBUG)
-      debug();
+   setCamera();
+
+   if (DEBUG_MOVE) {
+      cout << "posDim.x: " << posDim.x << endl;
+      cout << "posDim.y: " << posDim.y << endl;
+   }
 }
 
-void Figure::show(SDL_Rect* clip) {
+void Figure::show(SDL_Rect* otherCamera) {
    if (numClips > 0) {
       if (v.x < 0) {
          status = LEFT;
@@ -414,13 +510,27 @@ void Figure::show(SDL_Rect* clip) {
       if (animationFrame >= numClips)
          animationFrame = 0;
 
-      if (status == LEFT)
-         applySurface(posDim.x, posDim.y, *image, screen,
-               &cl[static_cast<int>(animationFrame)]);
-      else if (status == RIGHT)
-         applySurface(posDim.x, posDim.y, *image, screen,
-               &cr[static_cast<int>(animationFrame)]);
+      if (leader) {
+         if (status == LEFT)
+            applySurface(posDim.x - camera->x, posDim.y - camera->y, *image,
+                  screen, &cl[static_cast<int>(animationFrame)]);
+         else if (status == RIGHT)
+            applySurface(posDim.x - camera->x, posDim.y - camera->y, *image,
+                  screen, &cr[static_cast<int>(animationFrame)]);
+      }
+      else {
+         if (status == LEFT)
+            applySurface(posDim.x - otherCamera->x, posDim.y - otherCamera->y,
+                  *image, screen, &cl[static_cast<int>(animationFrame)]);
+         else if (status == RIGHT)
+            applySurface(posDim.x - otherCamera->x, posDim.y - otherCamera->y,
+                  *image, screen, &cr[static_cast<int>(animationFrame)]);
+      }
    }
+}
+
+SDL_Rect* Figure::getCameraClip() {
+   return camera;
 }
 
 string Figure::getClassName() {
@@ -428,6 +538,7 @@ string Figure::getClassName() {
 }
 
 Figure::~Figure() {
+   delete camera;
 }
 
 RectFigure::RectFigure() {
@@ -435,11 +546,14 @@ RectFigure::RectFigure() {
 }
 
 RectFigure::RectFigure(int x, int y, Surface& image, SDL_Surface* screen,
-      Gravity gravityEnabled, double speed, int gravity, double jumpStrength,
-      int numClips) :
-      Figure(x, y, image, screen, gravityEnabled, speed, gravity, jumpStrength,
-            numClips) {
+      Gravity gravityEnabled, bool leader, double speed, int gravity,
+      double jumpStrength, int numClips, int levelWidth, int levelHeight) :
+      Figure(x, y, image, screen, gravityEnabled, leader, speed, gravity,
+            jumpStrength, numClips, levelWidth, levelHeight) {
    className = "RectFigure";
+
+   if (DEBUG_PRIVATES)
+      debug();
 }
 
 bool RectFigure::checkCollision(RectFigure* r) {
@@ -484,7 +598,7 @@ bool RectFigure::checkCollision(CircFigure* c) {
 }
 
 int CircFigure::calculateGravity() {
-   if (posDim.y < screen->h - r)
+   if (posDim.y < lh - r)
       v.y += gravity + abs(v.y * 0.01);
    else
       v.y = 0;
@@ -499,8 +613,8 @@ void CircFigure::xMovement(vector<Figure*>& other) {
 
    if (isCollided(other, count))
       posDim.x -= v.x;
-   else if (posDim.x > screen->w - r)
-      posDim.x = screen->w - r;
+   else if (posDim.x > lw - r)
+      posDim.x = lw - r;
    else if (posDim.x < r)
       posDim.x = r;
 }
@@ -518,8 +632,8 @@ void CircFigure::yMovement(vector<Figure*>& other) {
       if (gravityEnabled)
          v.y = 0;
    }
-   else if (posDim.y > screen->h - r)
-      posDim.y = screen->h - r;
+   else if (posDim.y > lh - r)
+      posDim.y = lh - r;
    else if (posDim.y < r)
       posDim.y = r;
 
@@ -538,35 +652,41 @@ CircFigure::CircFigure() {
 }
 
 CircFigure::CircFigure(int x, int y, Surface& image, SDL_Surface* screen,
-      Gravity gravityEnabled, double speed, int gravity, double jumpStrength,
-      int numClips) :
-      Figure(x, y, image, screen, gravityEnabled, speed, gravity, jumpStrength,
-            numClips) {
+      Gravity gravityEnabled, bool leader, double speed, int gravity,
+      double jumpStrength, int numClips, int levelWidth, int levelHeight) :
+      Figure(x, y, image, screen, gravityEnabled, leader, speed, gravity,
+            jumpStrength, numClips, levelWidth, levelHeight) {
    className = "CircFigure";
 
    if (posDim.w > posDim.h)
       r = posDim.w / 2;
    else
       r = posDim.h / 2;
+
+   if (DEBUG_PRIVATES)
+      debug();
 }
 
 void CircFigure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
-      Gravity gravityEnabled, double speed, int gravity, double jumpStrength,
-      int numClips) {
-   Figure::setFigure(x, y, image, screen, gravityEnabled, speed, gravity,
-         jumpStrength, numClips);
+      Gravity gravityEnabled, bool leader, double speed, int gravity,
+      double jumpStrength, int numClips, int levelWidth, int levelHeight) {
+   Figure::setFigure(x, y, image, screen, gravityEnabled, leader, speed,
+         gravity, jumpStrength, numClips, levelWidth, levelHeight);
 
    if (posDim.w > posDim.h)
       r = posDim.w / 2;
    else
       r = posDim.h / 2;
+
+   if (DEBUG_PRIVATES)
+      debug();
 }
 
 int CircFigure::getR() {
    return r;
 }
 
-void CircFigure::show(SDL_Rect* clip) {
+void CircFigure::show(SDL_Rect* otherCamera) {
    if (numClips > 0) {
       if (v.x < 0) {
          status = LEFT;
@@ -582,223 +702,235 @@ void CircFigure::show(SDL_Rect* clip) {
       if (animationFrame >= numClips)
          animationFrame = 0;
 
-      if (status == LEFT)
-         applySurface(posDim.x - r, posDim.y - r, *image, screen,
-               &cl[static_cast<int>(animationFrame)]);
-      else if (status == RIGHT)
-         applySurface(posDim.x - r, posDim.y - r, *image, screen,
-               &cr[static_cast<int>(animationFrame)]);
+      if (leader) {
+         if (status == LEFT)
+            applySurface(posDim.x - r - camera->x, posDim.y - r - camera->y,
+                  *image, screen, &cl[static_cast<int>(animationFrame)]);
+         else if (status == RIGHT)
+            applySurface(posDim.x - r - camera->x, posDim.y - r - camera->y,
+                  *image, screen, &cr[static_cast<int>(animationFrame)]);
+      }
+      else {
+         if (status == LEFT)
+            applySurface(posDim.x - r - otherCamera->x,
+                  posDim.y - r - otherCamera->y, *image, screen,
+                  &cl[static_cast<int>(animationFrame)]);
+         else if (status == RIGHT)
+            applySurface(posDim.x - r - otherCamera->x,
+                  posDim.y - r - otherCamera->y, *image, screen,
+                  &cr[static_cast<int>(animationFrame)]);
+      }
    }
 }
 
 bool CircFigure::checkCollision(RectFigure* r) {
-   int cx, cy;
+int cx, cy;
 
-   if (posDim.x < r->getX())
-      cx = r->getX();
-   else if (posDim.x > r->getX() + r->getWidth())
-      cx = r->getX() + r->getWidth();
-   else
-      cx = posDim.x;
+if (posDim.x < r->getX())
+   cx = r->getX();
+else if (posDim.x > r->getX() + r->getWidth())
+   cx = r->getX() + r->getWidth();
+else
+   cx = posDim.x;
 
-   if (posDim.y < r->getY())
-      cy = r->getY();
-   else if (posDim.y > r->getY() + r->getHeight())
-      cy = r->getY() + r->getHeight();
-   else
-      cy = posDim.y;
+if (posDim.y < r->getY())
+   cy = r->getY();
+else if (posDim.y > r->getY() + r->getHeight())
+   cy = r->getY() + r->getHeight();
+else
+   cy = posDim.y;
 
-   Point p1 = { posDim.x, posDim.y };
-   Point p2 = { cx, cy };
-   if (dist(p1, p2) < this->r)
-      return true;
+Point p1 = { posDim.x, posDim.y };
+Point p2 = { cx, cy };
+if (dist(p1, p2) < this->r)
+   return true;
 
-   return false;
+return false;
 }
 
 bool CircFigure::checkCollision(CircFigure* c) {
-   Point thisCenter = { posDim.x, posDim.y };
-   Point otherCenter = { c->posDim.x, c->posDim.y };
+Point thisCenter = { posDim.x, posDim.y };
+Point otherCenter = { c->posDim.x, c->posDim.y };
 
-   if (dist(thisCenter, otherCenter) < this->r + c->r) {
-      return true;
-   }
-
-   return false;
-}
-
-double dist(Point p1, Point p2) {
-   return sqrt(pow(p2.x - p1.x, 2) + pow(p2.y - p1.y, 2));
-}
-
-SDL_Surface* optimizeImage(SDL_Surface* s) {
-   SDL_Surface* optImg = SDL_DisplayFormat(s);
-   if (optImg == NULL)
-      throw ConversionException();
-
-   SDL_FreeSurface(s);
-   return optImg;
-}
-
-void setColorKey(Surface::Color ck, SDL_Surface* s) {
-   Uint32 colorkey;
-
-   SDL_Color c = parseColor(ck);
-   colorkey = SDL_MapRGB(s->format, c.r, c.g, c.b);
-   SDL_SetColorKey(s, SDL_SRCCOLORKEY, colorkey);
-}
-
-SDL_Color setRGBColor(int r, int g, int b) {
-   SDL_Color c = { r, g, b };
-   return c;
-}
-
-SDL_Color parseColor(Surface::Color color) {
-   SDL_Color c;
-   switch (color) {
-   case Surface::NONE:
-      c = setRGBColor(0, 0, 0);
-      break;
-   case Surface::RED:
-      c = setRGBColor(255, 0, 0);
-      break;
-   case Surface::GREEN:
-      c = setRGBColor(0, 255, 0);
-      break;
-   case Surface::BLUE:
-      c = setRGBColor(0, 0, 255);
-      break;
-   case Surface::CYAN:
-      c = setRGBColor(0, 255, 255);
-      break;
-   case Surface::BLACK:
-      c = setRGBColor(0, 0, 0);
-      break;
-   case Surface::WHITE:
-      c = setRGBColor(255, 255, 255);
-      break;
-   default:
-      throw InvalidColorException();
-      break;
-   }
-
-   return c;
-}
-
-SDL_Surface* loadImage(string filename, Surface::Color ck) {
-   SDL_Surface* loadImg = IMG_Load(filename.c_str());
-   if (loadImg == NULL)
-      throw LoadImageException();
-   else {
-      SDL_Surface* optImg = optimizeImage(loadImg);
-
-      if (ck != Surface::NONE)
-         setColorKey(ck, optImg);
-
-      return optImg;
-   }
-}
-
-SDL_Surface* loadText(string pathToTTF, int size, Surface::Color color,
-      string msg) {
-   TTF_Font* font = TTF_OpenFont(pathToTTF.c_str(), size);
-   if (font == NULL)
-      throw LoadTextException();
-
-   SDL_Color c = parseColor(color);
-   if (msg == "")
-      msg = " ";
-
-   SDL_Surface* text = TTF_RenderText_Solid(font, msg.c_str(), c);
-   if (text == NULL)
-      throw LoadTextException();
-
-   TTF_CloseFont(font);
-
-   return text;
-}
-
-Mix_Music* loadMusic(string music) {
-   Mix_Music* m = Mix_LoadMUS(music.c_str());
-   if (m == NULL)
-      throw LoadMusicException();
-
-   return m;
-}
-
-Mix_Chunk* loadChunk(string chunk) {
-   Mix_Chunk* c = Mix_LoadWAV(chunk.c_str());
-   if (c == NULL)
-      throw LoadChunkException();
-
-   return c;
-}
-
-void applySurface(int x, int y, Surface& source, SDL_Surface* destination,
-      SDL_Rect* clip) {
-   SDL_Rect offset;
-
-   offset.x = x;
-   offset.y = y;
-   SDL_BlitSurface(source.getSDL_Surface(), clip, destination, &offset);
-}
-
-void applySurfaceMiddle(Surface& source, SDL_Surface* destination,
-      SDL_Rect* clip) {
-   applySurface((destination->w - source.getSDL_Surface()->w) / 2,
-         (destination->h - source.getSDL_Surface()->h) / 2, source, destination,
-         clip);
-}
-
-void flip(SDL_Surface* screen) {
-   if (SDL_Flip(screen) < 0)
-      throw FlipException();
-}
-
-int getVerticalMiddlePosition(Surface& object, SDL_Surface* screen) {
-   return (screen->h - object.getSDL_Surface()->h) / 2;
-}
-
-int getHorizontalMiddlePosition(Surface& object, SDL_Surface* screen) {
-   return (screen->w - object.getSDL_Surface()->w) / 2;
-}
-
-bool isHeldDown(SDL_Event& event) {
-   while (SDL_PollEvent(&event)) {
-      if (event.type == SDL_KEYUP)
-         return false;
-   }
+if (dist(thisCenter, otherCenter) < this->r + c->r) {
    return true;
 }
 
+return false;
+}
+
+double dist(Point p1, Point p2) {
+return sqrt(pow(p2.x - p1.x, 2) + pow(p2.y - p1.y, 2));
+}
+
+SDL_Surface* optimizeImage(SDL_Surface* s) {
+SDL_Surface* optImg = SDL_DisplayFormat(s);
+if (optImg == NULL)
+   throw ConversionException();
+
+SDL_FreeSurface(s);
+return optImg;
+}
+
+void setColorKey(Surface::Color ck, SDL_Surface* s) {
+Uint32 colorkey;
+
+SDL_Color c = parseColor(ck);
+colorkey = SDL_MapRGB(s->format, c.r, c.g, c.b);
+SDL_SetColorKey(s, SDL_SRCCOLORKEY, colorkey);
+}
+
+SDL_Color setRGBColor(int r, int g, int b) {
+SDL_Color c = { r, g, b };
+return c;
+}
+
+SDL_Color parseColor(Surface::Color color) {
+SDL_Color c;
+switch (color) {
+case Surface::NONE:
+   c = setRGBColor(0, 0, 0);
+   break;
+case Surface::RED:
+   c = setRGBColor(255, 0, 0);
+   break;
+case Surface::GREEN:
+   c = setRGBColor(0, 255, 0);
+   break;
+case Surface::BLUE:
+   c = setRGBColor(0, 0, 255);
+   break;
+case Surface::CYAN:
+   c = setRGBColor(0, 255, 255);
+   break;
+case Surface::BLACK:
+   c = setRGBColor(0, 0, 0);
+   break;
+case Surface::WHITE:
+   c = setRGBColor(255, 255, 255);
+   break;
+default:
+   throw InvalidColorException();
+   break;
+}
+
+return c;
+}
+
+SDL_Surface* loadImage(string filename, Surface::Color ck) {
+SDL_Surface* loadImg = IMG_Load(filename.c_str());
+if (loadImg == NULL)
+   throw LoadImageException();
+else {
+   SDL_Surface* optImg = optimizeImage(loadImg);
+
+   if (ck != Surface::NONE)
+      setColorKey(ck, optImg);
+
+   return optImg;
+}
+}
+
+SDL_Surface* loadText(string pathToTTF, int size, Surface::Color color,
+   string msg) {
+TTF_Font* font = TTF_OpenFont(pathToTTF.c_str(), size);
+if (font == NULL)
+   throw LoadTextException();
+
+SDL_Color c = parseColor(color);
+if (msg == "")
+   msg = " ";
+
+SDL_Surface* text = TTF_RenderText_Solid(font, msg.c_str(), c);
+if (text == NULL)
+   throw LoadTextException();
+
+TTF_CloseFont(font);
+
+return text;
+}
+
+Mix_Music* loadMusic(string music) {
+Mix_Music* m = Mix_LoadMUS(music.c_str());
+if (m == NULL)
+   throw LoadMusicException();
+
+return m;
+}
+
+Mix_Chunk* loadChunk(string chunk) {
+Mix_Chunk* c = Mix_LoadWAV(chunk.c_str());
+if (c == NULL)
+   throw LoadChunkException();
+
+return c;
+}
+
+void applySurface(int x, int y, Surface& source, SDL_Surface* destination,
+   SDL_Rect* clip) {
+SDL_Rect offset;
+
+offset.x = x;
+offset.y = y;
+SDL_BlitSurface(source.getSDL_Surface(), clip, destination, &offset);
+}
+
+void applySurfaceMiddle(Surface& source, SDL_Surface* destination,
+   SDL_Rect* clip) {
+applySurface((destination->w - source.getSDL_Surface()->w) / 2,
+      (destination->h - source.getSDL_Surface()->h) / 2, source, destination,
+      clip);
+}
+
+void flip(SDL_Surface* screen) {
+if (SDL_Flip(screen) < 0)
+   throw FlipException();
+}
+
+int getVerticalMiddlePosition(Surface& object, SDL_Surface* screen) {
+return (screen->h - object.getSDL_Surface()->h) / 2;
+}
+
+int getHorizontalMiddlePosition(Surface& object, SDL_Surface* screen) {
+return (screen->w - object.getSDL_Surface()->w) / 2;
+}
+
+bool isHeldDown(SDL_Event& event) {
+while (SDL_PollEvent(&event)) {
+   if (event.type == SDL_KEYUP)
+      return false;
+}
+return true;
+}
+
 void fillScreen(SDL_Surface* screen, Surface::Color color) {
-   SDL_Color c = parseColor(color);
-   SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, c.r, c.g, c.b));
+SDL_Color c = parseColor(color);
+SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, c.r, c.g, c.b));
 }
 
 SDL_Surface* init(int w, int h, string title) {
-   SDL_Surface* screen = NULL;
+SDL_Surface* screen = NULL;
 
-   if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
-      throw InitException();
+if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+   throw InitException();
 
-   screen = SDL_SetVideoMode(w, h, 32, SDL_SWSURFACE);
-   if (screen < 0)
-      throw SetVideoModeException();
+screen = SDL_SetVideoMode(w, h, 32, SDL_SWSURFACE);
+if (screen < 0)
+   throw SetVideoModeException();
 
-   if (TTF_Init() < 0)
-      throw InitException();
+if (TTF_Init() < 0)
+   throw InitException();
 
-   if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096) < 0)
-      throw InitException();
+if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096) < 0)
+   throw InitException();
 
-   SDL_WM_SetCaption(title.c_str(), NULL);
+SDL_WM_SetCaption(title.c_str(), NULL);
 
-   return screen;
+return screen;
 }
 
 void cleanUp() {
-   Mix_CloseAudio();
-   TTF_Quit();
-   SDL_Quit();
+Mix_CloseAudio();
+TTF_Quit();
+SDL_Quit();
 }
