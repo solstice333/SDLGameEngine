@@ -724,213 +724,253 @@ void CircFigure::show(SDL_Rect* otherCamera) {
 }
 
 bool CircFigure::checkCollision(RectFigure* r) {
-int cx, cy;
+   int cx, cy;
 
-if (posDim.x < r->getX())
-   cx = r->getX();
-else if (posDim.x > r->getX() + r->getWidth())
-   cx = r->getX() + r->getWidth();
-else
-   cx = posDim.x;
+   if (posDim.x < r->getX())
+      cx = r->getX();
+   else if (posDim.x > r->getX() + r->getWidth())
+      cx = r->getX() + r->getWidth();
+   else
+      cx = posDim.x;
 
-if (posDim.y < r->getY())
-   cy = r->getY();
-else if (posDim.y > r->getY() + r->getHeight())
-   cy = r->getY() + r->getHeight();
-else
-   cy = posDim.y;
+   if (posDim.y < r->getY())
+      cy = r->getY();
+   else if (posDim.y > r->getY() + r->getHeight())
+      cy = r->getY() + r->getHeight();
+   else
+      cy = posDim.y;
 
-Point p1 = { posDim.x, posDim.y };
-Point p2 = { cx, cy };
-if (dist(p1, p2) < this->r)
-   return true;
+   Point p1 = { posDim.x, posDim.y };
+   Point p2 = { cx, cy };
+   if (dist(p1, p2) < this->r)
+      return true;
 
-return false;
+   return false;
 }
 
 bool CircFigure::checkCollision(CircFigure* c) {
-Point thisCenter = { posDim.x, posDim.y };
-Point otherCenter = { c->posDim.x, c->posDim.y };
+   Point thisCenter = { posDim.x, posDim.y };
+   Point otherCenter = { c->posDim.x, c->posDim.y };
 
-if (dist(thisCenter, otherCenter) < this->r + c->r) {
-   return true;
+   if (dist(thisCenter, otherCenter) < this->r + c->r) {
+      return true;
+   }
+
+   return false;
 }
 
-return false;
+StringInput::StringInput(string ttfFile, int fontSize, Surface::Color fontColor,
+      SDL_Surface* screen) :
+      str(""), ttfFile(ttfFile), fontSize(fontSize), fontColor(fontColor), screen(
+            screen), text(ttfFile, fontSize, fontColor, "") {
+   SDL_EnableUNICODE(SDL_ENABLE);
+}
+
+void StringInput::handleInput(SDL_Event& event) {
+   if (event.type == SDL_KEYDOWN) {
+      string temp = str;
+
+      if (str.length() <= 16) {
+         if (event.key.keysym.unicode == (Uint16) ' ')
+            str += (char) event.key.keysym.unicode;
+         else if ((event.key.keysym.unicode >= (Uint16) '0'
+               && event.key.keysym.unicode <= (Uint16) '9')
+               || (event.key.keysym.unicode >= (Uint16) 'A'
+                     && event.key.keysym.unicode <= (Uint16) 'Z')
+               || (event.key.keysym.unicode >= (Uint16) 'a'
+                     && event.key.keysym.unicode <= (Uint16) 'z'))
+            str += (char) event.key.keysym.unicode;
+      }
+
+      if (event.key.keysym.sym == SDLK_BACKSPACE && str.length() > 0) {
+         str.erase(str.length() - 1);
+      }
+
+      if (str != temp)
+         text.setSDL_Surface(ttfFile, fontSize, fontColor, str);
+   }
+}
+
+void StringInput::showCentered() {
+   applySurfaceMiddle(text, screen);
+}
+
+StringInput::~StringInput() {
+   SDL_EnableUNICODE(SDL_DISABLE);
 }
 
 double dist(Point p1, Point p2) {
-return sqrt(pow(p2.x - p1.x, 2) + pow(p2.y - p1.y, 2));
+   return sqrt(pow(p2.x - p1.x, 2) + pow(p2.y - p1.y, 2));
 }
 
 SDL_Surface* optimizeImage(SDL_Surface* s) {
-SDL_Surface* optImg = SDL_DisplayFormat(s);
-if (optImg == NULL)
-   throw ConversionException();
+   SDL_Surface* optImg = SDL_DisplayFormat(s);
+   if (optImg == NULL)
+      throw ConversionException();
 
-SDL_FreeSurface(s);
-return optImg;
+   SDL_FreeSurface(s);
+   return optImg;
 }
 
 void setColorKey(Surface::Color ck, SDL_Surface* s) {
-Uint32 colorkey;
+   Uint32 colorkey;
 
-SDL_Color c = parseColor(ck);
-colorkey = SDL_MapRGB(s->format, c.r, c.g, c.b);
-SDL_SetColorKey(s, SDL_SRCCOLORKEY, colorkey);
+   SDL_Color c = parseColor(ck);
+   colorkey = SDL_MapRGB(s->format, c.r, c.g, c.b);
+   SDL_SetColorKey(s, SDL_SRCCOLORKEY, colorkey);
 }
 
 SDL_Color setRGBColor(int r, int g, int b) {
-SDL_Color c = { r, g, b };
-return c;
+   SDL_Color c = { r, g, b };
+   return c;
 }
 
 SDL_Color parseColor(Surface::Color color) {
-SDL_Color c;
-switch (color) {
-case Surface::NONE:
-   c = setRGBColor(0, 0, 0);
-   break;
-case Surface::RED:
-   c = setRGBColor(255, 0, 0);
-   break;
-case Surface::GREEN:
-   c = setRGBColor(0, 255, 0);
-   break;
-case Surface::BLUE:
-   c = setRGBColor(0, 0, 255);
-   break;
-case Surface::CYAN:
-   c = setRGBColor(0, 255, 255);
-   break;
-case Surface::BLACK:
-   c = setRGBColor(0, 0, 0);
-   break;
-case Surface::WHITE:
-   c = setRGBColor(255, 255, 255);
-   break;
-default:
-   throw InvalidColorException();
-   break;
-}
+   SDL_Color c;
+   switch (color) {
+   case Surface::NONE:
+      c = setRGBColor(0, 0, 0);
+      break;
+   case Surface::RED:
+      c = setRGBColor(255, 0, 0);
+      break;
+   case Surface::GREEN:
+      c = setRGBColor(0, 255, 0);
+      break;
+   case Surface::BLUE:
+      c = setRGBColor(0, 0, 255);
+      break;
+   case Surface::CYAN:
+      c = setRGBColor(0, 255, 255);
+      break;
+   case Surface::BLACK:
+      c = setRGBColor(0, 0, 0);
+      break;
+   case Surface::WHITE:
+      c = setRGBColor(255, 255, 255);
+      break;
+   default:
+      throw InvalidColorException();
+      break;
+   }
 
-return c;
+   return c;
 }
 
 SDL_Surface* loadImage(string filename, Surface::Color ck) {
-SDL_Surface* loadImg = IMG_Load(filename.c_str());
-if (loadImg == NULL)
-   throw LoadImageException();
-else {
-   SDL_Surface* optImg = optimizeImage(loadImg);
+   SDL_Surface* loadImg = IMG_Load(filename.c_str());
+   if (loadImg == NULL)
+      throw LoadImageException();
+   else {
+      SDL_Surface* optImg = optimizeImage(loadImg);
 
-   if (ck != Surface::NONE)
-      setColorKey(ck, optImg);
+      if (ck != Surface::NONE)
+         setColorKey(ck, optImg);
 
-   return optImg;
-}
+      return optImg;
+   }
 }
 
 SDL_Surface* loadText(string pathToTTF, int size, Surface::Color color,
-   string msg) {
-TTF_Font* font = TTF_OpenFont(pathToTTF.c_str(), size);
-if (font == NULL)
-   throw LoadTextException();
+      string msg) {
+   TTF_Font* font = TTF_OpenFont(pathToTTF.c_str(), size);
+   if (font == NULL)
+      throw LoadTextException();
 
-SDL_Color c = parseColor(color);
-if (msg == "")
-   msg = " ";
+   SDL_Color c = parseColor(color);
+   if (msg == "")
+      msg = " ";
 
-SDL_Surface* text = TTF_RenderText_Solid(font, msg.c_str(), c);
-if (text == NULL)
-   throw LoadTextException();
+   SDL_Surface* text = TTF_RenderText_Solid(font, msg.c_str(), c);
+   if (text == NULL)
+      throw LoadTextException();
 
-TTF_CloseFont(font);
+   TTF_CloseFont(font);
 
-return text;
+   return text;
 }
 
 Mix_Music* loadMusic(string music) {
-Mix_Music* m = Mix_LoadMUS(music.c_str());
-if (m == NULL)
-   throw LoadMusicException();
+   Mix_Music* m = Mix_LoadMUS(music.c_str());
+   if (m == NULL)
+      throw LoadMusicException();
 
-return m;
+   return m;
 }
 
 Mix_Chunk* loadChunk(string chunk) {
-Mix_Chunk* c = Mix_LoadWAV(chunk.c_str());
-if (c == NULL)
-   throw LoadChunkException();
+   Mix_Chunk* c = Mix_LoadWAV(chunk.c_str());
+   if (c == NULL)
+      throw LoadChunkException();
 
-return c;
+   return c;
 }
 
 void applySurface(int x, int y, Surface& source, SDL_Surface* destination,
-   SDL_Rect* clip) {
-SDL_Rect offset;
+      SDL_Rect* clip) {
+   SDL_Rect offset;
 
-offset.x = x;
-offset.y = y;
-SDL_BlitSurface(source.getSDL_Surface(), clip, destination, &offset);
+   offset.x = x;
+   offset.y = y;
+   SDL_BlitSurface(source.getSDL_Surface(), clip, destination, &offset);
 }
 
 void applySurfaceMiddle(Surface& source, SDL_Surface* destination,
-   SDL_Rect* clip) {
-applySurface((destination->w - source.getSDL_Surface()->w) / 2,
-      (destination->h - source.getSDL_Surface()->h) / 2, source, destination,
-      clip);
+      SDL_Rect* clip) {
+   applySurface((destination->w - source.getSDL_Surface()->w) / 2,
+         (destination->h - source.getSDL_Surface()->h) / 2, source, destination,
+         clip);
 }
 
 void flip(SDL_Surface* screen) {
-if (SDL_Flip(screen) < 0)
-   throw FlipException();
+   if (SDL_Flip(screen) < 0)
+      throw FlipException();
 }
 
 int getVerticalMiddlePosition(Surface& object, SDL_Surface* screen) {
-return (screen->h - object.getSDL_Surface()->h) / 2;
+   return (screen->h - object.getSDL_Surface()->h) / 2;
 }
 
 int getHorizontalMiddlePosition(Surface& object, SDL_Surface* screen) {
-return (screen->w - object.getSDL_Surface()->w) / 2;
+   return (screen->w - object.getSDL_Surface()->w) / 2;
 }
 
 bool isHeldDown(SDL_Event& event) {
-while (SDL_PollEvent(&event)) {
-   if (event.type == SDL_KEYUP)
-      return false;
-}
-return true;
+   while (SDL_PollEvent(&event)) {
+      if (event.type == SDL_KEYUP)
+         return false;
+   }
+   return true;
 }
 
 void fillScreen(SDL_Surface* screen, Surface::Color color) {
-SDL_Color c = parseColor(color);
-SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, c.r, c.g, c.b));
+   SDL_Color c = parseColor(color);
+   SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, c.r, c.g, c.b));
 }
 
 SDL_Surface* init(int w, int h, string title) {
-SDL_Surface* screen = NULL;
+   SDL_Surface* screen = NULL;
 
-if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
-   throw InitException();
+   if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+      throw InitException();
 
-screen = SDL_SetVideoMode(w, h, 32, SDL_SWSURFACE);
-if (screen < 0)
-   throw SetVideoModeException();
+   screen = SDL_SetVideoMode(w, h, 32, SDL_SWSURFACE);
+   if (screen < 0)
+      throw SetVideoModeException();
 
-if (TTF_Init() < 0)
-   throw InitException();
+   if (TTF_Init() < 0)
+      throw InitException();
 
-if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096) < 0)
-   throw InitException();
+   if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096) < 0)
+      throw InitException();
 
-SDL_WM_SetCaption(title.c_str(), NULL);
+   SDL_WM_SetCaption(title.c_str(), NULL);
 
-return screen;
+   return screen;
 }
 
 void cleanUp() {
-Mix_CloseAudio();
-TTF_Quit();
-SDL_Quit();
+   Mix_CloseAudio();
+   TTF_Quit();
+   SDL_Quit();
 }

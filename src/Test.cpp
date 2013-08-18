@@ -32,11 +32,18 @@ const int G = 2;
 const int CNC = 1;
 const int FNC = 4;
 
-const bool FOO = true;  //change this from true or false to choose between a stick figure
-                        //or dot ("FOO = true" is the stick figure)
+const string TTF_PATH = "fonts/lazy.ttf";
+const int FONT_SIZE = 28;
+const Surface::Color FONT_COLOR = Surface::BLACK;
+
+const bool FOO = true; //change this from true or false to choose between a stick figure
+//or dot ("FOO = true" is the stick figure)
 
 const Figure::Gravity gravEnDis = Figure::GRAVITY_ENABLED;
 //const Figure::Gravity gravEnDis = Figure::GRAVITY_DISABLED;
+
+const bool TEST_GRAPHICS = true;
+const bool TEST_STRING_INPUT = true;
 
 /*
  * Description: This tests the scrolling, collision detection, static figures within the level,
@@ -44,81 +51,130 @@ const Figure::Gravity gravEnDis = Figure::GRAVITY_ENABLED;
  * Figure::Gravity gravEnDis for Enabling and Disabling gravity
  */
 int main(int argc, char* argv[]) {
-   SDL_Surface* screen = init(SCREEN_WIDTH, SCREEN_HEIGHT, "SDL Scrolling");
+   if (TEST_GRAPHICS) {
+      SDL_Surface* screen = init(SCREEN_WIDTH, SCREEN_HEIGHT, "SDL Scrolling");
 
-   Surface bgnd("images/bgnd.jpg");
-   Surface dot("images/dot.png", Surface::CYAN);
-   Surface foo("images/foo.png", Surface::CYAN);
-   Surface rect("images/rectangle.png");
+      Surface bgnd("images/bgnd.jpg");
+      Surface dot("images/dot.png", Surface::CYAN);
+      Surface foo("images/foo.png", Surface::CYAN);
+      Surface rect("images/rectangle.png");
 
-   RectFigure rf1(300, 525, rect, screen, Figure::GRAVITY_DISABLED, false, 0, 0,
-         0, 1, LEVEL_WIDTH, LEVEL_HEIGHT);
-   RectFigure rf2(500, 125, rect, screen, Figure::GRAVITY_DISABLED, false, 0, 0,
-         0, 1, LEVEL_WIDTH, LEVEL_HEIGHT);
-   CircFigure cf1(700, 525, dot, screen, Figure::GRAVITY_DISABLED, false, 0, 0,
-         0, 1, LEVEL_WIDTH, LEVEL_HEIGHT);
-   CircFigure cf2(900, 350, dot, screen, Figure::GRAVITY_DISABLED, false, 0, 0,
-         0, 1, LEVEL_WIDTH, LEVEL_HEIGHT);
+      RectFigure rf1(300, 525, rect, screen, Figure::GRAVITY_DISABLED, false, 0,
+            0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT);
+      RectFigure rf2(500, 125, rect, screen, Figure::GRAVITY_DISABLED, false, 0,
+            0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT);
+      CircFigure cf1(700, 525, dot, screen, Figure::GRAVITY_DISABLED, false, 0,
+            0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT);
+      CircFigure cf2(900, 350, dot, screen, Figure::GRAVITY_DISABLED, false, 0,
+            0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT);
 
-   RectFigure rf;
-   CircFigure cf;
+      RectFigure rf;
+      CircFigure cf;
 
-   if (FOO)
-      rf.setFigure(100, 300, foo, screen, gravEnDis, true, FS, G,
-            FJS, FNC, LEVEL_WIDTH, LEVEL_HEIGHT);
-   else
-      cf.setFigure(100, 300, dot, screen, gravEnDis, true, CS, G,
-            CJS, CNC, LEVEL_WIDTH, LEVEL_HEIGHT);
+      if (FOO)
+         rf.setFigure(100, 300, foo, screen, gravEnDis, true, FS, G, FJS, FNC,
+               LEVEL_WIDTH, LEVEL_HEIGHT);
+      else
+         cf.setFigure(100, 300, dot, screen, gravEnDis, true, CS, G, CJS, CNC,
+               LEVEL_WIDTH, LEVEL_HEIGHT);
 
-   bool quit = false;
-   SDL_Event event;
-   Timer timer;
-   vector<Figure*> collisions;
-   collisions.push_back(&rf1);
-   collisions.push_back(&rf2);
-   collisions.push_back(&cf1);
-   collisions.push_back(&cf2);
+      bool quit = false;
+      SDL_Event event;
+      Timer timer;
+      vector<Figure*> collisions;
+      collisions.push_back(&rf1);
+      collisions.push_back(&rf2);
+      collisions.push_back(&cf1);
+      collisions.push_back(&cf2);
 
-   while (!quit) {
-      timer.start();
+      while (!quit) {
+         timer.start();
 
-      if (SDL_PollEvent(&event)) {
-         if (event.type == SDL_QUIT) {
-            quit = true;
-            break;
+         if (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+               quit = true;
+               break;
+            }
+
+            if (FOO)
+               rf.handleInput(event);
+            else
+               cf.handleInput(event);
          }
 
-         if (FOO)
-            rf.handleInput(event);
-         else
-            cf.handleInput(event);
+         if (FOO) {
+            rf.move(collisions);
+            applySurface(0, 0, bgnd, screen, rf.getCameraClip());
+            rf.show(rf.getCameraClip());
+
+            rf1.show(rf.getCameraClip());
+            rf2.show(rf.getCameraClip());
+            cf1.show(rf.getCameraClip());
+            cf2.show(rf.getCameraClip());
+
+         }
+         else {
+            cf.move(collisions);
+            applySurface(0, 0, bgnd, screen, cf.getCameraClip());
+            cf.show();
+
+            rf1.show(cf.getCameraClip());
+            rf2.show(cf.getCameraClip());
+            cf1.show(cf.getCameraClip());
+            cf2.show(cf.getCameraClip());
+         }
+
+         flip(screen);
+
+         timer.delayFrame(FRAMERATE);
       }
+   }
 
-      if (FOO) {
-         rf.move(collisions);
-         applySurface(0, 0, bgnd, screen, rf.getCameraClip());
-         rf.show(rf.getCameraClip());
+   if (TEST_STRING_INPUT) {
+      SDL_Surface* screen = init(640, 480, "SDL Getting String Input Test");
 
-         rf1.show(rf.getCameraClip());
-         rf2.show(rf.getCameraClip());
-         cf1.show(rf.getCameraClip());
-         cf2.show(rf.getCameraClip());
+      bool quit = false;
+      bool nameEntered = false;
+      SDL_Event event;
 
-      }
-      else {
-         cf.move(collisions);
-         applySurface(0, 0, bgnd, screen, cf.getCameraClip());
-         cf.show();
+      StringInput name(TTF_PATH, FONT_SIZE, FONT_COLOR, screen);
+      Surface msg(TTF_PATH, FONT_SIZE, FONT_COLOR,
+            "New High Score! Enter Name: ");
 
-         rf1.show(cf.getCameraClip());
-         rf2.show(cf.getCameraClip());
-         cf1.show(cf.getCameraClip());
-         cf2.show(cf.getCameraClip());
-      }
-
+      fillScreen(screen, Surface::WHITE);
+      applySurface(getHorizontalMiddlePosition(msg, screen), 100, msg, screen);
       flip(screen);
 
-      timer.delayFrame(FRAMERATE);
+      while (!quit) {
+         if (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+               quit = true;
+               break;
+            }
+
+            if (!nameEntered) {
+               name.handleInput(event);
+
+               if (event.type == SDL_KEYDOWN
+                     && event.key.keysym.sym == SDLK_RETURN) {
+                  nameEntered = true;
+                  msg.setSDL_Surface(TTF_PATH, FONT_SIZE, FONT_COLOR,
+                        "Rank 1st: ");
+                  quit = true;
+               }
+            }
+
+            fillScreen(screen, Surface::WHITE);
+            applySurface(getHorizontalMiddlePosition(msg, screen), 100, msg,
+                  screen);
+            name.showCentered();
+
+            flip(screen);
+
+            if (nameEntered)
+               SDL_Delay(500);
+         }
+      }
    }
 
    cleanUp();

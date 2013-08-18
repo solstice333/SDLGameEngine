@@ -928,6 +928,72 @@ public:
 };
 
 /*
+ * Description: Convenience class for accepting user input and outputting text
+ * to the screen
+ */
+class StringInput {
+private:
+
+   /*
+    * Description: string str is the string to be outputted to the screen
+    */
+   string str;
+
+   /*
+    * Description: text is the Surface to be outputted to the screen
+    */
+   Surface text;
+
+   /*
+    * Description: screen is the software display
+    */
+   SDL_Surface* screen;
+
+   /*
+    * Description: ttfFile is the relative path to the ttf file
+    */
+   string ttfFile;
+
+   /*
+    * Description: fontSize is the size of the font
+    */
+   int fontSize;
+
+   /*
+    * Description: fontColor is the color of the font
+    */
+   Surface::Color fontColor;
+
+public:
+
+   /*
+    * Description: Constructor for StringInput
+    * Parameter: string ttfFile is the relative path to the ttf file
+    * Parameter: int fontSize is the size of the font
+    * Parameter: Surface::Color fontColor is the color of the font
+    * Parameter: SDL_Surface* screen
+    */
+   StringInput(string ttfFile, int fontSize, Surface::Color fontColor,
+         SDL_Surface* screen);
+
+   /*
+    * Description: handleInput handles all keyboard input
+    * Parameter: SDL_Event& event is the reference to an event within the event loop
+    */
+   void handleInput(SDL_Event& event);
+
+   /*
+    * Description: blits the text surface to the middle of the screen
+    */
+   void showCentered();
+
+   /*
+    * Description: clean up destructor for StringInput
+    */
+   ~StringInput();
+};
+
+/*
  * Description: returns the distance between Point p1 and Point p2
  * Parameter: Point p1 is point 1
  * Parameter: Point p2 is point 2
