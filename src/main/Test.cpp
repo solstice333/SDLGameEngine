@@ -5,7 +5,6 @@
 // Copyright   : 
 // Description : SDL Scrolling Test
 //============================================================================
-
 #include <iostream>
 #include "SDLAbstractionLayer.h"
 #include "SDL/SDL.h"
@@ -13,8 +12,8 @@
 
 using namespace std;
 
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
+const int SCREEN_WIDTH = 900;
+const int SCREEN_HEIGHT = 550;
 
 const int FRAMERATE = 30;
 
@@ -24,10 +23,10 @@ const int DOT_HEIGHT = 20;
 const int LEVEL_WIDTH = 1191;
 const int LEVEL_HEIGHT = 670;
 
-const double FS = 9;
+const double FS = 7;
 const double CS = 40;
-const double CJS = 0.7;
-const double FJS = 0.25;
+const double CJS = 0.6;
+const double FJS = 0.3;
 const int G = 2;
 const int CNC = 1;
 const int FNC = 4;
@@ -45,10 +44,9 @@ const Figure::Gravity gravEnDis = Figure::GRAVITY_ENABLED;
 const bool TEST_GRAPHICS = true;
 const bool TEST_STRING_INPUT = true;
 
-/*
- * Description: This tests the scrolling, collision detection, static figures within the level,
- * and animation. User can switch const bool FOO to true/false and comment/uncomment const
- * Figure::Gravity gravEnDis for Enabling and Disabling gravity
+/*Description: This tests the scrolling, collision detection, static figures within the level,
+ *and animation. User can switch const bool FOO to true/false and comment/uncomment const
+ *Figure::Gravity gravEnDis for Enabling and Disabling gravity
  */
 int main(int argc, char* argv[]) {
    if (TEST_GRAPHICS) {
@@ -56,7 +54,7 @@ int main(int argc, char* argv[]) {
 
       Surface bgnd("images/bgnd.jpg");
       Surface dot("images/dot.png", Surface::CYAN);
-      Surface foo("images/foo.png", Surface::CYAN);
+      Surface foo("images/Cyan_Final.png", Surface::BLACK);
       Surface rect("images/rectangle.png");
 
       RectFigure rf1(300, 525, rect, screen, Figure::GRAVITY_DISABLED, false, 0,
@@ -128,51 +126,51 @@ int main(int argc, char* argv[]) {
 
          timer.delayFrame(FRAMERATE);
       }
-   }
 
-   if (TEST_STRING_INPUT) {
-      SDL_Surface* screen = init(640, 480, "SDL Getting String Input Test");
+      if (TEST_STRING_INPUT) {
+         cout << "Getting to this block" << endl;
 
-      bool quit = false;
-      bool nameEntered = false;
-      SDL_Event event;
+         quit = false;
+         bool nameEntered = false;
 
-      StringInput name(TTF_PATH, FONT_SIZE, FONT_COLOR, screen);
-      Surface msg(TTF_PATH, FONT_SIZE, FONT_COLOR,
-            "New High Score! Enter Name: ");
+         StringInput name(TTF_PATH, FONT_SIZE, FONT_COLOR, screen);
+         Surface msg(TTF_PATH, FONT_SIZE, FONT_COLOR,
+               "New High Score! Enter Name: ");
 
-      fillScreen(screen, Surface::WHITE);
-      applySurface(getHorizontalMiddlePosition(msg, screen), 100, msg, screen);
-      flip(screen);
+         fillScreen(screen, Surface::WHITE);
+         applySurface(getHorizontalMiddlePosition(msg, screen), 100, msg,
+               screen);
+         flip(screen);
 
-      while (!quit) {
-         if (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-               quit = true;
-               break;
-            }
-
-            if (!nameEntered) {
-               name.handleInput(event);
-
-               if (event.type == SDL_KEYDOWN
-                     && event.key.keysym.sym == SDLK_RETURN) {
-                  nameEntered = true;
-                  msg.setSDL_Surface(TTF_PATH, FONT_SIZE, FONT_COLOR,
-                        "Rank 1st: ");
+         while (!quit) {
+            if (SDL_PollEvent(&event)) {
+               if (event.type == SDL_QUIT) {
                   quit = true;
+                  break;
                }
+
+               if (!nameEntered) {
+                  name.handleInput(event);
+
+                  if (event.type == SDL_KEYDOWN
+                        && event.key.keysym.sym == SDLK_RETURN) {
+                     nameEntered = true;
+                     msg.setSDL_Surface(TTF_PATH, FONT_SIZE, FONT_COLOR,
+                           "Rank 1st: ");
+                     quit = true;
+                  }
+               }
+
+               fillScreen(screen, Surface::WHITE);
+               applySurface(getHorizontalMiddlePosition(msg, screen), 100, msg,
+                     screen);
+               name.showCentered();
+
+               flip(screen);
+
+               if (nameEntered)
+                  SDL_Delay(500);
             }
-
-            fillScreen(screen, Surface::WHITE);
-            applySurface(getHorizontalMiddlePosition(msg, screen), 100, msg,
-                  screen);
-            name.showCentered();
-
-            flip(screen);
-
-            if (nameEntered)
-               SDL_Delay(500);
          }
       }
    }

@@ -4,18 +4,27 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../src/Dot.cpp \
 ../src/Exception.cpp \
 ../src/SDLAbstractionLayer.cpp \
+../src/SDLGameSavesTest.cpp \
+../src/SimpleLoadSave.cpp \
 ../src/Test.cpp 
 
 OBJS += \
+./src/Dot.o \
 ./src/Exception.o \
 ./src/SDLAbstractionLayer.o \
+./src/SDLGameSavesTest.o \
+./src/SimpleLoadSave.o \
 ./src/Test.o 
 
 CPP_DEPS += \
+./src/Dot.d \
 ./src/Exception.d \
 ./src/SDLAbstractionLayer.d \
+./src/SDLGameSavesTest.d \
+./src/SimpleLoadSave.d \
 ./src/Test.d 
 
 

@@ -47,3 +47,7 @@ const char* GravityException::what() const throw () {
 const char* FigureException::what() const throw () {
    return "Error: Invalid Figure \n";
 }
+
+const char* LoadSavedGameException::what() const throw() {
+   return "Error: Failed to load saved game \n";
+}
