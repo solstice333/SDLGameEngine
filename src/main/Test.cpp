@@ -25,8 +25,8 @@ const int LEVEL_HEIGHT = 670;
 
 const double FS = 7;
 const double CS = 40;
-const double CJS = 0.6;
-const double FJS = 0.3;
+const double CJS = 4.5;
+const double FJS = 2.5;
 const int G = 2;
 const int CNC = 1;
 const int FNC = 4;
@@ -128,8 +128,6 @@ int main(int argc, char* argv[]) {
       }
 
       if (TEST_STRING_INPUT) {
-         cout << "Getting to this block" << endl;
-
          quit = false;
          bool nameEntered = false;
 

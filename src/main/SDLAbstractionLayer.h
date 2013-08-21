@@ -409,6 +409,16 @@ protected:
    bool l, r, u, d;
 
    /*
+    * Description: true if jump is in action, false otherwise
+    */
+   bool jumpAction;
+
+   /*
+    * Description: true if Figure is in in the air, false otherwise
+    */
+   bool inAir;
+
+   /*
     * Description: describes whether a Figure is to be followed by the camera or not. If
     * followed by the camera, the Figure is considered to be the leader
     */
@@ -456,7 +466,20 @@ protected:
     *
     * Return: velocity of the Figure in the y component
     */
-   virtual int calculateGravity();
+   virtual int determineGravity();
+
+   /*
+    * Description: private method for handling jump related operations
+    * Return: velocity of the Figure in the y component
+    */
+   virtual int determineJump();
+
+   /*
+    * Description: private method for determining if bool inAir should be true or false
+    * Parameter: vector<Figure*>& other is a reference to the collision vector that hold
+    * Figure pointers to the Figures that are not to be collided with by the player Figure
+    */
+   virtual void checkIfInAir(vector<Figure*>& other);
 
    /*
     * Description: initialize function
@@ -793,7 +816,14 @@ private:
    /*
     * Description: calculates gravity with respect to circle figures
     */
-   virtual int calculateGravity();
+   virtual int determineGravity();
+
+   /*
+    * Description: private method for determining if bool inAir should be true or false
+    * Parameter: vector<Figure*>& other is a reference to the collision vector that hold
+    * Figure pointers to the Figures that are not to be collided with by the player Figure
+    */
+   virtual void checkIfInAir(vector<Figure*>& other);
 
    /*
     * Description: describes how the current x position should be updated

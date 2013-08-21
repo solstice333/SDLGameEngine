@@ -151,13 +151,48 @@ int Timer::delayFrame(int fps) {
    return delay;
 }
 
-int Figure::calculateGravity() {
-   if (posDim.y < lh - posDim.h)
-      v.y += gravity + abs(v.y * 0.01);
-   else
-      v.y = 0;
+int Figure::determineGravity() {
+   if (gravityEnabled && !u) {
+      if (posDim.y < lh - posDim.h)
+         v.y += gravity + abs(v.y * 0.01);
+      else
+         v.y = 0;
+   }
 
    return v.y;
+}
+
+int Figure::determineJump() {
+   //the greater jumpSmoothener is the smoother the jump, but possibly worse the collision
+   int jumpSmoothener = 12;
+
+   if (gravityEnabled && u && !jumpAction) {
+      jumpAction = true;
+      u = false;
+   }
+   else if (!u && gravityEnabled && jumpAction && jumpFrame < 5) {
+      v.y += abs(v.y/jumpSmoothener) ;
+      jumpFrame++;
+   }
+   else {
+      jumpFrame = 0;
+      jumpAction = false;
+   }
+
+   return v.y;
+}
+
+void Figure::checkIfInAir(vector<Figure*>& other) {
+   int count = 0;
+
+   inAir = true;
+   posDim.y += 2;
+   if ((v.y == 0 && posDim.y >= lh - posDim.h)
+         || (v.y <= gravity && isCollided(other, count)))
+      inAir = false;
+   posDim.y -= 2;
+   if (posDim.y < lh - posDim.h && v.y <= 1 && v.y >= -1)
+      inAir = true;
 }
 
 void Figure::initialize(int x, int y, double gravity, double speed,
@@ -181,6 +216,7 @@ void Figure::initialize(int x, int y, double gravity, double speed,
       this->jumpStrength = 1;
 
    this->jumpStrength = jumpStrength;
+   jumpAction = false;
 
    l = r = u = d = false;
    this->screen = screen;
@@ -245,11 +281,18 @@ void Figure::xMovement(vector<Figure*>& other) {
 }
 
 void Figure::yMovement(vector<Figure*>& other) {
-   if (gravityEnabled && !u)
-      calculateGravity();
-
    int count = 0;
 
+   //gravity considerations
+   determineGravity();
+
+   //jump action
+   determineJump();
+
+   //check if inAir is true
+   checkIfInAir(other);
+
+   //collision with boundaries or other Figures
    posDim.y += v.y;
    if (isCollided(other, count)) {
       posDim.y -= v.y;
@@ -261,15 +304,6 @@ void Figure::yMovement(vector<Figure*>& other) {
       posDim.y = lh - posDim.h;
    else if (posDim.y < 0)
       posDim.y = 0;
-
-   if (gravityEnabled && u && jumpFrame < 5) {
-      v.y -= posDim.h * speed / 100 * jumpStrength;
-      jumpFrame++;
-   }
-   else {
-      jumpFrame = 0;
-      u = false;
-   }
 }
 
 void Figure::setCamera() {
@@ -430,9 +464,13 @@ void Figure::handleInput(SDL_Event& event) {
    if (event.type == SDL_KEYDOWN) {
       switch (event.key.keysym.sym) {
       case SDLK_UP:
-         if (posDim.y > 0)
+         if ((!jumpAction && !inAir) || !gravityEnabled)
             v.y -= posDim.h * speed / 100 * jumpStrength;
+
          u = true;
+         if (inAir)
+            u = false;
+
          break;
       case SDLK_DOWN:
          v.y += posDim.h * speed / 100;
@@ -454,10 +492,9 @@ void Figure::handleInput(SDL_Event& event) {
    else if (event.type == SDL_KEYUP) {
       switch (event.key.keysym.sym) {
       case SDLK_UP:
-         if (!gravityEnabled) {
+         if (!gravityEnabled)
             v.y += posDim.h * speed / 100 * jumpStrength;
-            u = false;
-         }
+         u = false;
          break;
       case SDLK_DOWN:
          v.y -= posDim.h * speed / 100;
@@ -495,14 +532,17 @@ void Figure::move(vector<Figure*>& other) {
 }
 
 void Figure::show(SDL_Rect* otherCamera) {
+   //the greater afvalue is, the faster the animation sprites switchover
+   double afvalue = 0.25;
+
    if (numClips > 0) {
       if (v.x < 0) {
          status = LEFT;
-         animationFrame += 0.25;
+         animationFrame += afvalue;
       }
       else if (v.x > 0) {
          status = RIGHT;
-         animationFrame += 0.25;
+         animationFrame += afvalue;
       }
       else
          animationFrame = 0;
@@ -597,13 +637,28 @@ bool RectFigure::checkCollision(CircFigure* c) {
    return false;
 }
 
-int CircFigure::calculateGravity() {
-   if (posDim.y < lh - r)
-      v.y += gravity + abs(v.y * 0.01);
-   else
-      v.y = 0;
+int CircFigure::determineGravity() {
+   if (gravityEnabled && !u) {
+      if (posDim.y < lh - r)
+         v.y += gravity + abs(v.y * 0.01);
+      else
+         v.y = 0;
+   }
 
    return v.y;
+}
+
+void CircFigure::checkIfInAir(vector<Figure*>& other) {
+   int count = 0;
+
+   inAir = true;
+   posDim.y += 2;
+   if ((v.y == 0 && posDim.y >= lh - r)
+         || (v.y <= gravity && isCollided(other, count)))
+      inAir = false;
+   posDim.y -= 2;
+   if (posDim.y < lh - r && v.y <= 1 && v.y >= -1)
+      inAir = true;
 }
 
 void CircFigure::xMovement(vector<Figure*>& other) {
@@ -620,10 +675,16 @@ void CircFigure::xMovement(vector<Figure*>& other) {
 }
 
 void CircFigure::yMovement(vector<Figure*>& other) {
-   if (gravityEnabled && !u)
-      calculateGravity();
-
    int count = 0;
+
+   //gravity considerations
+   determineGravity();
+
+   //jump action
+   determineJump();
+
+   //check if inAir is true
+   checkIfInAir(other);
 
    posDim.y += v.y;
    if (isCollided(other, count)) {
@@ -636,15 +697,6 @@ void CircFigure::yMovement(vector<Figure*>& other) {
       posDim.y = lh - r;
    else if (posDim.y < r)
       posDim.y = r;
-
-   if (gravityEnabled && u && jumpFrame < 5) {
-      v.y -= posDim.h * speed / 100 * jumpStrength;
-      jumpFrame++;
-   }
-   else {
-      jumpFrame = 0;
-      u = false;
-   }
 }
 
 CircFigure::CircFigure() {
@@ -687,14 +739,17 @@ int CircFigure::getR() {
 }
 
 void CircFigure::show(SDL_Rect* otherCamera) {
+   //the greater afvalue is, the faster the animation sprites switchover
+   double afvalue = 0.25;
+
    if (numClips > 0) {
       if (v.x < 0) {
          status = LEFT;
-         animationFrame += 0.25;
+         animationFrame += afvalue;
       }
       else if (v.x > 0) {
          status = RIGHT;
-         animationFrame += 0.25;
+         animationFrame += afvalue;
       }
       else
          animationFrame = 0;

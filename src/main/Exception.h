@@ -70,4 +70,9 @@ public:
    virtual const char* what() const throw();
 };
 
+class WindowException : public exception {
+public:
+   virtual const char* what() const throw();
+};
+
 #endif

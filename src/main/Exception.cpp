@@ -51,3 +51,7 @@ const char* FigureException::what() const throw () {
 const char* LoadSavedGameException::what() const throw() {
    return "Error: Failed to load saved game \n";
 }
+
+const char* WindowException::what() const throw() {
+   return "Error: Window error \n";
+}
