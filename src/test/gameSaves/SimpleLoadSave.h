@@ -9,7 +9,7 @@
 #define SIMPLELOADSAVE_H_
 
 #include "Dot.h"
-#include "../main/Exception.h"
+#include "../../main/Exception.h"
 #include <fstream>
 
 using namespace std;

@@ -8,23 +8,19 @@
 
 #include <iostream>
 #include "SDL/SDL.h"
-#include "../main/Exception.h"
+#include "../../main/Exception.h"
 #include "Window.h"
 
 using namespace std;
 
-void init();
-
-void init() {
-   if (SDL_Init(SDL_INIT_EVERYTHING) == -1)
-      throw InitException();
-}
-
+/*
+ * Description: window management for resizing and fullscreen. Integrate into the api in
+ * late dev stages
+ */
 /*
 int main(int argc, char* argv[]) {
-   SDL_Surface* screen = NULL;
-   init();
-   Window w(screen, 640, 480);
+   SDL_Surface* screen = init(640, 480, "SDL Resizing Test");
+   Window w(screen);
 
    Surface bg("images/bgnd1.jpg");
 

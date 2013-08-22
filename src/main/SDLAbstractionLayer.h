@@ -23,6 +23,9 @@ struct Point {
    int x, y;
 };
 
+//TODO late stages - add in window management classes for windowed/fullscreen
+//TODO late stages - add in game save classes
+
 /*
  * Description: The Surface class provides easy management with instantiating SDL_Surfaces
  * and clean up. Also included, is automatic color key by sending in the Color

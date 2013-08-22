@@ -8,16 +8,15 @@
 #ifndef WINDOW_H_
 #define WINDOW_H_
 
-#include "../main/SDLAbstractionLayer.h"
+#include "../../main/SDLAbstractionLayer.h"
 
 class Window {
 private:
    bool windowed;
    bool windowOK;
    SDL_Surface*& screen;
-   SDL_Rect dims;
 public:
-   Window(SDL_Surface*& screen, int initWidth, int initHeight);
+   Window(SDL_Surface*& screen);
    void handleEvents(SDL_Event& event);
    void toggleFullscreen();
    bool error();

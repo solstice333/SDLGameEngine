@@ -10,7 +10,7 @@
 
 #include "SDL/SDL.h"
 #include "SDL/SDL_image.h"
-#include "../main/SDLAbstractionLayer.h"
+#include "../../main/SDLAbstractionLayer.h"
 
 class Dot {
 private:

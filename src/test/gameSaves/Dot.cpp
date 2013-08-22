@@ -5,7 +5,6 @@
  *      Author: knavero
  */
 #include "Dot.h"
-#include "../main/SDLAbstractionLayer.h"
 
 Dot::Dot() {
 }

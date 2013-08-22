@@ -6,18 +6,13 @@
  */
 
 #include "Window.h"
-#include "../main/Exception.h"
+#include "../../main/Exception.h"
 #include <iostream>
 
 using namespace std;
 
-Window::Window(SDL_Surface*& screen, int initWidth, int initHeight) :
+Window::Window(SDL_Surface*& screen) :
       screen(screen) {
-   this->screen = SDL_SetVideoMode(initWidth, initHeight, 32,
-   SDL_SWSURFACE);
-   dims.w = this->screen->w;
-   dims.h = this->screen->h;
-
    if (screen == NULL) {
       windowOK = false;
       throw SetVideoModeException();
