@@ -48,7 +48,6 @@ const bool TEST_STRING_INPUT = true;
  *and animation. User can switch const bool FOO to true/false and comment/uncomment const
  *Figure::Gravity gravEnDis for Enabling and Disabling gravity
  */
-/*
 int main(int argc, char* argv[]) {
    if (TEST_GRAPHICS) {
       SDL_Surface* screen = init(SCREEN_WIDTH, SCREEN_HEIGHT, "SDL Scrolling");
@@ -178,4 +177,3 @@ int main(int argc, char* argv[]) {
 
    return 0;
 }
-*/

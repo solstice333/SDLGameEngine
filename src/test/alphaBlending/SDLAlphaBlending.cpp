@@ -16,6 +16,7 @@ const int FPS = 20;
 /*
  * Description: example for alpha blending. useful for when an enemy is killed during gameplay
  */
+/*
 int main(int argc, char* argv[]) {
    SDL_Surface* screen = init(640, 480, "SDL Alpha Blending");
 
@@ -59,3 +60,4 @@ int main(int argc, char* argv[]) {
 
    return 0;
 }
+*/

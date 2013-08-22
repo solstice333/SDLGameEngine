@@ -1004,7 +1004,7 @@ void fillScreen(SDL_Surface* screen, Surface::Color color) {
 }
 
 int randRange(int low, int high) {
-   return rand() % (high - low) + low;
+   return rand() % (high + 1 - low) + low;
 }
 
 SDL_Surface* init(int w, int h, string title) {

@@ -1175,8 +1175,8 @@ bool isHeldDown(SDL_Event& event);
 void fillScreen(SDL_Surface* screen, Surface::Color color);
 
 /*
- * Description: returns a random number within the specified range. Initialize pseudo
- * random number generatior using srand(time(NULL)) or srand(SDL_GetTicks()) before
+ * Description: returns a random number within the specified range (inclusive). Initialize
+ * pseudo random number generator using srand(time(NULL)) or srand(SDL_GetTicks()) before
  * using this function
  *
  * Parameter: int low is the minimum value of the range
