@@ -1175,6 +1175,16 @@ bool isHeldDown(SDL_Event& event);
 void fillScreen(SDL_Surface* screen, Surface::Color color);
 
 /*
+ * Description: returns a random number within the specified range. Initialize pseudo
+ * random number generatior using srand(time(NULL)) or srand(SDL_GetTicks()) before
+ * using this function
+ *
+ * Parameter: int low is the minimum value of the range
+ * Parameter: int high is the maximum value of the range
+ */
+int randRange(int low, int high);
+
+/*
  * Description: init initializes all SDL subsystems, sets the video mode, and sets the caption
  * Parameter: int w is the width of the screen
  * Parameter: int h is the height of the screen

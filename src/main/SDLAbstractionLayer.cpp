@@ -1003,6 +1003,10 @@ void fillScreen(SDL_Surface* screen, Surface::Color color) {
    SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, c.r, c.g, c.b));
 }
 
+int randRange(int low, int high) {
+   return rand() % (high - low) + low;
+}
+
 SDL_Surface* init(int w, int h, string title) {
    SDL_Surface* screen = NULL;
 
