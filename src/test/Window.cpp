@@ -86,4 +86,47 @@ void Window::handleEvents(SDL_Event& event) {
       }
       cout << "screen dimensions: " << screen->w << "x" << screen->h << endl;
    }
+   //if the window focus changed
+   else if (event.type == SDL_ACTIVEEVENT) {
+      //if the window was iconfied or restored
+      if (event.active.state & SDL_APPACTIVE) {
+         //if the application is no longer active
+         if (event.active.gain == 0) {
+            SDL_WM_SetCaption("Window Event Test: Iconified", NULL);
+            cout << "minimized" << endl;
+         }
+         else {
+            SDL_WM_SetCaption("Window Event Test", NULL);
+            cout << "restored" << endl;
+         }
+      }
+   }
+   //if something happened to the kb focus
+   else if (event.active.state & SDL_APPINPUTFOCUS) {
+      if (event.active.state & SDL_APPINPUTFOCUS) {
+         if (event.active.gain == 0)
+            SDL_WM_SetCaption("Window Event Test: Keyboard focus lost", NULL);
+         else
+            SDL_WM_SetCaption("Window Event Test", NULL);
+      }
+   }
+   //if something happened to the mouse focus
+   else if (event.active.state & SDL_APPMOUSEFOCUS) {
+      if (event.active.gain == 0)
+         SDL_WM_SetCaption("Window Event Test: Mouse Focus Lost", NULL);
+      else
+         SDL_WM_SetCaption("Window Event Test", NULL);
+   }
+   //if the window's screen has been altered (by another program outside of this one)
+   else if (event.type == SDL_VIDEOEXPOSE) {
+      //update the screen
+      if (SDL_Flip(screen) == -1) {
+         windowOK = false;
+         //TODO continue implementing this here
+      }
+   }
+}
+
+bool Window::error() {
+   return !windowOK;
 }

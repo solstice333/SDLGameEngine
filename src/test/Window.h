@@ -20,7 +20,7 @@ public:
    Window(SDL_Surface*& screen, int initWidth, int initHeight);
    void handleEvents(SDL_Event& event);
    void toggleFullscreen();
-   //bool error();
+   bool error();
 };
 
 

@@ -16,12 +16,12 @@ using namespace std;
 void init();
 
 void init() {
-   if(SDL_Init(SDL_INIT_EVERYTHING) == -1)
+   if (SDL_Init(SDL_INIT_EVERYTHING) == -1)
       throw InitException();
 }
 
 /*
-int main() {
+int main(int argc, char* argv[]) {
    SDL_Surface* screen = NULL;
    init();
    Window w(screen, 640, 480);
@@ -35,8 +35,8 @@ int main() {
    while (!quit) {
       timer.start();
 
-      if(SDL_PollEvent(&event)) {
-         if(event.type == SDL_QUIT) {
+      if (SDL_PollEvent(&event)) {
+         if (event.type == SDL_QUIT) {
             quit = true;
             break;
          }
@@ -44,7 +44,13 @@ int main() {
          w.handleEvents(event);
       }
 
-      applySurface(0, 0, bg, screen);
+      if (w.error()) {
+         cout << "Error: Window error exiting" << endl;
+         return 1;
+      }
+
+      applySurface((screen->w - bg.getSDL_Surface()->w) / 2,
+            (screen->h - bg.getSDL_Surface()->h) / 2, bg, screen);
       flip(screen);
 
       timer.delayFrame(40);
@@ -52,6 +58,6 @@ int main() {
 
    cleanUp();
 
-	return 0;
+   return 0;
 }
 */
