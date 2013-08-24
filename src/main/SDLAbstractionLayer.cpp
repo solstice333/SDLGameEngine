@@ -302,8 +302,9 @@ void Figure::yMovement(vector<Figure*>& other) {
    }
    else if (posDim.y > lh - posDim.h)
       posDim.y = lh - posDim.h;
-   else if (posDim.y < 0)
-      posDim.y = 0;
+   //upper bounds
+   //else if (posDim.y < 0)
+      //posDim.y = 0;
 }
 
 void Figure::setCamera() {
@@ -695,8 +696,9 @@ void CircFigure::yMovement(vector<Figure*>& other) {
    }
    else if (posDim.y > lh - r)
       posDim.y = lh - r;
-   else if (posDim.y < r)
-      posDim.y = r;
+   //upper bounds
+   //else if (posDim.y < r)
+      //posDim.y = r;
 }
 
 CircFigure::CircFigure() {
