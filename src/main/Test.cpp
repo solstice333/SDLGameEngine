@@ -25,7 +25,7 @@ const int LEVEL_HEIGHT = 670;
 
 const double FS = 7;
 const double CS = 40;
-const double CJS = 4.5;
+const double CJS = 7;
 const double FJS = 2.5;
 const int G = 2;
 const int CNC = 1;
@@ -42,7 +42,7 @@ const Figure::Gravity gravEnDis = Figure::GRAVITY_ENABLED;
 //const Figure::Gravity gravEnDis = Figure::GRAVITY_DISABLED;
 
 const bool TEST_GRAPHICS = true;
-const bool TEST_STRING_INPUT = true;
+const bool TEST_STRING_INPUT = false;
 
 /*Description: This tests the scrolling, collision detection, static figures within the level,
  *and animation. User can switch const bool FOO to true/false and comment/uncomment const
@@ -57,24 +57,37 @@ int main(int argc, char* argv[]) {
       Surface foo("images/Cyan_Final.png", Surface::BLACK);
       Surface rect("images/rectangle.png");
 
+      Surface red("images/red.bmp", Surface::CYAN);
+      Surface blue("images/blue.bmp", Surface::CYAN);
+      Surface green("images/green.bmp", Surface::CYAN);
+      Surface shimmer("images/shimmer.bmp", Surface::CYAN);
+
       RectFigure rf1(300, 525, rect, screen, Figure::GRAVITY_DISABLED, false, 0,
-            0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT);
+            0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT, &red, &green, &blue, &shimmer);
       RectFigure rf2(500, 125, rect, screen, Figure::GRAVITY_DISABLED, false, 0,
             0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT);
       CircFigure cf1(700, 525, dot, screen, Figure::GRAVITY_DISABLED, false, 0,
             0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT);
       CircFigure cf2(900, 350, dot, screen, Figure::GRAVITY_DISABLED, false, 0,
-            0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT);
+            0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT, &red, &green, &blue, &shimmer);
 
       RectFigure rf;
       CircFigure cf;
 
       if (FOO)
          rf.setFigure(100, 300, foo, screen, gravEnDis, true, FS, G, FJS, FNC,
-               LEVEL_WIDTH, LEVEL_HEIGHT);
+               LEVEL_WIDTH, LEVEL_HEIGHT, &red, &green, &blue, &shimmer);
       else
          cf.setFigure(100, 300, dot, screen, gravEnDis, true, CS, G, CJS, CNC,
-               LEVEL_WIDTH, LEVEL_HEIGHT);
+               LEVEL_WIDTH, LEVEL_HEIGHT, &red, &green, &blue, &shimmer);
+
+      //Test constructors
+      /*
+       RectFigure rf(100, 300, foo, screen, gravEnDis, true, FS, G, FJS, FNC,
+       LEVEL_WIDTH, LEVEL_HEIGHT, &red, &green, &blue, &shimmer);
+       CircFigure cf(100, 300, dot, screen, gravEnDis, true, CS, G, CJS, CNC,
+       LEVEL_WIDTH, LEVEL_HEIGHT, &red, &green, &blue, &shimmer);
+       */
 
       bool quit = false;
       SDL_Event event;

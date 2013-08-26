@@ -24,7 +24,6 @@ C_UPPER_DEPS :=
 # Every subdirectory with source files must be described here
 SUBDIRS := \
 src/test/windowResizing \
-src/test/particleEngine \
 src/test/gameSaves \
 src/test/alphaBlending \
 src/main \

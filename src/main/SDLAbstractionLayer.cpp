@@ -6,11 +6,6 @@
 
 using namespace std;
 
-const bool DEBUG_PRIVATES = false;
-const bool DEBUG_MOVE = false;
-const bool DEBUG_HANDLE_INPUT = false;
-const bool DEBUG_CAM = false;
-
 Surface::Surface() :
       s(NULL) {
 }
@@ -151,6 +146,48 @@ int Timer::delayFrame(int fps) {
    return delay;
 }
 
+Particle::Particle(SDL_Rect posDim, Surface* p1, Surface* p2, Surface* p3,
+      Surface* p4, SDL_Surface* screen) :
+      p1(p1), p2(p2), p3(p3), p4(p4), screen(screen) {
+   //set offsets
+   this->posDim.x = posDim.x + randRange(-5, posDim.w);
+   this->posDim.y = posDim.y + randRange(-5, posDim.h);
+
+   //init animation frame
+   frame = randRange(0, 4);
+
+   //set type
+   switch (randRange(0, 2)) {
+   case 0:
+      type = this->p1;
+      break;
+   case 1:
+      type = this->p2;
+      break;
+   case 2:
+      type = this->p3;
+      break;
+   default:
+      break;
+   }
+}
+
+void Particle::show(SDL_Rect* camera) {
+   if (type != NULL)
+      applySurface(posDim.x - camera->x, posDim.y - camera->y, *type, screen);
+
+   if (frame % 2 == 0 && p4 != NULL)
+      applySurface(posDim.x - camera->x, posDim.y - camera->y, *p4, screen);
+
+   frame++;
+}
+
+bool Particle::isDead() {
+   if (frame > PARTICLE_DRAG)
+      return true;
+   return false;
+}
+
 int Figure::determineGravity() {
    if (gravityEnabled && !u) {
       if (posDim.y < lh - posDim.h)
@@ -163,15 +200,13 @@ int Figure::determineGravity() {
 }
 
 int Figure::determineJump() {
-   //the greater jumpSmoothener is the smoother the jump, but possibly worse the collision
-   int jumpSmoothener = 12;
 
    if (gravityEnabled && u && !jumpAction) {
       jumpAction = true;
       u = false;
    }
    else if (!u && gravityEnabled && jumpAction && jumpFrame < 5) {
-      v.y += abs(v.y/jumpSmoothener) ;
+      v.y += abs(v.y / JUMP_SMOOTHENER);
       jumpFrame++;
    }
    else {
@@ -197,7 +232,8 @@ void Figure::checkIfInAir(vector<Figure*>& other) {
 
 void Figure::initialize(int x, int y, double gravity, double speed,
       double jumpStrength, SDL_Surface* screen, Gravity gravityEnabled,
-      bool leader, int numClips, int levelWidth, int levelHeight) {
+      bool leader, int numClips, int levelWidth, int levelHeight, Surface* p1,
+      Surface* p2, Surface* p3, Surface* p4) {
    posDim.x = x;
    posDim.y = y;
    this->leader = leader;
@@ -251,6 +287,38 @@ void Figure::initialize(int x, int y, double gravity, double speed,
    camera->x = camera->y = 0;
    camera->w = screen->w;
    camera->h = screen->h;
+
+   particleEffects = false;
+   this->p1 = this->p2 = this->p3 = this->p4 = NULL;
+
+   if (p1 != NULL) {
+      particleEffects = true;
+      this->p1 = p1;
+   }
+   if (p2 != NULL) {
+      particleEffects = true;
+      this->p2 = p2;
+   }
+   if (p3 != NULL) {
+      particleEffects = true;
+      this->p3 = p3;
+   }
+   if (p4 != NULL) {
+      particleEffects = true;
+      this->p4 = p4;
+   }
+
+   if (particleEffects) {
+      for (int i = 0; i < TOTAL_PARTICLES; i++) {
+         particles[i] = new Particle(posDim, this->p1, this->p2, this->p3,
+               this->p4, screen);
+      }
+   }
+   else {
+      for (int i = 0; i < TOTAL_PARTICLES; i++) {
+         particles[i] = NULL;
+      }
+   }
 }
 
 void Figure::setClips(int clipWidth, int clipHeight) {
@@ -304,7 +372,7 @@ void Figure::yMovement(vector<Figure*>& other) {
       posDim.y = lh - posDim.h;
    //upper bounds
    //else if (posDim.y < 0)
-      //posDim.y = 0;
+   //posDim.y = 0;
 }
 
 void Figure::setCamera() {
@@ -386,26 +454,28 @@ Figure::Figure() {
 
 Figure::Figure(int x, int y, Surface& image, SDL_Surface* screen,
       Gravity gravityEnabled, bool leader, double speed, int gravity,
-      double jumpStrength, int numClips, int levelWidth, int levelHeight) :
+      double jumpStrength, int numClips, int levelWidth, int levelHeight,
+      Surface* p1, Surface* p2, Surface* p3, Surface* p4) :
       image(&image) {
 
    posDim.w = image.getSDL_Surface()->w / numClips;
    posDim.h = image.getSDL_Surface()->h / 2;
 
    initialize(x, y, gravity, speed, jumpStrength, screen, gravityEnabled,
-         leader, numClips, levelWidth, levelHeight);
+         leader, numClips, levelWidth, levelHeight, p1, p2, p3, p4);
 }
 
 void Figure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
       Gravity gravityEnabled, bool leader, double speed, int gravity,
-      double jumpStrength, int numClips, int levelWidth, int levelHeight) {
+      double jumpStrength, int numClips, int levelWidth, int levelHeight,
+      Surface* p1, Surface* p2, Surface* p3, Surface* p4) {
 
    posDim.w = image.getSDL_Surface()->w / numClips;
    posDim.h = image.getSDL_Surface()->h / 2;
    this->image = &image;
 
    initialize(x, y, gravity, speed, jumpStrength, screen, gravityEnabled,
-         leader, numClips, levelWidth, levelHeight);
+         leader, numClips, levelWidth, levelHeight, p1, p2, p3, p4);
 
    if (DEBUG_PRIVATES && this->className == "RectFigure")
       debug();
@@ -533,17 +603,14 @@ void Figure::move(vector<Figure*>& other) {
 }
 
 void Figure::show(SDL_Rect* otherCamera) {
-   //the greater afvalue is, the faster the animation sprites switchover
-   double afvalue = 0.25;
-
    if (numClips > 0) {
       if (v.x < 0) {
          status = LEFT;
-         animationFrame += afvalue;
+         animationFrame += AFVALUE;
       }
       else if (v.x > 0) {
          status = RIGHT;
-         animationFrame += afvalue;
+         animationFrame += AFVALUE;
       }
       else
          animationFrame = 0;
@@ -558,6 +625,9 @@ void Figure::show(SDL_Rect* otherCamera) {
          else if (status == RIGHT)
             applySurface(posDim.x - camera->x, posDim.y - camera->y, *image,
                   screen, &cr[static_cast<int>(animationFrame)]);
+
+         if (particleEffects)
+            showParticles(camera);
       }
       else {
          if (status == LEFT)
@@ -566,7 +636,21 @@ void Figure::show(SDL_Rect* otherCamera) {
          else if (status == RIGHT)
             applySurface(posDim.x - otherCamera->x, posDim.y - otherCamera->y,
                   *image, screen, &cr[static_cast<int>(animationFrame)]);
+
+         if (particleEffects)
+            showParticles(otherCamera);
       }
+   }
+}
+
+void Figure::showParticles(SDL_Rect* camera) {
+   for (int i = 0; i < TOTAL_PARTICLES; i++) {
+      if (particles[i]->isDead()) {
+         delete particles[i];
+         particles[i] = new Particle(posDim, p1, p2, p3, p4, screen);
+      }
+
+      particles[i]->show(camera);
    }
 }
 
@@ -579,18 +663,31 @@ string Figure::getClassName() {
 }
 
 Figure::~Figure() {
-   delete camera;
+   if (camera != NULL)
+      delete camera;
+
+   for (int i = 0; i < TOTAL_PARTICLES; i++) {
+      if (particles[i] != NULL)
+         delete particles[i];
+   }
 }
 
 RectFigure::RectFigure() {
+   camera = NULL;
+
+   for (int i = 0; i < TOTAL_PARTICLES; i++) {
+      particles[i] = NULL;
+   }
+
    className = "RectFigure";
 }
 
 RectFigure::RectFigure(int x, int y, Surface& image, SDL_Surface* screen,
       Gravity gravityEnabled, bool leader, double speed, int gravity,
-      double jumpStrength, int numClips, int levelWidth, int levelHeight) :
+      double jumpStrength, int numClips, int levelWidth, int levelHeight,
+      Surface* p1, Surface* p2, Surface* p3, Surface* p4) :
       Figure(x, y, image, screen, gravityEnabled, leader, speed, gravity,
-            jumpStrength, numClips, levelWidth, levelHeight) {
+            jumpStrength, numClips, levelWidth, levelHeight, p1, p2, p3, p4) {
    className = "RectFigure";
 
    if (DEBUG_PRIVATES)
@@ -698,18 +795,25 @@ void CircFigure::yMovement(vector<Figure*>& other) {
       posDim.y = lh - r;
    //upper bounds
    //else if (posDim.y < r)
-      //posDim.y = r;
+   //posDim.y = r;
 }
 
 CircFigure::CircFigure() {
+   camera = NULL;
+
+   for (int i = 0; i < TOTAL_PARTICLES; i++) {
+      particles[i] = NULL;
+   }
+
    className = "CircFigure";
 }
 
 CircFigure::CircFigure(int x, int y, Surface& image, SDL_Surface* screen,
       Gravity gravityEnabled, bool leader, double speed, int gravity,
-      double jumpStrength, int numClips, int levelWidth, int levelHeight) :
+      double jumpStrength, int numClips, int levelWidth, int levelHeight,
+      Surface* p1, Surface* p2, Surface* p3, Surface* p4) :
       Figure(x, y, image, screen, gravityEnabled, leader, speed, gravity,
-            jumpStrength, numClips, levelWidth, levelHeight) {
+            jumpStrength, numClips, levelWidth, levelHeight, p1, p2, p3, p4) {
    className = "CircFigure";
 
    if (posDim.w > posDim.h)
@@ -723,9 +827,11 @@ CircFigure::CircFigure(int x, int y, Surface& image, SDL_Surface* screen,
 
 void CircFigure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
       Gravity gravityEnabled, bool leader, double speed, int gravity,
-      double jumpStrength, int numClips, int levelWidth, int levelHeight) {
+      double jumpStrength, int numClips, int levelWidth, int levelHeight,
+      Surface* p1, Surface* p2, Surface* p3, Surface* p4) {
    Figure::setFigure(x, y, image, screen, gravityEnabled, leader, speed,
-         gravity, jumpStrength, numClips, levelWidth, levelHeight);
+         gravity, jumpStrength, numClips, levelWidth, levelHeight, p1, p2, p3,
+         p4);
 
    if (posDim.w > posDim.h)
       r = posDim.w / 2;
@@ -741,17 +847,15 @@ int CircFigure::getR() {
 }
 
 void CircFigure::show(SDL_Rect* otherCamera) {
-   //the greater afvalue is, the faster the animation sprites switchover
-   double afvalue = 0.25;
 
    if (numClips > 0) {
       if (v.x < 0) {
          status = LEFT;
-         animationFrame += afvalue;
+         animationFrame += AFVALUE;
       }
       else if (v.x > 0) {
          status = RIGHT;
-         animationFrame += afvalue;
+         animationFrame += AFVALUE;
       }
       else
          animationFrame = 0;
@@ -766,6 +870,9 @@ void CircFigure::show(SDL_Rect* otherCamera) {
          else if (status == RIGHT)
             applySurface(posDim.x - r - camera->x, posDim.y - r - camera->y,
                   *image, screen, &cr[static_cast<int>(animationFrame)]);
+
+         if (particleEffects)
+            showParticles(camera);
       }
       else {
          if (status == LEFT)
@@ -776,7 +883,27 @@ void CircFigure::show(SDL_Rect* otherCamera) {
             applySurface(posDim.x - r - otherCamera->x,
                   posDim.y - r - otherCamera->y, *image, screen,
                   &cr[static_cast<int>(animationFrame)]);
+
+         if (particleEffects)
+            showParticles(otherCamera);
       }
+   }
+}
+
+void CircFigure::showParticles(SDL_Rect* camera) {
+   SDL_Rect posDimOffset;
+   posDimOffset.x = posDim.x - r;
+   posDimOffset.y = posDim.y - r;
+   posDimOffset.w = posDim.w;
+   posDimOffset.h = posDim.h;
+
+   for (int i = 0; i < TOTAL_PARTICLES; i++) {
+      if (particles[i]->isDead()) {
+         delete particles[i];
+         particles[i] = new Particle(posDimOffset, p1, p2, p3, p4, screen);
+      }
+
+      particles[i]->show(camera);
    }
 }
 

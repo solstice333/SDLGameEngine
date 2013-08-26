@@ -9,6 +9,33 @@
 #include <vector>
 using namespace std;
 
+const bool DEBUG_PRIVATES = false;
+const bool DEBUG_MOVE = false;
+const bool DEBUG_HANDLE_INPUT = false;
+const bool DEBUG_CAM = false;
+
+/*
+ * Description: the greater AFVALUE is, the faster the animation sprites switchover
+ */
+const double AFVALUE = 0.25;
+
+/*
+ * Description: the greater JUMP_SMOOTHENER is the smoother the jump, but possibly worse
+ * the collision
+ */
+const int JUMP_SMOOTHENER = 12;
+
+/*
+ * Description: total amount of particles. The higher the amount of particles, the
+ * more particles show up on the screen.
+ */
+const int TOTAL_PARTICLES = 20;
+
+/*
+ * Description: allows for more drag of the particles
+ */
+const int PARTICLE_DRAG = 20;
+
 //struct describing current position on both x and y components
 struct Position {
    int x, y;
@@ -297,6 +324,81 @@ public:
 };
 
 /*
+ * Description: Particle Engine
+ */
+class Particle {
+private:
+   /*
+    * Description: position and dimension of where to place the particle
+    */
+   SDL_Rect posDim;
+
+   /*
+    * Description: particle frame counter
+    */
+   int frame;
+
+   /*
+    * Description: pointer to type of particle to show
+    */
+   Surface* type;
+
+   /*
+    * Description: pointer to particle 1
+    */
+   Surface* p1;
+
+   /*
+    * Description: pointer to particle 2
+    */
+   Surface* p2;
+
+   /*
+    * Description: pointer to particle 3
+    */
+   Surface* p3;
+
+   /*
+    * Description: pointer to particle 4
+    */
+   Surface* p4;
+
+   /*
+    * Description: pointer to screen
+    */
+   SDL_Surface* screen;
+
+public:
+
+   /*
+    * Description: Particle constructor
+    * Parameter: SDL_Rect posDim contains the position of where to generally place the
+    * particle and the dimensions of the source image of where the particles are to appear
+    * around
+    *
+    * Parameter: Surface* p1 is the pointer to particle 1
+    * Parameter: Surface* p2 is the pointer to particle 2
+    * Parameter: Surface* p3 is the pointer to particle 3
+    * Parameter: Surface* p4 is the pointer to particle 4
+    * Parameter: Point to screen
+    */
+   Particle(SDL_Rect posDim, Surface* p1, Surface* p2, Surface* p3, Surface* p4,
+         SDL_Surface* screen);
+
+   /*
+    * Description: Applies particle to screen
+    * Parameter: SDL_Rect* camera is the pointer to the relative camera. The relative camera
+    * is the camera that follows the leader Figure
+    */
+   void show(SDL_Rect* camera);
+
+   /*
+    * Description: Checks if the particle is dead. True is dead, false otherwise.
+    */
+   bool isDead();
+};
+
+/*
  * Description: Figure pre-declaration
  */
 class Figure;
@@ -463,6 +565,36 @@ protected:
    int lw, lh;
 
    /*
+    * Description: True if there are particle effects, false if otherwise.
+    */
+   bool particleEffects;
+
+   /*
+    * Description: pointer to particle 1
+    */
+   Surface* p1;
+
+   /*
+    * Description: Pointer to particle 2
+    */
+   Surface* p2;
+
+   /*
+    * Description: Pointer to particle 3
+    */
+   Surface* p3;
+
+   /*
+    * Description: Pointer to particle 4
+    */
+   Surface* p4;
+
+   /*
+    * Description: array of Particle pointers of size TOTAL_PARTICLES
+    */
+   Particle* particles[TOTAL_PARTICLES];
+
+   /*
     * Description: private method for calculating the velocity in the y component as a result from gravity.
     * Makes direct changes to v.y in Figure instance, and thus it is not necessary to store the return value
     * to a location.
@@ -506,10 +638,15 @@ protected:
     *
     * Parameter: int levelWidth is the width of the level
     * Parameter: int levelHeight is the height of the level
+    * Parameter: Surface* p1 is the pointer to particle 1
+    * Parameter: Surface* p2 is the pointer to particle 2
+    * Parameter: Surface* p3 is the pointer to particle 3
+    * Parameter: Surface* p4 is the pointer to particle 4
     */
    void initialize(int x, int y, double gravity, double speed,
          double jumpStrength, SDL_Surface* screen, Gravity gravityEnabled,
-         bool leader, int numClips, int levelWidth, int levelHeight);
+         bool leader, int numClips, int levelWidth, int levelHeight,
+         Surface* p1, Surface* p2, Surface* p3, Surface* p4);
 
    /*
     * Description: sets the clips to enable animation
@@ -581,11 +718,16 @@ public:
     *
     * Parameter: int levelWidth is the width of the level. Default is -1.
     * Parameter: int levelHeight is the height of the level. Default is -1.
+    * Parameter: Surface* p1 is the pointer to particle 1. Default is NULL.
+    * Parameter: Surface* p2 is the pointer to particle 2. Default is NULL.
+    * Parameter: Surface* p3 is the pointer to particle 3. Default is NULL.
+    * Parameter: Surface* p4 is the pointer to particle 4. Default is NULL.
     */
    Figure(int x, int y, Surface& image, SDL_Surface* screen,
          Gravity gravityEnabled, bool leader = false, double speed = 5,
          int gravity = 1, double jumpStrength = 1, int numClips = 1,
-         int levelWidth = -1, int levelHeight = -1);
+         int levelWidth = -1, int levelHeight = -1, Surface* p1 = NULL,
+         Surface* p2 = NULL, Surface* p3 = NULL, Surface* p4 = NULL);
 
    /*
     * Description: sets Figure
@@ -619,11 +761,16 @@ public:
     *
     * Parameter: int levelWidth is the width of the level. Default is -1.
     * Parameter: int levelHeight is the height of the level. Default is -1.
+    * Parameter: Surface* p1 is the pointer to particle 1. Default is NULL.
+    * Parameter: Surface* p2 is the pointer to particle 2. Default is NULL.
+    * Parameter: Surface* p3 is the pointer to particle 3. Default is NULL.
+    * Parameter: Surface* p4 is the pointer to particle 4. Default is NULL.
     */
    virtual void setFigure(int x, int y, Surface& image, SDL_Surface* screen,
          Gravity gravityEnabled, bool leader = false, double speed = 5,
          int gravity = 1, double jumpStrength = 1, int numClips = 1,
-         int levelWidth = -1, int levelHeight = -1);
+         int levelWidth = -1, int levelHeight = -1, Surface* p1 = NULL,
+         Surface* p2 = NULL, Surface* p3 = NULL, Surface* p4 = NULL);
 
    /*
     * Description: obtains the width of the Figure
@@ -714,6 +861,13 @@ public:
    virtual void show(SDL_Rect* otherCamera = NULL);
 
    /*
+    * Description: applies the particles to screen
+    * Paramter: SDL_Rect* camera is the relative camera. The relative camera is the camera following the
+    * leader Figure
+    */
+   virtual void showParticles(SDL_Rect* camera);
+
+   /*
     * Description: obtains the SDL_Rect pointer to the camera belonging to the
     * associating Figure. This is used primarily for non-leader Figures that are not
     * followed by the camera. For example, RectFigure rf1 is a Figure that is not
@@ -779,11 +933,16 @@ public:
     *
     * Parameter: int levelWidth is the width of the level. Default is -1.
     * Parameter: int levelHeight is the height of the level. Default is -1.
+    * Parameter: Surface* p1 is the pointer to particle 1. Default is NULL.
+    * Parameter: Surface* p2 is the pointer to particle 2. Default is NULL.
+    * Parameter: Surface* p3 is the pointer to particle 3. Default is NULL.
+    * Parameter: Surface* p4 is the pointer to particle 4. Default is NULL.
     */
    RectFigure(int x, int y, Surface& image, SDL_Surface* screen,
          Gravity gravityEnabled, bool leader = false, double speed = 5,
          int gravity = 1, double jumpStrength = 1, int numClips = 1,
-         int levelWidth = -1, int levelHeight = -1);
+         int levelWidth = -1, int levelHeight = -1, Surface* p1 = NULL,
+         Surface* p2 = NULL, Surface* p3 = NULL, Surface* p4 = NULL);
 
    /*
     * Description: checks for RectFigure to RectFigure collision
@@ -881,11 +1040,16 @@ public:
     *
     * Parameter: int levelWidth is the width of the level. Default is -1.
     * Parameter: int levelHeight is the height of the level. Default is -1.
+    * Parameter: Surface* p1 is the pointer to particle 1. Default is NULL.
+    * Parameter: Surface* p2 is the pointer to particle 2. Default is NULL.
+    * Parameter: Surface* p3 is the pointer to particle 3. Default is NULL.
+    * Parameter: Surface* p4 is the pointer to particle 4. Default is NULL.
     */
    CircFigure(int x, int y, Surface& image, SDL_Surface* screen,
          Gravity gravityEnabled, bool leader = false, double speed = 5,
          int gravity = 1, double jumpStrength = 1, int numClips = 1,
-         int levelWidth = -1, int levelHeight = -1);
+         int levelWidth = -1, int levelHeight = -1, Surface* p1 = NULL,
+         Surface* p2 = NULL, Surface* p3 = NULL, Surface* p4 = NULL);
 
    /*
     * Description: Overloading parameterized constructor
@@ -919,11 +1083,16 @@ public:
     *
     * Parameter: int levelWidth is the width of the level. Default is -1.
     * Parameter: int levelHeight is the height of the level. Default is -1.
+    * Parameter: Surface* p1 is the pointer to particle 1. Default is NULL.
+    * Parameter: Surface* p2 is the pointer to particle 2. Default is NULL.
+    * Parameter: Surface* p3 is the pointer to particle 3. Default is NULL.
+    * Parameter: Surface* p4 is the pointer to particle 4. Default is NULL.
     */
    virtual void setFigure(int x, int y, Surface& image, SDL_Surface* screen,
          Gravity gravityEnabled, bool leader = false, double speed = 5,
          int gravity = 1, double jumpStrength = 1, int numClips = 1,
-         int levelWidth = -1, int levelHeight = -1);
+         int levelWidth = -1, int levelHeight = -1, Surface* p1 = NULL,
+         Surface* p2 = NULL, Surface* p3 = NULL, Surface* p4 = NULL);
 
    /*
     * Description: obtains the radius of the circle
@@ -942,6 +1111,13 @@ public:
     * Default value for otherCamera is NULL.
     */
    virtual void show(SDL_Rect* otherCamera = NULL);
+
+   /*
+    * Description: applies the particles to screen
+    * Paramter: SDL_Rect* camera is the relative camera. The relative camera is the camera following the
+    * leader Figure
+    */
+   virtual void showParticles(SDL_Rect* camera);
 
    /*
     * Description: checks for CircFigure to RectFigure collision
