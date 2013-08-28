@@ -23,11 +23,11 @@ const int DOT_HEIGHT = 20;
 const int LEVEL_WIDTH = 1191;
 const int LEVEL_HEIGHT = 670;
 
-const double FS = 7;
-const double CS = 40;
-const double CJS = 7;
-const double FJS = 2.5;
-const int G = 2;
+const double FS = 150;
+const double CS = 1200;
+const double CJS = 11;
+const double FJS = 5;
+const double G = 4;
 const int CNC = 1;
 const int FNC = 4;
 
@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
       Surface shimmer("images/shimmer.bmp", Surface::CYAN);
 
       RectFigure rf1(300, 525, rect, screen, Figure::GRAVITY_DISABLED, false, 0,
-            0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT, &red, &green, &blue, &shimmer);
+            0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT, &red, &shimmer);
       RectFigure rf2(500, 125, rect, screen, Figure::GRAVITY_DISABLED, false, 0,
             0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT);
       CircFigure cf1(700, 525, dot, screen, Figure::GRAVITY_DISABLED, false, 0,
@@ -98,8 +98,8 @@ int main(int argc, char* argv[]) {
       collisions.push_back(&cf1);
       collisions.push_back(&cf2);
 
+      timer.start();
       while (!quit) {
-         timer.start();
 
          if (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
@@ -114,7 +114,9 @@ int main(int argc, char* argv[]) {
          }
 
          if (FOO) {
-            rf.move(collisions);
+            rf.move(collisions, timer.getTicks());
+            timer.start();
+
             applySurface(0, 0, bgnd, screen, rf.getCameraClip());
             rf.show(rf.getCameraClip());
 
@@ -125,7 +127,9 @@ int main(int argc, char* argv[]) {
 
          }
          else {
-            cf.move(collisions);
+            cf.move(collisions, timer.getTicks());
+            timer.start();
+
             applySurface(0, 0, bgnd, screen, cf.getCameraClip());
             cf.show();
 
@@ -136,8 +140,6 @@ int main(int argc, char* argv[]) {
          }
 
          flip(screen);
-
-         timer.delayFrame(FRAMERATE);
       }
 
       if (TEST_STRING_INPUT) {

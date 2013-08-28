@@ -146,12 +146,12 @@ int Timer::delayFrame(int fps) {
    return delay;
 }
 
-Particle::Particle(SDL_Rect posDim, Surface* p1, Surface* p2, Surface* p3,
-      Surface* p4, SDL_Surface* screen) :
+Particle::Particle(double x, double y, SDL_Rect dim, Surface* p1, Surface* p2,
+      Surface* p3, Surface* p4, SDL_Surface* screen) :
       p1(p1), p2(p2), p3(p3), p4(p4), screen(screen) {
    //set offsets
-   this->posDim.x = posDim.x + randRange(-5, posDim.w);
-   this->posDim.y = posDim.y + randRange(-5, posDim.h);
+   this->p.x = x + static_cast<double>(randRange(-5, dim.w));
+   this->p.y = y + static_cast<double>(randRange(-5, dim.h));
 
    //init animation frame
    frame = randRange(0, 4);
@@ -174,24 +174,24 @@ Particle::Particle(SDL_Rect posDim, Surface* p1, Surface* p2, Surface* p3,
 
 void Particle::show(SDL_Rect* camera) {
    if (type != NULL)
-      applySurface(posDim.x - camera->x, posDim.y - camera->y, *type, screen);
+      applySurface(p.x - camera->x, p.y - camera->y, *type, screen);
 
    if (frame % 2 == 0 && p4 != NULL)
-      applySurface(posDim.x - camera->x, posDim.y - camera->y, *p4, screen);
+      applySurface(p.x - camera->x, p.y - camera->y, *p4, screen);
 
    frame++;
 }
 
 bool Particle::isDead() {
-   if (frame > PARTICLE_DRAG)
+   if (frame > randRange(PARTICLE_DRAG_MIN, PARTICLE_DRAG_MAX))
       return true;
    return false;
 }
 
 int Figure::determineGravity() {
    if (gravityEnabled && !u) {
-      if (posDim.y < lh - posDim.h)
-         v.y += gravity + abs(v.y * 0.01);
+      if (p.y < lh - dim.h)
+         v.y += gravity + abs(0.01 * v.y);
       else
          v.y = 0;
    }
@@ -221,12 +221,16 @@ void Figure::checkIfInAir(vector<Figure*>& other) {
    int count = 0;
 
    inAir = true;
-   posDim.y += 2;
-   if ((v.y == 0 && posDim.y >= lh - posDim.h)
+   p.y += 3;
+
+   //standing on ground or other Figure
+   if ((v.y == 0 && p.y >= lh - dim.h)
          || (v.y <= gravity && isCollided(other, count)))
       inAir = false;
-   posDim.y -= 2;
-   if (posDim.y < lh - posDim.h && v.y <= 1 && v.y >= -1)
+   p.y -= 3;
+
+   //peak of trajectory
+   if (p.y < lh - dim.h && v.y <= 0.5 && v.y >= -0.5)
       inAir = true;
 }
 
@@ -234,8 +238,8 @@ void Figure::initialize(int x, int y, double gravity, double speed,
       double jumpStrength, SDL_Surface* screen, Gravity gravityEnabled,
       bool leader, int numClips, int levelWidth, int levelHeight, Surface* p1,
       Surface* p2, Surface* p3, Surface* p4) {
-   posDim.x = x;
-   posDim.y = y;
+   p.x = x;
+   p.y = y;
    this->leader = leader;
 
    jumpFrame = 0;
@@ -244,7 +248,7 @@ void Figure::initialize(int x, int y, double gravity, double speed,
    cr = new SDL_Rect[numClips];
    status = RIGHT;
 
-   setClips(posDim.w, posDim.h);
+   setClips(dim.w, dim.h);
 
    this->gravity = gravity;
    this->speed = speed;
@@ -310,8 +314,8 @@ void Figure::initialize(int x, int y, double gravity, double speed,
 
    if (particleEffects) {
       for (int i = 0; i < TOTAL_PARTICLES; i++) {
-         particles[i] = new Particle(posDim, this->p1, this->p2, this->p3,
-               this->p4, screen);
+         particles[i] = new Particle(p.x, p.y, dim, this->p1, this->p2,
+               this->p3, this->p4, screen);
       }
    }
    else {
@@ -335,20 +339,20 @@ void Figure::setClips(int clipWidth, int clipHeight) {
    }
 }
 
-void Figure::xMovement(vector<Figure*>& other) {
+void Figure::xMovement(vector<Figure*>& other, int deltaTicks) {
    int count = 0;
 
-   posDim.x += v.x;
+   p.x += v.x * deltaTicks / 1000.0;
 
    if (isCollided(other, count))
-      posDim.x -= v.x;
-   else if (posDim.x > lw - posDim.w)
-      posDim.x = lw - posDim.w;
-   else if (posDim.x < 0)
-      posDim.x = 0;
+      p.x -= v.x * deltaTicks / 1000.0;
+   else if (p.x > lw - dim.w)
+      p.x = lw - dim.w;
+   else if (p.x < 0)
+      p.x = 0;
 }
 
-void Figure::yMovement(vector<Figure*>& other) {
+void Figure::yMovement(vector<Figure*>& other, int deltaTicks) {
    int count = 0;
 
    //gravity considerations
@@ -361,23 +365,21 @@ void Figure::yMovement(vector<Figure*>& other) {
    checkIfInAir(other);
 
    //collision with boundaries or other Figures
-   posDim.y += v.y;
+   p.y += v.y * deltaTicks / 1000.0;
+
    if (isCollided(other, count)) {
-      posDim.y -= v.y;
+      p.y -= v.y * deltaTicks / 1000.0;
 
       if (gravityEnabled)
          v.y = 0;
    }
-   else if (posDim.y > lh - posDim.h)
-      posDim.y = lh - posDim.h;
-   //upper bounds
-   //else if (posDim.y < 0)
-   //posDim.y = 0;
+   else if (p.y > lh - dim.h)
+      p.y = lh - dim.h;
 }
 
 void Figure::setCamera() {
-   camera->x = posDim.x + posDim.w / 2 - camera->w / 2;
-   camera->y = posDim.y + posDim.h / 2 - camera->h / 2;
+   camera->x = p.x + dim.w / 2 - camera->w / 2;
+   camera->y = p.y + dim.h / 2 - camera->h / 2;
 
    if (camera->x < 0)
       camera->x = 0;
@@ -395,10 +397,10 @@ void Figure::setCamera() {
 }
 
 void Figure::debug() {
-   cout << "posDim.x: " << posDim.x << endl;
-   cout << "posDim.y: " << posDim.y << endl;
-   cout << "posDim.w: " << posDim.w << endl;
-   cout << "posDim.h: " << posDim.h << endl;
+   cout << "p.x: " << p.x << endl;
+   cout << "p.y: " << p.y << endl;
+   cout << "dim.w: " << dim.w << endl;
+   cout << "dim.h: " << dim.h << endl;
    cout << "gravity: " << this->gravity << endl;
    cout << "jumpstrength: " << this->jumpStrength << endl;
    cout << "speed: " << this->speed << endl;
@@ -453,25 +455,25 @@ Figure::Figure() {
 }
 
 Figure::Figure(int x, int y, Surface& image, SDL_Surface* screen,
-      Gravity gravityEnabled, bool leader, double speed, int gravity,
+      Gravity gravityEnabled, bool leader, double speed, double gravity,
       double jumpStrength, int numClips, int levelWidth, int levelHeight,
       Surface* p1, Surface* p2, Surface* p3, Surface* p4) :
       image(&image) {
 
-   posDim.w = image.getSDL_Surface()->w / numClips;
-   posDim.h = image.getSDL_Surface()->h / 2;
+   dim.w = image.getSDL_Surface()->w / numClips;
+   dim.h = image.getSDL_Surface()->h / 2;
 
    initialize(x, y, gravity, speed, jumpStrength, screen, gravityEnabled,
          leader, numClips, levelWidth, levelHeight, p1, p2, p3, p4);
 }
 
 void Figure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
-      Gravity gravityEnabled, bool leader, double speed, int gravity,
+      Gravity gravityEnabled, bool leader, double speed, double gravity,
       double jumpStrength, int numClips, int levelWidth, int levelHeight,
       Surface* p1, Surface* p2, Surface* p3, Surface* p4) {
 
-   posDim.w = image.getSDL_Surface()->w / numClips;
-   posDim.h = image.getSDL_Surface()->h / 2;
+   dim.w = image.getSDL_Surface()->w / numClips;
+   dim.h = image.getSDL_Surface()->h / 2;
    this->image = &image;
 
    initialize(x, y, gravity, speed, jumpStrength, screen, gravityEnabled,
@@ -482,19 +484,19 @@ void Figure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
 }
 
 int Figure::getWidth() {
-   return posDim.w;
+   return dim.w;
 }
 
 int Figure::getHeight() {
-   return posDim.h;
+   return dim.h;
 }
 
 int Figure::getX() {
-   return posDim.x;
+   return p.x;
 }
 
 int Figure::getY() {
-   return posDim.y;
+   return p.y;
 }
 
 bool Figure::checkCollision(Figure* f) {
@@ -536,7 +538,7 @@ void Figure::handleInput(SDL_Event& event) {
       switch (event.key.keysym.sym) {
       case SDLK_UP:
          if ((!jumpAction && !inAir) || !gravityEnabled)
-            v.y -= posDim.h * speed / 100 * jumpStrength;
+            v.y -= dim.h * speed / 100 * jumpStrength;
 
          u = true;
          if (inAir)
@@ -544,15 +546,15 @@ void Figure::handleInput(SDL_Event& event) {
 
          break;
       case SDLK_DOWN:
-         v.y += posDim.h * speed / 100;
+         v.y += dim.h * speed / 100;
          d = true;
          break;
       case SDLK_LEFT:
-         v.x -= posDim.w * speed / 100;
+         v.x -= dim.w * speed / 100;
          l = true;
          break;
       case SDLK_RIGHT:
-         v.x += posDim.w * speed / 100;
+         v.x += dim.w * speed / 100;
          r = true;
          break;
       default:
@@ -564,19 +566,19 @@ void Figure::handleInput(SDL_Event& event) {
       switch (event.key.keysym.sym) {
       case SDLK_UP:
          if (!gravityEnabled)
-            v.y += posDim.h * speed / 100 * jumpStrength;
+            v.y += dim.h * speed / 100 * jumpStrength;
          u = false;
          break;
       case SDLK_DOWN:
-         v.y -= posDim.h * speed / 100;
+         v.y -= dim.h * speed / 100;
          d = false;
          break;
       case SDLK_LEFT:
-         v.x += posDim.w * speed / 100;
+         v.x += dim.w * speed / 100;
          l = false;
          break;
       case SDLK_RIGHT:
-         v.x -= posDim.w * speed / 100;
+         v.x -= dim.w * speed / 100;
          r = false;
          break;
       default:
@@ -590,15 +592,15 @@ void Figure::handleInput(SDL_Event& event) {
    }
 }
 
-void Figure::move(vector<Figure*>& other) {
-   xMovement(other);
-   yMovement(other);
+void Figure::move(vector<Figure*>& other, int deltaTicks) {
+   xMovement(other, deltaTicks);
+   yMovement(other, deltaTicks);
 
    setCamera();
 
    if (DEBUG_MOVE) {
-      cout << "posDim.x: " << posDim.x << endl;
-      cout << "posDim.y: " << posDim.y << endl;
+      cout << "p.x: " << p.x << endl;
+      cout << "p.y: " << p.y << endl;
    }
 }
 
@@ -620,10 +622,10 @@ void Figure::show(SDL_Rect* otherCamera) {
 
       if (leader) {
          if (status == LEFT)
-            applySurface(posDim.x - camera->x, posDim.y - camera->y, *image,
+            applySurface((int) p.x - camera->x, (int) p.y - camera->y, *image,
                   screen, &cl[static_cast<int>(animationFrame)]);
          else if (status == RIGHT)
-            applySurface(posDim.x - camera->x, posDim.y - camera->y, *image,
+            applySurface((int) p.x - camera->x, (int) p.y - camera->y, *image,
                   screen, &cr[static_cast<int>(animationFrame)]);
 
          if (particleEffects)
@@ -631,10 +633,10 @@ void Figure::show(SDL_Rect* otherCamera) {
       }
       else {
          if (status == LEFT)
-            applySurface(posDim.x - otherCamera->x, posDim.y - otherCamera->y,
+            applySurface((int) p.x - otherCamera->x, (int) p.y - otherCamera->y,
                   *image, screen, &cl[static_cast<int>(animationFrame)]);
          else if (status == RIGHT)
-            applySurface(posDim.x - otherCamera->x, posDim.y - otherCamera->y,
+            applySurface((int) p.x - otherCamera->x, (int) p.y - otherCamera->y,
                   *image, screen, &cr[static_cast<int>(animationFrame)]);
 
          if (particleEffects)
@@ -647,7 +649,7 @@ void Figure::showParticles(SDL_Rect* camera) {
    for (int i = 0; i < TOTAL_PARTICLES; i++) {
       if (particles[i]->isDead()) {
          delete particles[i];
-         particles[i] = new Particle(posDim, p1, p2, p3, p4, screen);
+         particles[i] = new Particle(p.x, p.y, dim, p1, p2, p3, p4, screen);
       }
 
       particles[i]->show(camera);
@@ -683,7 +685,7 @@ RectFigure::RectFigure() {
 }
 
 RectFigure::RectFigure(int x, int y, Surface& image, SDL_Surface* screen,
-      Gravity gravityEnabled, bool leader, double speed, int gravity,
+      Gravity gravityEnabled, bool leader, double speed, double gravity,
       double jumpStrength, int numClips, int levelWidth, int levelHeight,
       Surface* p1, Surface* p2, Surface* p3, Surface* p4) :
       Figure(x, y, image, screen, gravityEnabled, leader, speed, gravity,
@@ -695,15 +697,15 @@ RectFigure::RectFigure(int x, int y, Surface& image, SDL_Surface* screen,
 }
 
 bool RectFigure::checkCollision(RectFigure* r) {
-   int left1 = posDim.x;
-   int right1 = posDim.x + posDim.w;
-   int top1 = posDim.y;
-   int bot1 = posDim.y + posDim.h;
+   int left1 = p.x;
+   int right1 = p.x + dim.w;
+   int top1 = p.y;
+   int bot1 = p.y + dim.h;
 
-   int left2 = r->posDim.x;
-   int right2 = r->posDim.x + r->posDim.w;
-   int top2 = r->posDim.y;
-   int bot2 = r->posDim.y + r->posDim.h;
+   int left2 = r->p.x;
+   int right2 = r->p.x + r->dim.w;
+   int top2 = r->p.y;
+   int bot2 = r->p.y + r->dim.h;
 
    if (!(bot1 < top2 || top1 > bot2 || right1 < left2 || left1 > right2))
       return true;
@@ -713,17 +715,17 @@ bool RectFigure::checkCollision(RectFigure* r) {
 bool RectFigure::checkCollision(CircFigure* c) {
    int cx, cy;
 
-   if (c->getX() < posDim.x)
-      cx = posDim.x;
-   else if (c->getX() > posDim.x + posDim.w)
-      cx = posDim.x + posDim.w;
+   if (c->getX() < p.x)
+      cx = p.x;
+   else if (c->getX() > p.x + dim.w)
+      cx = p.x + dim.w;
    else
       cx = c->getX();
 
-   if (c->getY() < posDim.y)
-      cy = posDim.y;
-   else if (c->getY() > posDim.y + posDim.h)
-      cy = posDim.y + posDim.h;
+   if (c->getY() < p.y)
+      cy = p.y;
+   else if (c->getY() > p.y + dim.h)
+      cy = p.y + dim.h;
    else
       cy = c->getY();
 
@@ -737,7 +739,7 @@ bool RectFigure::checkCollision(CircFigure* c) {
 
 int CircFigure::determineGravity() {
    if (gravityEnabled && !u) {
-      if (posDim.y < lh - r)
+      if (p.y < lh - r)
          v.y += gravity + abs(v.y * 0.01);
       else
          v.y = 0;
@@ -750,29 +752,32 @@ void CircFigure::checkIfInAir(vector<Figure*>& other) {
    int count = 0;
 
    inAir = true;
-   posDim.y += 2;
-   if ((v.y == 0 && posDim.y >= lh - r)
-         || (v.y <= gravity && isCollided(other, count)))
+   p.y += 3;
+
+   //if on floor or standing on another Figure
+   if ((v.y == 0 && p.y >= lh - r) || (isCollided(other, count)))
       inAir = false;
-   posDim.y -= 2;
-   if (posDim.y < lh - r && v.y <= 1 && v.y >= -1)
+   p.y -= 3;
+
+   //Figure is at the peak of trajectory
+   if (p.y < lh - r && v.y <= 0.5 && v.y >= 0.5)
       inAir = true;
 }
 
-void CircFigure::xMovement(vector<Figure*>& other) {
+void CircFigure::xMovement(vector<Figure*>& other, int deltaTicks) {
    int count = 0;
 
-   posDim.x += v.x;
+   p.x += v.x * deltaTicks / 1000.0;
 
    if (isCollided(other, count))
-      posDim.x -= v.x;
-   else if (posDim.x > lw - r)
-      posDim.x = lw - r;
-   else if (posDim.x < r)
-      posDim.x = r;
+      p.x -= gravity / 2 * v.x * deltaTicks / 1000.0;
+   else if (p.x > lw - r)
+      p.x = lw - r;
+   else if (p.x < r)
+      p.x = r;
 }
 
-void CircFigure::yMovement(vector<Figure*>& other) {
+void CircFigure::yMovement(vector<Figure*>& other, int deltaTicks) {
    int count = 0;
 
    //gravity considerations
@@ -784,18 +789,16 @@ void CircFigure::yMovement(vector<Figure*>& other) {
    //check if inAir is true
    checkIfInAir(other);
 
-   posDim.y += v.y;
+   p.y += v.y * deltaTicks / 1000.0;
+
    if (isCollided(other, count)) {
-      posDim.y -= v.y;
+      p.y -= gravity / 2 * v.y * deltaTicks / 1000.0;
 
       if (gravityEnabled)
          v.y = 0;
    }
-   else if (posDim.y > lh - r)
-      posDim.y = lh - r;
-   //upper bounds
-   //else if (posDim.y < r)
-   //posDim.y = r;
+   else if (p.y > lh - r)
+      p.y = lh - r;
 }
 
 CircFigure::CircFigure() {
@@ -809,34 +812,34 @@ CircFigure::CircFigure() {
 }
 
 CircFigure::CircFigure(int x, int y, Surface& image, SDL_Surface* screen,
-      Gravity gravityEnabled, bool leader, double speed, int gravity,
+      Gravity gravityEnabled, bool leader, double speed, double gravity,
       double jumpStrength, int numClips, int levelWidth, int levelHeight,
       Surface* p1, Surface* p2, Surface* p3, Surface* p4) :
       Figure(x, y, image, screen, gravityEnabled, leader, speed, gravity,
             jumpStrength, numClips, levelWidth, levelHeight, p1, p2, p3, p4) {
    className = "CircFigure";
 
-   if (posDim.w > posDim.h)
-      r = posDim.w / 2;
+   if (dim.w > dim.h)
+      r = dim.w / 2;
    else
-      r = posDim.h / 2;
+      r = dim.h / 2;
 
    if (DEBUG_PRIVATES)
       debug();
 }
 
 void CircFigure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
-      Gravity gravityEnabled, bool leader, double speed, int gravity,
+      Gravity gravityEnabled, bool leader, double speed, double gravity,
       double jumpStrength, int numClips, int levelWidth, int levelHeight,
       Surface* p1, Surface* p2, Surface* p3, Surface* p4) {
    Figure::setFigure(x, y, image, screen, gravityEnabled, leader, speed,
          gravity, jumpStrength, numClips, levelWidth, levelHeight, p1, p2, p3,
          p4);
 
-   if (posDim.w > posDim.h)
-      r = posDim.w / 2;
+   if (dim.w > dim.h)
+      r = dim.w / 2;
    else
-      r = posDim.h / 2;
+      r = dim.h / 2;
 
    if (DEBUG_PRIVATES)
       debug();
@@ -865,10 +868,10 @@ void CircFigure::show(SDL_Rect* otherCamera) {
 
       if (leader) {
          if (status == LEFT)
-            applySurface(posDim.x - r - camera->x, posDim.y - r - camera->y,
+            applySurface((int) p.x - r - camera->x, (int) p.y - r - camera->y,
                   *image, screen, &cl[static_cast<int>(animationFrame)]);
          else if (status == RIGHT)
-            applySurface(posDim.x - r - camera->x, posDim.y - r - camera->y,
+            applySurface((int) p.x - r - camera->x, (int) p.y - r - camera->y,
                   *image, screen, &cr[static_cast<int>(animationFrame)]);
 
          if (particleEffects)
@@ -876,12 +879,12 @@ void CircFigure::show(SDL_Rect* otherCamera) {
       }
       else {
          if (status == LEFT)
-            applySurface(posDim.x - r - otherCamera->x,
-                  posDim.y - r - otherCamera->y, *image, screen,
+            applySurface((int) p.x - r - otherCamera->x,
+                  (int) p.y - r - otherCamera->y, *image, screen,
                   &cl[static_cast<int>(animationFrame)]);
          else if (status == RIGHT)
-            applySurface(posDim.x - r - otherCamera->x,
-                  posDim.y - r - otherCamera->y, *image, screen,
+            applySurface((int) p.x - r - otherCamera->x,
+                  (int) p.y - r - otherCamera->y, *image, screen,
                   &cr[static_cast<int>(animationFrame)]);
 
          if (particleEffects)
@@ -891,16 +894,15 @@ void CircFigure::show(SDL_Rect* otherCamera) {
 }
 
 void CircFigure::showParticles(SDL_Rect* camera) {
-   SDL_Rect posDimOffset;
-   posDimOffset.x = posDim.x - r;
-   posDimOffset.y = posDim.y - r;
-   posDimOffset.w = posDim.w;
-   posDimOffset.h = posDim.h;
+   Position posOff;
+   posOff.x = p.x - r;
+   posOff.y = p.y - r;
 
    for (int i = 0; i < TOTAL_PARTICLES; i++) {
       if (particles[i]->isDead()) {
          delete particles[i];
-         particles[i] = new Particle(posDimOffset, p1, p2, p3, p4, screen);
+         particles[i] = new Particle(posOff.x, posOff.y, dim, p1, p2, p3, p4,
+               screen);
       }
 
       particles[i]->show(camera);
@@ -910,21 +912,21 @@ void CircFigure::showParticles(SDL_Rect* camera) {
 bool CircFigure::checkCollision(RectFigure* r) {
    int cx, cy;
 
-   if (posDim.x < r->getX())
+   if (p.x < r->getX())
       cx = r->getX();
-   else if (posDim.x > r->getX() + r->getWidth())
+   else if (p.x > r->getX() + r->getWidth())
       cx = r->getX() + r->getWidth();
    else
-      cx = posDim.x;
+      cx = p.x;
 
-   if (posDim.y < r->getY())
+   if (p.y < r->getY())
       cy = r->getY();
-   else if (posDim.y > r->getY() + r->getHeight())
+   else if (p.y > r->getY() + r->getHeight())
       cy = r->getY() + r->getHeight();
    else
-      cy = posDim.y;
+      cy = p.y;
 
-   Point p1 = { posDim.x, posDim.y };
+   Point p1 = { p.x, p.y };
    Point p2 = { cx, cy };
    if (dist(p1, p2) < this->r)
       return true;
@@ -933,8 +935,8 @@ bool CircFigure::checkCollision(RectFigure* r) {
 }
 
 bool CircFigure::checkCollision(CircFigure* c) {
-   Point thisCenter = { posDim.x, posDim.y };
-   Point otherCenter = { c->posDim.x, c->posDim.y };
+   Point thisCenter = { p.x, p.y };
+   Point otherCenter = { c->p.x, c->p.y };
 
    if (dist(thisCenter, otherCenter) < this->r + c->r) {
       return true;
@@ -987,7 +989,7 @@ double dist(Point p1, Point p2) {
    return sqrt(pow(p2.x - p1.x, 2) + pow(p2.y - p1.y, 2));
 }
 
-SDL_Surface* optimizeImage(SDL_Surface* s) {
+SDL_Surface * optimizeImage(SDL_Surface * s) {
    SDL_Surface* optImg = SDL_DisplayFormat(s);
    if (optImg == NULL)
       throw ConversionException();

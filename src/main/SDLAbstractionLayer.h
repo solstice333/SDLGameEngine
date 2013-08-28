@@ -14,16 +14,17 @@ const bool DEBUG_MOVE = false;
 const bool DEBUG_HANDLE_INPUT = false;
 const bool DEBUG_CAM = false;
 
+//TODO make AFVALUE and TOTAL_PARTICLES user controlled
 /*
  * Description: the greater AFVALUE is, the faster the animation sprites switchover
  */
-const double AFVALUE = 0.25;
+const double AFVALUE = 0.03;
 
 /*
  * Description: the greater JUMP_SMOOTHENER is the smoother the jump, but possibly worse
  * the collision
  */
-const int JUMP_SMOOTHENER = 12;
+const int JUMP_SMOOTHENER = 20;
 
 /*
  * Description: total amount of particles. The higher the amount of particles, the
@@ -32,22 +33,24 @@ const int JUMP_SMOOTHENER = 12;
 const int TOTAL_PARTICLES = 20;
 
 /*
- * Description: allows for more drag of the particles
+ * Description: allows for drag control of the particles
  */
-const int PARTICLE_DRAG = 20;
+const int PARTICLE_DRAG_MIN = 200;
+const int PARTICLE_DRAG_MAX = 2000;
 
 //struct describing current position on both x and y components
 struct Position {
-   int x, y;
+   double x, y;
 };
 
 //struct describing current velocity on both x and y components
 struct Velocity {
-   int x, y;
+   double x, y;
 };
 
+//struct describing a point
 struct Point {
-   int x, y;
+   double x, y;
 };
 
 //TODO late stages - add in window management classes for windowed/fullscreen
@@ -329,9 +332,14 @@ public:
 class Particle {
 private:
    /*
-    * Description: position and dimension of where to place the particle
+    * Description: dimension range of where to place the particle
     */
-   SDL_Rect posDim;
+   SDL_Rect dim;
+
+   /*
+    * Description: position of the particle
+    */
+   Position p;
 
    /*
     * Description: particle frame counter
@@ -372,7 +380,13 @@ public:
 
    /*
     * Description: Particle constructor
-    * Parameter: SDL_Rect posDim contains the position of where to generally place the
+    * Parameter: double x contains the x coordinate specifying position of the upper left
+    * corner of the source image that the particles are following
+    *
+    * Parameter: double y contains the y coordinate specifying position of the upper left
+    * corner of the source image that the particles are following
+    *
+    * Parameter: SDL_Rect dim contains the position of where to generally place the
     * particle and the dimensions of the source image of where the particles are to appear
     * around
     *
@@ -382,8 +396,8 @@ public:
     * Parameter: Surface* p4 is the pointer to particle 4
     * Parameter: Point to screen
     */
-   Particle(SDL_Rect posDim, Surface* p1, Surface* p2, Surface* p3, Surface* p4,
-         SDL_Surface* screen);
+   Particle(double x, double y, SDL_Rect dim, Surface* p1, Surface* p2,
+         Surface* p3, Surface* p4, SDL_Surface* screen);
 
    /*
     * Description: Applies particle to screen
@@ -444,11 +458,14 @@ private:
 protected:
 
    /*
-    * Description: SDL_Rect posDim holds the current x, y position and dimensions of
-    * the Figure. If there are two Surface images (a left and right) then the average is taken
-    * for each respective dimension i.e. an average width and an average height.
+    * Description: contains dimensions of the image
     */
-   SDL_Rect posDim;
+   SDL_Rect dim;
+
+   /*
+    * Description: contains the position of where the image is located at
+    */
+   Position p;
 
    /*
     * Description: the base gravity value specifying pixels covered per frame when in freefall
@@ -657,15 +674,19 @@ protected:
     * Description: describes how the current x position should be updated
     * Parameter: vector<Figure*>& other is the reference to a vector containing Figure pointers
     * that are to be detected for collision
+    *
+    * Parameter: deltaTicks is the time that has passed since the timer started
     */
-   virtual void xMovement(vector<Figure*>& other);
+   virtual void xMovement(vector<Figure*>& other, int deltaTicks);
 
    /*
     * Description: describes how the current y position should be updated
     * Parameter: vector<Figure*>& other is the reference to a vector containing Figure pointers
     * that are to be detected for collision
+    *
+    * Parameter: deltaTicks is the time that has passed since the timer started
     */
-   virtual void yMovement(vector<Figure*>& other);
+   virtual void yMovement(vector<Figure*>& other, int deltaTicks);
 
    /*
     * Description: setCamera() sets the camera position to a new position
@@ -703,7 +724,7 @@ public:
     * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
     * would indicate move 50% of the Figure width every frame. Default is 5.
     *
-    * Parameter: int gravity is set to 1 by default and describes how strong the
+    * Parameter: double gravity is set to 1 by default and describes how strong the
     * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
     * no matter what value is passed in for gravity
     *
@@ -725,7 +746,7 @@ public:
     */
    Figure(int x, int y, Surface& image, SDL_Surface* screen,
          Gravity gravityEnabled, bool leader = false, double speed = 5,
-         int gravity = 1, double jumpStrength = 1, int numClips = 1,
+         double gravity = 1, double jumpStrength = 1, int numClips = 1,
          int levelWidth = -1, int levelHeight = -1, Surface* p1 = NULL,
          Surface* p2 = NULL, Surface* p3 = NULL, Surface* p4 = NULL);
 
@@ -746,7 +767,7 @@ public:
     * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
     * would indicate move 50% of the Figure width every frame. Default is 5.
     *
-    * Parameter: int gravity is set to 1 by default and describes how strong the
+    * Parameter: double gravity is set to 1 by default and describes how strong the
     * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
     * no matter what value is passed in for gravity
     *
@@ -768,7 +789,7 @@ public:
     */
    virtual void setFigure(int x, int y, Surface& image, SDL_Surface* screen,
          Gravity gravityEnabled, bool leader = false, double speed = 5,
-         int gravity = 1, double jumpStrength = 1, int numClips = 1,
+         double gravity = 1, double jumpStrength = 1, int numClips = 1,
          int levelWidth = -1, int levelHeight = -1, Surface* p1 = NULL,
          Surface* p2 = NULL, Surface* p3 = NULL, Surface* p4 = NULL);
 
@@ -845,8 +866,10 @@ public:
     *
     * Parameter: vector<Figure*>& other is the reference to a vector holding the Figure pointers
     * that require parsing for collision detection
+    *
+    * Parameter: deltaTicks is the time that has passed since the timer started
     */
-   virtual void move(vector<Figure*>& other);
+   virtual void move(vector<Figure*>& other, int deltaTicks);
 
    /*
     * Description: applies the current image (left or right) to the screen. Does not flip the
@@ -918,7 +941,7 @@ public:
     * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
     * would indicate move 50% of the Figure width every frame. Default is 5;
     *
-    * Parameter: int gravity is set to 1 by default and describes how strong the
+    * Parameter: double gravity is set to 1 by default and describes how strong the
     * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
     * no matter what value is passed in for gravity
     *
@@ -940,7 +963,7 @@ public:
     */
    RectFigure(int x, int y, Surface& image, SDL_Surface* screen,
          Gravity gravityEnabled, bool leader = false, double speed = 5,
-         int gravity = 1, double jumpStrength = 1, int numClips = 1,
+         double gravity = 1, double jumpStrength = 1, int numClips = 1,
          int levelWidth = -1, int levelHeight = -1, Surface* p1 = NULL,
          Surface* p2 = NULL, Surface* p3 = NULL, Surface* p4 = NULL);
 
@@ -991,15 +1014,19 @@ private:
     * Description: describes how the current x position should be updated
     * Parameter: vector<Figure*>& other is the reference to a vector containing Figure pointers
     * that are to be detected for collision
+    *
+    * Parameter: deltaTicks is the time that has passed since the timer started
     */
-   virtual void xMovement(vector<Figure*>& other);
+   virtual void xMovement(vector<Figure*>& other, int deltaTicks);
 
    /*
     * Description: describes how the current y position should be updated
     * Parameter: vector<Figure*>& other is the reference to a vector containing Figure pointers
     * that are to be detected for collision
+    *
+    * Parameter: deltaTicks is the time that has passed since the timer started
     */
-   virtual void yMovement(vector<Figure*>& other);
+   virtual void yMovement(vector<Figure*>& other, int deltaTicks);
 
 public:
 
@@ -1025,7 +1052,7 @@ public:
     * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
     * would indicate move 50% of the Figure width every frame. Default is 5;
     *
-    * Parameter: int gravity is set to 1 by default and describes how strong the
+    * Parameter: double gravity is set to 1 by default and describes how strong the
     * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
     * no matter what value is passed in for gravity
     *
@@ -1047,7 +1074,7 @@ public:
     */
    CircFigure(int x, int y, Surface& image, SDL_Surface* screen,
          Gravity gravityEnabled, bool leader = false, double speed = 5,
-         int gravity = 1, double jumpStrength = 1, int numClips = 1,
+         double gravity = 1, double jumpStrength = 1, int numClips = 1,
          int levelWidth = -1, int levelHeight = -1, Surface* p1 = NULL,
          Surface* p2 = NULL, Surface* p3 = NULL, Surface* p4 = NULL);
 
@@ -1068,7 +1095,7 @@ public:
     * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
     * would indicate move 50% of the Figure width every frame. Default is 5;
     *
-    * Parameter: int gravity is set to 1 by default and describes how strong the
+    * Parameter: double gravity is set to 1 by default and describes how strong the
     * gravity is. If GRAVITY_DISABLED is passed in as a parameter, this is disregarded
     * no matter what value is passed in for gravity
     *
@@ -1090,7 +1117,7 @@ public:
     */
    virtual void setFigure(int x, int y, Surface& image, SDL_Surface* screen,
          Gravity gravityEnabled, bool leader = false, double speed = 5,
-         int gravity = 1, double jumpStrength = 1, int numClips = 1,
+         double gravity = 1, double jumpStrength = 1, int numClips = 1,
          int levelWidth = -1, int levelHeight = -1, Surface* p1 = NULL,
          Surface* p2 = NULL, Surface* p3 = NULL, Surface* p4 = NULL);
 
