@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
                LEVEL_WIDTH, LEVEL_HEIGHT, &red, &green, &blue, &shimmer);
       else
          cf.setFigure(100, 300, dot, screen, gravEnDis, true, CS, G, CJS, CNC,
-               LEVEL_WIDTH, LEVEL_HEIGHT, &red, &green, &blue, &shimmer);
+               LEVEL_WIDTH, LEVEL_HEIGHT);
 
       //Test constructors
       /*

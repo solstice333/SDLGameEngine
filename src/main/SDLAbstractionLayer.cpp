@@ -792,7 +792,10 @@ void CircFigure::yMovement(vector<Figure*>& other, int deltaTicks) {
    p.y += v.y * deltaTicks / 1000.0;
 
    if (isCollided(other, count)) {
-      p.y -= gravity / 2 * v.y * deltaTicks / 1000.0;
+      if (v.y * deltaTicks / 1000.0 < 0)
+         p.y -= floor(v.y * deltaTicks / 1000.0);
+      else
+         p.y -= ceil(v.y * deltaTicks / 1000.0);
 
       if (gravityEnabled)
          v.y = 0;
