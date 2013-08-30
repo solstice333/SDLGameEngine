@@ -7,6 +7,7 @@
 //============================================================================
 #include <iostream>
 #include "SDLAbstractionLayer.h"
+#include "Exception.h"
 #include "SDL/SDL.h"
 #include "SDL/SDL_image.h"
 
@@ -26,7 +27,7 @@ const int LEVEL_HEIGHT = 670;
 const double FS = 150;
 const double CS = 1200;
 const double CJS = 11;
-const double FJS = 5;
+const double FJS = 4;
 const double G = 4;
 const int CNC = 1;
 const int FNC = 4;
@@ -98,9 +99,17 @@ int main(int argc, char* argv[]) {
       collisions.push_back(&cf1);
       collisions.push_back(&cf2);
 
-      timer.start();
-      while (!quit) {
+      Music m("resources/tristam.mp3");
 
+      timer.start();
+
+      if (Mix_PlayingMusic() == 0)
+         if (Mix_PlayMusic(m.getMix_Music(), -1) < 0)
+            throw SoundException();
+
+      Mix_VolumeMusic(32); //0 to 128
+
+      while (!quit) {
          if (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                quit = true;
@@ -141,6 +150,8 @@ int main(int argc, char* argv[]) {
 
          flip(screen);
       }
+
+      Mix_HaltMusic();
 
       if (TEST_STRING_INPUT) {
          quit = false;
