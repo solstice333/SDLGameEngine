@@ -27,7 +27,7 @@ const int LEVEL_HEIGHT = 670;
 const double FS = 150;
 const double CS = 1200;
 const double CJS = 11;
-const double FJS = 4;
+const double FJS = 10;
 const double G = 4;
 const int CNC = 1;
 const int FNC = 4;
@@ -43,7 +43,7 @@ const Figure::Gravity gravEnDis = Figure::GRAVITY_ENABLED;
 //const Figure::Gravity gravEnDis = Figure::GRAVITY_DISABLED;
 
 const bool TEST_GRAPHICS = true;
-const bool TEST_STRING_INPUT = false;
+const bool TEST_STRING_INPUT = true;
 
 /*Description: This tests the scrolling, collision detection, static figures within the level,
  *and animation. User can switch const bool FOO to true/false and comment/uncomment const

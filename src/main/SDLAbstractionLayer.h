@@ -5,6 +5,7 @@
 #include <SDL/SDL_ttf.h>
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_mixer.h>
+#include "rebel.h"
 #include <string>
 #include <vector>
 using namespace std;
@@ -448,6 +449,30 @@ public:
       LEFT, RIGHT
    };
 
+   /*
+    * Attempt at solving ledge problem
+    * Rebel's Attempts
+    */
+   //REBEL: hacking together a solution for ledge problem
+   // custom hitboxes depending on frame (tried to implement this in my engine)
+   vector<AABB*> hitboxes;
+
+   //REBEL: method to add hit boxes
+   void addHitBoxes(vector<AABB*>);
+
+   //Rebel: property of this object
+   int resolution;
+
+   //Rebel: called in x move and etc
+   void resolveCollision(int, float);
+
+   //enum table for resolves
+   enum resolves{
+	   boundry, //includes walls, floors and other hard objects
+	   player,
+	   point
+   };
+
 private:
 
    /*
@@ -748,7 +773,7 @@ public:
          Gravity gravityEnabled, bool leader = false, double speed = 5,
          double gravity = 1, double jumpStrength = 1, int numClips = 1,
          int levelWidth = -1, int levelHeight = -1, Surface* p1 = NULL,
-         Surface* p2 = NULL, Surface* p3 = NULL, Surface* p4 = NULL);
+         Surface* p2 = NULL, Surface* p3 = NULL, Surface* p4 = NULL, int resolve = 0);
 
    /*
     * Description: sets Figure
