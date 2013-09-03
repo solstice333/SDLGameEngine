@@ -7,7 +7,7 @@
 //============================================================================
 
 #include <iostream>
-#include "SDL/SDL.h"
+#include <SDL/SDL.h>
 #include "../../main/Exception.h"
 #include "Window.h"
 
