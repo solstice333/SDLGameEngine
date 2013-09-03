@@ -214,8 +214,10 @@ void Figure::checkIfInAir(vector<Figure*>& other) {
 	inAir = true;
 	p.y += 3;
 
+	Figure* emp;
+
 	//standing on ground or other Figure
-	if ((v.y == 0 && p.y >= lh - dim.h) || (v.y <= gravity && isCollided(other, count))) inAir = false;
+	if ((v.y == 0 && p.y >= lh - dim.h) || (v.y <= gravity && isCollided(other, count, emp))) inAir = false;
 	p.y -= 3;
 
 	//peak of trajectory
@@ -325,11 +327,13 @@ void Figure::xMovement(vector<Figure*>& other, int deltaTicks) {
 
 	p.x += v.x * deltaTicks / 1000.0;
 
-	if (isCollided(other, count)) {
+	Figure* stor = NULL; //pointer to object we may collide against
+
+	if (isCollided(other, count, stor)) {
 		/*
 		 * Rebel: Will add collision resolution here
 		 */
-		p.x -= v.x * deltaTicks / 1000.0;
+		resolveCollision(stor, deltaTicks, xHat);
 	}
 	else if (p.x > lw - dim.w) p.x = lw - dim.w;
 	else if (p.x < 0) p.x = 0;
@@ -350,10 +354,9 @@ void Figure::yMovement(vector<Figure*>& other, int deltaTicks) {
 	//collision with boundaries or other Figures
 	p.y += v.y * deltaTicks / 1000.0;
 
-	if (isCollided(other, count)) {
-		p.y -= v.y * deltaTicks / 1000.0;
-
-		if (gravityEnabled) v.y = 0;
+	Figure* stor;
+	if (isCollided(other, count, stor)) {
+		resolveCollision(stor,deltaTicks,yHat);
 	}
 	else if (p.y > lh - dim.h) p.y = lh - dim.h;
 }
@@ -428,7 +431,7 @@ Figure::Figure() {
 
 Figure::Figure(int x, int y, Surface& image, SDL_Surface* screen, Gravity gravityEnabled, bool leader, double speed,
 		double gravity, double jumpStrength, int numClips, int levelWidth, int levelHeight, Surface* p1, Surface* p2,
-		Surface* p3, Surface* p4, int resolve) :
+		Surface* p3, Surface* p4, resolves resolve) :
 		image(&image) {
 
 	dim.w = image.getSDL_Surface()->w / numClips;
@@ -488,10 +491,13 @@ bool Figure::checkCollision(Figure* f) {
 	return false;
 }
 
-bool Figure::isCollided(vector<Figure*>& other, int& count) {
+bool Figure::isCollided(vector<Figure*>& other, int& count, Figure*& stor) {
 	if (!other.empty()) {
 		for (vector<Figure*>::iterator i = other.begin(), end = other.end(); i != end; i++) {
-			if (checkCollision(*i)) return true;
+			if (checkCollision(*i)) {
+				stor = *i;
+				return true;
+			}
 		}
 
 		count++;
@@ -568,7 +574,27 @@ void Figure::move(vector<Figure*>& other, int deltaTicks) {
 	}
 }
 
-void Figure::show(SDL_Rect* otherCamera) {
+//Rebel - added marking system to signal if
+//Object is marked for deletion
+int Figure::show(SDL_Rect* otherCamera) {
+
+	//marker's been removed. Shouldn't even get here if it's already 2
+	if (marker == 2) return marker;
+
+	//check if marker is marked for removal
+	if (marker == 1) {
+		//TODO: Add animation and sound for this
+		//do a special animation if needed for however many frames
+		bool animationDone = true;
+		if (animationDone == false) return marker;
+
+		//after x frames, where x is the frames needed to complete animation
+		//set marker status = 2 and it will stop being considered in the collision map
+		//and when drawing frame
+		marker = 2;
+		return marker;
+	}
+
 	if (numClips > 0) {
 		if (v.x < 0) {
 			status = LEFT;
@@ -599,6 +625,7 @@ void Figure::show(SDL_Rect* otherCamera) {
 			if (particleEffects) showParticles(otherCamera);
 		}
 	}
+	return marker;
 }
 
 void Figure::showParticles(SDL_Rect* camera) {
@@ -628,7 +655,14 @@ SDL_Rect* Figure::getCameraClip() {
  *
  * TODO: There has to be a better way to do this
  */
-void Figure::resolveCollision(int other_resolve, float timeStep) {
+void Figure::resolveCollision(Figure* other, float timeStep, component dir) {
+
+	//TODO: We need to add impluse or some way to prevent the player form sinking
+
+	if (other == NULL) {
+		printf("Error! Found collision, with invalid other;\n");
+	}
+
 	switch (this->resolution) {
 		case (boundry): {
 			//we're a boundry - we don't do anything cause we're cool
@@ -638,20 +672,27 @@ void Figure::resolveCollision(int other_resolve, float timeStep) {
 		case (player): {
 			//we're the player - we have special interactions depending on the
 			//other resolve
-			switch (other_resolve) {
+			switch (other->resolution) {
 				case (boundry): {
 					//Player runs into a boundary type object
 					//do what we expect it to do
-					p.x -= v.x * timeStep / 1000.0;
-
+					if (dir == xHat) p.x -= v.x * timeStep / 1000.0;
+					if (dir == yHat){
+						p.y -= v.x * timeStep / 1000.0;
+						if (gravityEnabled) v.y = 0;
+					}
+					break;
 				}
 				case (player): {
 					//Player runs into another player
 					//TODO: probably won't be doing anything until we have multiplayer
+					break;
 				}
 				case (point): {
 					//player runs into a point
-					//TODO: Figure out someway to delete the point
+					// mark point for deletion
+					other->marker = 1;
+					break;
 				}
 			}
 
@@ -689,9 +730,9 @@ RectFigure::RectFigure() {
 
 RectFigure::RectFigure(int x, int y, Surface& image, SDL_Surface* screen, Gravity gravityEnabled, bool leader,
 		double speed, double gravity, double jumpStrength, int numClips, int levelWidth, int levelHeight, Surface* p1,
-		Surface* p2, Surface* p3, Surface* p4) :
+		Surface* p2, Surface* p3, Surface* p4, resolves resolve) :
 		Figure(x, y, image, screen, gravityEnabled, leader, speed, gravity, jumpStrength, numClips, levelWidth,
-				levelHeight, p1, p2, p3, p4) {
+				levelHeight, p1, p2, p3, p4, resolve) {
 	className = "RectFigure";
 
 	if (DEBUG_PRIVATES) debug();
@@ -745,8 +786,10 @@ void CircFigure::checkIfInAir(vector<Figure*>& other) {
 	inAir = true;
 	p.y += 3;
 
+	Figure* stor;
+
 	//if on floor or standing on another Figure
-	if ((v.y == 0 && p.y >= lh - r) || (isCollided(other, count))) inAir = false;
+	if ((v.y == 0 && p.y >= lh - r) || (isCollided(other, count, stor))) inAir = false;
 	p.y -= 3;
 
 	//Figure is at the peak of trajectory
@@ -758,7 +801,9 @@ void CircFigure::xMovement(vector<Figure*>& other, int deltaTicks) {
 
 	p.x += v.x * deltaTicks / 1000.0;
 
-	if (isCollided(other, count)) p.x -= gravity / 2 * v.x * deltaTicks / 1000.0;
+	Figure* stor;
+
+	if (isCollided(other, count, stor)) p.x -= gravity / 2 * v.x * deltaTicks / 1000.0;
 	else if (p.x > lw - r) p.x = lw - r;
 	else if (p.x < r) p.x = r;
 }
@@ -777,7 +822,9 @@ void CircFigure::yMovement(vector<Figure*>& other, int deltaTicks) {
 
 	p.y += v.y * deltaTicks / 1000.0;
 
-	if (isCollided(other, count)) {
+	Figure* stor;
+
+	if (isCollided(other, count, stor)) {
 		if (v.y * deltaTicks / 1000.0 < 0) p.y -= floor(v.y * deltaTicks / 1000.0);
 		else p.y -= ceil(v.y * deltaTicks / 1000.0);
 
@@ -825,7 +872,7 @@ int CircFigure::getR() {
 	return r;
 }
 
-void CircFigure::show(SDL_Rect* otherCamera) {
+int CircFigure::show(SDL_Rect* otherCamera) {
 
 	if (numClips > 0) {
 		if (v.x < 0) {
@@ -857,6 +904,7 @@ void CircFigure::show(SDL_Rect* otherCamera) {
 			if (particleEffects) showParticles(otherCamera);
 		}
 	}
+	return marker;
 }
 
 void CircFigure::showParticles(SDL_Rect* camera) {

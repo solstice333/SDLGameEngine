@@ -450,6 +450,22 @@ public:
    };
 
    /*
+    * Component for collision resolution
+    */
+   enum component{
+	   xHat,
+	   yHat
+   };
+
+   //enum table for resolves
+   enum resolves{
+	   boundry, //includes walls, floors and other hard objects
+	   player,
+	   point
+   };
+
+
+   /*
     * Attempt at solving ledge problem
     * Rebel's Attempts
     */
@@ -461,17 +477,13 @@ public:
    void addHitBoxes(vector<AABB*>);
 
    //Rebel: property of this object
-   int resolution;
+   resolves resolution;
 
    //Rebel: called in x move and etc
-   void resolveCollision(int, float);
+   void resolveCollision(Figure*, float, component);
 
-   //enum table for resolves
-   enum resolves{
-	   boundry, //includes walls, floors and other hard objects
-	   player,
-	   point
-   };
+   //status marker (deletion or otherwise)
+   int marker;
 
 private:
 
@@ -773,7 +785,7 @@ public:
          Gravity gravityEnabled, bool leader = false, double speed = 5,
          double gravity = 1, double jumpStrength = 1, int numClips = 1,
          int levelWidth = -1, int levelHeight = -1, Surface* p1 = NULL,
-         Surface* p2 = NULL, Surface* p3 = NULL, Surface* p4 = NULL, int resolve = 0);
+         Surface* p2 = NULL, Surface* p3 = NULL, Surface* p4 = NULL, resolves resolve = boundry);
 
    /*
     * Description: sets Figure
@@ -877,7 +889,7 @@ public:
     *
     * Return: true if collision occurred, false otherwise
     */
-   virtual bool isCollided(vector<Figure*>& other, int& count);
+   virtual bool isCollided(vector<Figure*>& other, int& count, Figure*&);
 
    /*
     * Description: handles input with directional keys and adjusts the velocity respectively
@@ -906,7 +918,7 @@ public:
     * the player. When showing rf1, it would look like this: rf1.show(rf2.getCameraClip()).
     * Default value for otherCamera is NULL.
     */
-   virtual void show(SDL_Rect* otherCamera = NULL);
+   virtual int show(SDL_Rect* otherCamera = NULL);
 
    /*
     * Description: applies the particles to screen
@@ -990,7 +1002,7 @@ public:
          Gravity gravityEnabled, bool leader = false, double speed = 5,
          double gravity = 1, double jumpStrength = 1, int numClips = 1,
          int levelWidth = -1, int levelHeight = -1, Surface* p1 = NULL,
-         Surface* p2 = NULL, Surface* p3 = NULL, Surface* p4 = NULL);
+         Surface* p2 = NULL, Surface* p3 = NULL, Surface* p4 = NULL, Figure::resolves resolve = boundry);
 
    /*
     * Description: checks for RectFigure to RectFigure collision
@@ -1162,7 +1174,7 @@ public:
     * the player. When showing cf1, it would look like this: cf1.show(cf2.getCameraClip()).
     * Default value for otherCamera is NULL.
     */
-   virtual void show(SDL_Rect* otherCamera = NULL);
+   virtual int show(SDL_Rect* otherCamera = NULL);
 
    /*
     * Description: applies the particles to screen
