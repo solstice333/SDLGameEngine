@@ -55,3 +55,7 @@ const char* LoadSavedGameException::what() const throw() {
 const char* WindowException::what() const throw() {
    return "Error: Window error \n";
 }
+
+const char* InvalidMarkerException::what() const throw() {
+   return "Error: Invalid marker enum \n";
+}

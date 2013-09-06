@@ -494,6 +494,7 @@ double dist(Point p1, Point p2);
  * of the video framebuffer
  *
  * Parameter: SDL_Surface* s points to the SDL_Surface to optimize
+ * Exception: throws ConversionException()
  * Return: SDL_Surface pointer pointing to the converted surface that is compatible
  * to the display format
  */
@@ -520,6 +521,7 @@ SDL_Color setRGBColor(int r, int g, int b);
 /*
  * Description: parses Surface::Color color and returns the respective SDL_Color
  * Parameter: Surface::Color color is the color desired
+ * Exceptions: throws InvalidColorException();
  */
 SDL_Color parseColor(Surface::Color color);
 
@@ -529,6 +531,9 @@ SDL_Color parseColor(Surface::Color color);
  * Color argument when calling the function, thus loadImage("/home/User/Pictures/image.png")
  * is valid.
  *
+ * Parameter: string filename is the path to the image file
+ * Parameter: Surface::Color ck represents the color you want to colorkey
+ * Exceptions: throws LoadImageException()
  * Return: the resulting SDL_Surface* specified by the parameters
  */
 SDL_Surface* loadImage(string filename, Surface::Color ck = Surface::NONE);
@@ -539,6 +544,7 @@ SDL_Surface* loadImage(string filename, Surface::Color ck = Surface::NONE);
  * Parameter: int size is the size of the font determined by pixel height
  * Parameter: Surface::Color color is the color of the text
  * Parameter: string msg is the text to be displayed
+ * Exception: throws LoadTextException()
  * Return: TTF_Font pointer
  */
 SDL_Surface* loadText(string pathToTTF, int size, Surface::Color color,
@@ -547,12 +553,16 @@ SDL_Surface* loadText(string pathToTTF, int size, Surface::Color color,
 /*
  * Description: loadMusic loads the specified music via pathname
  * Parameter: string music is the music to load
+ * Exception: throws LoadMusicException()
+ * Return: Mix_Music pointer
  */
 Mix_Music* loadMusic(string music);
 
 /*
  * Description: loadChunk loads the specified sound effect via pathname
  * Parameter: string chunk is the sound effect chunk to load
+ * Exception: throws LoadChunkException()
+ * Return: Mix_Chunk pointer
  */
 Mix_Chunk* loadChunk(string chunk);
 
@@ -590,6 +600,7 @@ void applySurfaceMiddle(Surface& source, SDL_Surface* destination,
 /*
  * Description: swaps the video buffers as to update the software screen
  * Parameter: SDL_Surface* screen is the screen in system memory
+ * Exception: throws FlipException()
  */
 void flip(SDL_Surface* screen);
 
@@ -644,6 +655,8 @@ int randRange(int low, int high);
  * Parameter: int w is the width of the screen
  * Parameter: int h is the height of the screen
  * Parameter: string title is the window title
+ * Exception: throws InitException()
+ * Exception: throws SetVideoException()
  * Return: returns an SDL_Surface* that represents the screen in system memory i.e.
  * the software display
  *

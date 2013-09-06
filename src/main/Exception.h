@@ -75,4 +75,9 @@ public:
    virtual const char* what() const throw();
 };
 
+class InvalidMarkerException : public exception {
+public:
+   virtual const char* what() const throw();
+};
+
 #endif

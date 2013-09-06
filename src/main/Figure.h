@@ -52,40 +52,27 @@ public:
    };
 
    /*
-    * Component for collision resolution
+    * Description: Component for collision resolution
     */
-   enum component{
-      xHat,
-      yHat
+   enum Component {
+      XHAT, YHAT
    };
-
-   //enum table for resolves
-   enum resolves{
-      boundry, //includes walls, floors and other hard objects
-      player,
-      point
-   };
-
 
    /*
-    * Attempt at solving ledge problem
-    * Rebel's Attempts
+    * Description: Enum table for types of collision resolution. Note that BOUNDARY
+    * includes walls, floors, and other hard objects considered rigid
     */
-   //REBEL: hacking together a solution for ledge problem
-   // custom hitboxes depending on frame (tried to implement this in my engine)
-   vector<AABB*> hitboxes;
+   enum Resolves {
+      BOUNDARY, PLAYER, POINT
+   };
 
-   //REBEL: method to add hit boxes
-   void addHitBoxes(vector<AABB*>);
-
-   //Rebel: property of this object
-   resolves resolution;
-
-   //Rebel: called in x move and etc
-   void resolveCollision(Figure*, float, component);
-
-   //status marker (deletion or otherwise)
-   int marker;
+   /*
+    * Description: Enum table for revised Marker. Marker describes the status of the Figure
+    * in terms of whether or not it should be shown on the screen
+    */
+   enum Marker {
+      ACTIVE, REMOVE, INACTIVE
+   };
 
 private:
 
@@ -95,6 +82,25 @@ private:
    Figure(const Figure& other);
 
 protected:
+
+   /*
+    * Description: contains the type of collision resolution property this
+    * Figure has
+    */
+   Resolves resolution;
+
+   /*
+    * Description: marker contains the status of the Figure in terms of whether or not
+    * it should be shown on the screen (active or inactive) or marked for removal
+    */
+   Marker marker;
+
+   // TODO REBEL: hacking together a solution for ledge problem
+   // custom hitboxes depending on frame (tried to implement this in my engine)
+   // KEVIN: what about using Figure properties instead of AABB? See
+   // RectFigure::checkCollision(RectFigure* r) for an example. In a sense, the variables
+   // inside that method make it a "dynamic" AABB
+   vector<AABB*> hitboxes;
 
    /*
     * Description: contains dimensions of the image
@@ -302,7 +308,7 @@ protected:
    void initialize(int x, int y, double gravity, double speed,
          double jumpStrength, SDL_Surface* screen, Gravity gravityEnabled,
          bool leader, int numClips, int levelWidth, int levelHeight,
-         Surface* p1, Surface* p2, Surface* p3, Surface* p4);
+         Surface* p1, Surface* p2, Surface* p3, Surface* p4, Resolves resolve);
 
    /*
     * Description: sets the clips to enable animation
@@ -359,6 +365,9 @@ public:
     * Figure (i.e. in most cases, the camera follows the Figure controlled
     * by the player), false otherwise. Default value is false.
     *
+    * Parameter: Resolves resolve describes the collision resolution action if collided
+    * with. Default is BOUNDARY.
+    *
     * Parameter: double speed is the movement speed of the Figure in terms of percentage
     * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
     * would indicate move 50% of the Figure width every frame. Default is 5.
@@ -386,8 +395,9 @@ public:
    Figure(int x, int y, Surface& image, SDL_Surface* screen,
          Gravity gravityEnabled, bool leader = false, double speed = 5,
          double gravity = 1, double jumpStrength = 1, int numClips = 1,
-         int levelWidth = -1, int levelHeight = -1, Surface* p1 = NULL,
-         Surface* p2 = NULL, Surface* p3 = NULL, Surface* p4 = NULL, resolves resolve = boundry);
+         int levelWidth = -1, int levelHeight = -1, Resolves resolve = BOUNDARY,
+         Surface * p1 = NULL, Surface* p2 = NULL, Surface* p3 = NULL,
+         Surface* p4 = NULL);
 
    /*
     * Description: sets Figure
@@ -401,6 +411,9 @@ public:
     * Parameter: bool leader is true if the camera is to follow the this instance of
     * Figure (i.e. in most cases, the camera follows the Figure controlled
     * by the player), false otherwise. Default value is false.
+    *
+    * Parameter: Resolves resolve describes the collision resolution action if collided
+    * with. Default is BOUNDARY.
     *
     * Parameter: double speed is the movement speed of the Figure in terms of percentage
     * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
@@ -429,8 +442,9 @@ public:
    virtual void setFigure(int x, int y, Surface& image, SDL_Surface* screen,
          Gravity gravityEnabled, bool leader = false, double speed = 5,
          double gravity = 1, double jumpStrength = 1, int numClips = 1,
-         int levelWidth = -1, int levelHeight = -1, Surface* p1 = NULL,
-         Surface* p2 = NULL, Surface* p3 = NULL, Surface* p4 = NULL);
+         int levelWidth = -1, int levelHeight = -1, Resolves resolve = BOUNDARY,
+         Surface* p1 = NULL, Surface* p2 = NULL, Surface* p3 = NULL,
+         Surface* p4 = NULL);
 
    /*
     * Description: obtains the width of the Figure
@@ -493,6 +507,15 @@ public:
     */
    virtual bool isCollided(vector<Figure*>& other, int& count, Figure*&);
 
+   // TODO REBEL: method to add hit boxes
+   void addHitBoxes(vector<AABB*>);
+
+   // TODO Rebel: called in x move and etc
+   /*
+    * Description: resolves collision based on the Component dir passed in
+    */
+   void resolveCollision(Figure* other, float timeStep, Component dir);
+
    /*
     * Description: handles input with directional keys and adjusts the velocity respectively
     * Parameter: SDL_Event& event is the reference to the SDL_Event type in the event loop
@@ -519,8 +542,11 @@ public:
     * is not moving on the level/screen and RectFigure rf2 is a Figure controlled by
     * the player. When showing rf1, it would look like this: rf1.show(rf2.getCameraClip()).
     * Default value for otherCamera is NULL.
+    *
+    * Exception: throws InvalidMarkerException()
+    * Return: Marker describing whether the Figure is ACTIVE, INACTIVE, or set to REMOVE
     */
-   virtual int show(SDL_Rect* otherCamera = NULL);
+   virtual Marker show(SDL_Rect* otherCamera = NULL);
 
    /*
     * Description: applies the particles to screen
@@ -576,6 +602,9 @@ public:
     * Figure (i.e. in most cases, the camera follows the Figure controlled
     * by the player), false otherwise. Default value is false.
     *
+    * Parameter: Resolves resolve describes the collision resolution action if collided
+    * with. Default is BOUNDARY.
+    *
     * Parameter: double speed is the movement speed of the Figure in terms of percentage
     * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
     * would indicate move 50% of the Figure width every frame. Default is 5;
@@ -603,8 +632,9 @@ public:
    RectFigure(int x, int y, Surface& image, SDL_Surface* screen,
          Gravity gravityEnabled, bool leader = false, double speed = 5,
          double gravity = 1, double jumpStrength = 1, int numClips = 1,
-         int levelWidth = -1, int levelHeight = -1, Surface* p1 = NULL,
-         Surface* p2 = NULL, Surface* p3 = NULL, Surface* p4 = NULL, Figure::resolves resolve = boundry);
+         int levelWidth = -1, int levelHeight = -1, Resolves resolve = BOUNDARY,
+         Surface* p1 = NULL, Surface* p2 = NULL, Surface* p3 =
+         NULL, Surface* p4 = NULL);
 
    /*
     * Description: checks for RectFigure to RectFigure collision
@@ -687,6 +717,9 @@ public:
     * Figure (i.e. in most cases, the camera follows the Figure controlled
     * by the player), false otherwise. Default value is false.
     *
+    * Parameter: Resolves resolve describes the collision resolution action if collided
+    * with. Default is BOUNDARY.
+    *
     * Parameter: double speed is the movement speed of the Figure in terms of percentage
     * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
     * would indicate move 50% of the Figure width every frame. Default is 5;
@@ -714,8 +747,9 @@ public:
    CircFigure(int x, int y, Surface& image, SDL_Surface* screen,
          Gravity gravityEnabled, bool leader = false, double speed = 5,
          double gravity = 1, double jumpStrength = 1, int numClips = 1,
-         int levelWidth = -1, int levelHeight = -1, Surface* p1 = NULL,
-         Surface* p2 = NULL, Surface* p3 = NULL, Surface* p4 = NULL);
+         int levelWidth = -1, int levelHeight = -1, Resolves resolve = BOUNDARY,
+         Surface* p1 = NULL, Surface* p2 = NULL, Surface* p3 = NULL,
+         Surface* p4 = NULL);
 
    /*
     * Description: Overloading parameterized constructor
@@ -729,6 +763,9 @@ public:
     * Parameter: bool leader is true if the camera is to follow the this instance of
     * Figure (i.e. in most cases, the camera follows the Figure controlled
     * by the player), false otherwise. Default value is false.
+    *
+    * Parameter: Resolves resolve describes the collision resolution action if collided
+    * with. Default is BOUNDARY.
     *
     * Parameter: double speed is the movement speed of the Figure in terms of percentage
     * of the dimensions of the Figure i.e. for horizontal movement, a speed value of 50
@@ -757,8 +794,9 @@ public:
    virtual void setFigure(int x, int y, Surface& image, SDL_Surface* screen,
          Gravity gravityEnabled, bool leader = false, double speed = 5,
          double gravity = 1, double jumpStrength = 1, int numClips = 1,
-         int levelWidth = -1, int levelHeight = -1, Surface* p1 = NULL,
-         Surface* p2 = NULL, Surface* p3 = NULL, Surface* p4 = NULL);
+         int levelWidth = -1, int levelHeight = -1, Resolves resolve = BOUNDARY,
+         Surface* p1 = NULL, Surface* p2 = NULL, Surface* p3 = NULL,
+         Surface* p4 = NULL);
 
    /*
     * Description: obtains the radius of the circle
@@ -776,7 +814,7 @@ public:
     * the player. When showing cf1, it would look like this: cf1.show(cf2.getCameraClip()).
     * Default value for otherCamera is NULL.
     */
-   virtual int show(SDL_Rect* otherCamera = NULL);
+   virtual Marker show(SDL_Rect* otherCamera = NULL);
 
    /*
     * Description: applies the particles to screen

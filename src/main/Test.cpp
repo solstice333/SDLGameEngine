@@ -47,13 +47,20 @@ const bool TEST_GRAPHICS = true;
 const bool TEST_STRING_INPUT = false;
 
 /*
+ * TODO
  * Rebel - remove an object from collision map
  * and thus the scene
+ *
+ * Kevin - not necessary anymore since the Figures are set to INACTIVE? No need
+ * to completely free memory from Figures that aren't shown anymore. Not until the
+ * end of the level anyways. Any thoughts on this?
  */
+/*
 void removeIndex(vector<Figure*>& vec, int i) {
-   //TODO: also free the memory assoicated with the pointer too
+   //also free the memory assoicated with the pointer too
    vec.erase(vec.begin() + i);
 }
+*/
 
 /*Description: This tests the scrolling, collision detection, static figures within the level,
  *and animation. User can switch const bool FOO to true/false and comment/uncomment const
@@ -75,24 +82,25 @@ int main(int argc, char* argv[]) {
       Surface shimmer("images/shimmer.bmp", Surface::CYAN);
 
       RectFigure rf1(300, 525, rect, screen, Figure::GRAVITY_DISABLED, false, 0,
-            0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT, &red, &shimmer);
+            0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT, Figure::BOUNDARY, &red,
+            &shimmer);
       RectFigure rf2(500, 125, rect, screen, Figure::GRAVITY_DISABLED, false, 0,
             0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT);
       CircFigure cf1(700, 525, dot, screen, Figure::GRAVITY_DISABLED, false, 0,
             0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT);
       CircFigure cf2(900, 350, dot, screen, Figure::GRAVITY_ENABLED, false, 0,
-            0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT, &red, &green, &blue, &shimmer);
+            0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT, Figure::BOUNDARY, &red, &green,
+            &blue, &shimmer);
       RectFigure coin1(600, 325, coin, screen, Figure::GRAVITY_DISABLED, false,
-            0, 0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT);
-      coin1.resolution = coin1.point;
+            0, 0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT, Figure::POINT);
 
       RectFigure rf;
       CircFigure cf;
 
       if (FOO) {
          rf.setFigure(100, 300, foo, screen, gravEnDis, true, FS, G, FJS, FNC,
-               LEVEL_WIDTH, LEVEL_HEIGHT, &red, &green, &blue, &shimmer);
-         rf.resolution = rf.player;
+               LEVEL_WIDTH, LEVEL_HEIGHT, Figure::PLAYER, &red, &green, &blue,
+               &shimmer);
       }
       else
          cf.setFigure(100, 300, dot, screen, gravEnDis, true, CS, G, CJS, CNC,
@@ -147,11 +155,18 @@ int main(int argc, char* argv[]) {
             applySurface(0, 0, bgnd, screen, rf.getCameraClip());
             rf.show(rf.getCameraClip());
 
-            for (int i = 0; i < (int) collisions.size(); i++) {
-               int marker = collisions[i]->show(rf.getCameraClip());
-               if (marker == 2)
-                  removeIndex(collisions, i);
-            }
+            //TODO Kevin - commented this for now
+            /*for (int i = 0; i < (int) collisions.size(); i++) {
+             int marker = collisions[i]->show(rf.getCameraClip());
+             if (marker == 2)
+             removeIndex(collisions, i);
+             }*/
+
+            rf1.show(rf.getCameraClip());
+            rf2.show(rf.getCameraClip());
+            cf1.show(rf.getCameraClip());
+            cf2.show(rf.getCameraClip());
+            coin1.show(rf.getCameraClip());
          }
          else {
             cf.move(collisions, timer.getTicks());
