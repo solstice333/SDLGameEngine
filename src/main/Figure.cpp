@@ -42,11 +42,9 @@ void Figure::checkIfInAir(vector<Figure*>& other) {
    inAir = true;
    p.y += 3;
 
-   Figure* emp;
-
    //standing on ground or other Figure
    if ((v.y == 0 && p.y >= lh - dim.h)
-         || (v.y <= gravity && isCollided(other, count, emp)))
+         || (v.y <= gravity && isCollided(other, count)))
       inAir = false;
    p.y -= 3;
 
@@ -167,10 +165,8 @@ void Figure::xMovement(vector<Figure*>& other, int deltaTicks) {
 
    p.x += v.x * deltaTicks / 1000.0;
 
-   Figure* stor = NULL; //pointer to object we may collide against
-
-   if (isCollided(other, count, stor))
-      resolveCollision(stor, deltaTicks, XHAT);
+   if (isCollided(other, count) && count != -1)
+      resolveCollision(other[count], deltaTicks, XHAT);
    else if (p.x > lw - dim.w)
       p.x = lw - dim.w;
    else if (p.x < 0)
@@ -192,9 +188,12 @@ void Figure::yMovement(vector<Figure*>& other, int deltaTicks) {
    //collision with boundaries or other Figures
    p.y += v.y * deltaTicks / 1000.0;
 
-   Figure* stor;
-   if (isCollided(other, count, stor))
-      resolveCollision(stor, deltaTicks, YHAT);
+   if (isCollided(other, count) && count != -1) {
+      //TODO Kevin - hey rebel, here's an example of how count works
+      cout << "count: " << count << endl;
+
+      resolveCollision(other[count], deltaTicks, YHAT);
+   }
    else if (p.y > lh - dim.h)
       p.y = lh - dim.h;
 }
@@ -341,17 +340,19 @@ bool Figure::checkCollision(Figure* f) {
    return false;
 }
 
-bool Figure::isCollided(vector<Figure*>& other, int& count, Figure*& stor) {
+bool Figure::isCollided(vector<Figure*>& other, int& count) {
    if (!other.empty()) {
       for (vector<Figure*>::iterator i = other.begin(), end = other.end();
             i != end; i++) {
          if (checkCollision(*i)) {
-            stor = *i;
             return true;
          }
+
+         count++;
       }
 
-      count++;
+      if (count == other.size())
+         count = -1;
    }
 
    return false;
@@ -428,13 +429,9 @@ void Figure::move(vector<Figure*>& other, int deltaTicks) {
    }
 }
 
-//TODO Rebel - added marking system to signal if
-//Object is marked for deletion
 Figure::Marker Figure::show(SDL_Rect* otherCamera) {
-   //marker's been removed. Shouldn't even get here if it's already 2
    if (marker == INACTIVE)
       return marker;
-   //check if marker is marked for removal
    else if (marker == REMOVE) {
       bool animationDone = false;
       marker = INACTIVE;
@@ -444,9 +441,6 @@ Figure::Marker Figure::show(SDL_Rect* otherCamera) {
          //do a special animation if needed for however many frames
       }
 
-      //after x frames, where x is the frames needed to complete animation
-      //set marker status = 2 and it will stop being considered in the collision map
-      //and when drawing frame
       return marker;
    }
    else if (marker == ACTIVE) {
@@ -530,11 +524,11 @@ void Figure::addHitBoxes(vector<AABB*> allocator) {
  * @param float time step given in mili seconds
  *
  * TODO: There has to be a better way to do this
+ * Kevin - precondition here: Figure* other is valid and not NULL. Will keep thinking of a
+ * better way to do the above. We'll see a pattern when this becomes bigger. Right now I'm
+ * thinking of a multi-dimensional list-like data structure (vector, array) perhaps?
  */
-void Figure::resolveCollision(Figure* other, float timeStep, Component dir) {
-   if (other == NULL)
-      printf("Error! Found collision, with invalid other;\n");
-
+void Figure::resolveCollision(Figure* other, double timeStep, Component dir) {
    switch (this->resolution) {
    case (BOUNDARY): {
       //we're a BOUNDARY - we don't do anything cause we're cool
@@ -673,10 +667,8 @@ void CircFigure::checkIfInAir(vector<Figure*>& other) {
    inAir = true;
    p.y += 3;
 
-   Figure* stor;
-
    //if on floor or standing on another Figure
-   if ((v.y == 0 && p.y >= lh - r) || (isCollided(other, count, stor)))
+   if ((v.y == 0 && p.y >= lh - r) || (isCollided(other, count)))
       inAir = false;
    p.y -= 3;
 
@@ -690,9 +682,7 @@ void CircFigure::xMovement(vector<Figure*>& other, int deltaTicks) {
 
    p.x += v.x * deltaTicks / 1000.0;
 
-   Figure* stor;
-
-   if (isCollided(other, count, stor))
+   if (isCollided(other, count))
       p.x -= gravity / 2 * v.x * deltaTicks / 1000.0;
    else if (p.x > lw - r)
       p.x = lw - r;
@@ -714,9 +704,7 @@ void CircFigure::yMovement(vector<Figure*>& other, int deltaTicks) {
 
    p.y += v.y * deltaTicks / 1000.0;
 
-   Figure* stor;
-
-   if (isCollided(other, count, stor)) {
+   if (isCollided(other, count)) {
       if (v.y * deltaTicks / 1000.0 < 0)
          p.y -= floor(v.y * deltaTicks / 1000.0);
       else

@@ -501,20 +501,28 @@ public:
     * that require parsing for collision detection
     *
     * Parameter: int& count is the reference to the counter describing which index of the vector
-    * the collision occurred on
+    * the collision occurred on. After the method has been executed, if count results as -1,
+    * then no collision occurred
     *
     * Return: true if collision occurred, false otherwise
     */
-   virtual bool isCollided(vector<Figure*>& other, int& count, Figure*&);
+   virtual bool isCollided(vector<Figure*>& other, int& count);
 
    // TODO REBEL: method to add hit boxes
    void addHitBoxes(vector<AABB*>);
 
-   // TODO Rebel: called in x move and etc
    /*
-    * Description: resolves collision based on the Component dir passed in
+    * Description: resolves collision based on the Component dir passed in i.e.
+    * if collision happened along the y axis, then dir would be YHAT
+    *
+    * Parameter: Figure* other is the pointer to Figure that was collided with
+    * Parameter: double timeStep is the deltaTicks between the start of the timer to the
+    * call of resolveCollision. timeStep is used for time-based frame independent movement.
+    *
+    * Parameter: Component dir is the axis that collision occurred on
+    * Precondition: Figure* other is valid and not NULL
     */
-   void resolveCollision(Figure* other, float timeStep, Component dir);
+   void resolveCollision(Figure* other, double timeStep, Component dir);
 
    /*
     * Description: handles input with directional keys and adjusts the velocity respectively
