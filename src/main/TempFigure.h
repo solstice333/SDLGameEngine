@@ -12,16 +12,21 @@
 #include "Figure.h"
 #include "Exception.h"
 
-class TempFigure : public Figure {
+class TempFigure: public RectFigure {
+public:
+   enum Marker {
+      ACTIVE, REMOVE, INACTIVE
+   };
+
+private:
+   Marker marker;
+
 public:
    TempFigure(int x, int y, Surface& image, SDL_Surface* screen,
-         Gravity gravityEnabled, bool leader = false, double speed = 5,
-         double gravity = 1, double jumpStrength = 1, int numClips = 1,
-         int levelWidth = -1, int levelHeight = -1, Surface* p1 = NULL,
-         Surface* p2 = NULL, Surface* p3 = NULL, Surface* p4 = NULL,
-         Figure::Resolves resolve = BOUNDARY);
-   Marker show(SDL_Rect* otherCamera = NULL);
+         int levelWidth = -1, int levelHeight = -1);
 
+   virtual void resolveCollision(Figure* other, double timeStep, Component dir);
+   virtual void show(SDL_Rect* otherCamera = NULL);
 };
 
 #endif /* TEMPFIGURE_H_ */

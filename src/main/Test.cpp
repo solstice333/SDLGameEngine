@@ -9,6 +9,7 @@
 #include "SDLAbstractionLayer.h"
 #include "Exception.h"
 #include "Figure.h"
+#include "TempFigure.h"
 #include "SDL/SDL.h"
 #include "SDL/SDL_image.h"
 
@@ -25,13 +26,19 @@ const int DOT_HEIGHT = 20;
 const int LEVEL_WIDTH = 1191;
 const int LEVEL_HEIGHT = 670;
 
-const double FS = 150;
+const double FS = 200;
 const double CS = 1200;
 const double CJS = 11;
-const double FJS = 10;
+const double FJS = 7;
 const double G = 4;
 const int CNC = 1;
 const int FNC = 4;
+
+const bool OTHER_LEADER = false;
+const double OTHER_SPEED = 0;
+const double OTHER_GRAVITY = 0;
+const double OTHER_JUMPSTRENGTH = 0;
+const int OTHER_NUMCLIPS = 1;
 
 const string TTF_PATH = "fonts/lazy.ttf";
 const int FONT_SIZE = 28;
@@ -56,11 +63,11 @@ const bool TEST_STRING_INPUT = false;
  * end of the level anyways. Any thoughts on this?
  */
 /*
-void removeIndex(vector<Figure*>& vec, int i) {
-   //also free the memory assoicated with the pointer too
-   vec.erase(vec.begin() + i);
-}
-*/
+ void removeIndex(vector<Figure*>& vec, int i) {
+ //also free the memory assoicated with the pointer too
+ vec.erase(vec.begin() + i);
+ }
+ */
 
 /*Description: This tests the scrolling, collision detection, static figures within the level,
  *and animation. User can switch const bool FOO to true/false and comment/uncomment const
@@ -69,6 +76,7 @@ void removeIndex(vector<Figure*>& vec, int i) {
 int main(int argc, char* argv[]) {
    if (TEST_GRAPHICS) {
       SDL_Surface* screen = init(SCREEN_WIDTH, SCREEN_HEIGHT, "SDL Scrolling");
+      vector<Figure*> collisions;
 
       Surface bgnd("images/bgnd.jpg");
       Surface dot("images/dot.png", Surface::CYAN);
@@ -81,18 +89,21 @@ int main(int argc, char* argv[]) {
       Surface green("images/green.bmp", Surface::CYAN);
       Surface shimmer("images/shimmer.bmp", Surface::CYAN);
 
-      RectFigure rf1(300, 525, rect, screen, Figure::GRAVITY_DISABLED, false, 0,
-            0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT, Figure::BOUNDARY, &red,
+      RectFigure rf1(300, 525, rect, screen, Figure::GRAVITY_DISABLED,
+            LEVEL_WIDTH, LEVEL_HEIGHT, OTHER_LEADER, OTHER_SPEED, OTHER_GRAVITY,
+            OTHER_JUMPSTRENGTH, OTHER_NUMCLIPS, Figure::BOUNDARY, &red,
             &shimmer);
-      RectFigure rf2(500, 125, rect, screen, Figure::GRAVITY_DISABLED, false, 0,
-            0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT);
-      CircFigure cf1(700, 525, dot, screen, Figure::GRAVITY_DISABLED, false, 0,
-            0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT);
-      CircFigure cf2(900, 350, dot, screen, Figure::GRAVITY_ENABLED, false, 0,
-            0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT, Figure::BOUNDARY, &red, &green,
-            &blue, &shimmer);
-      RectFigure coin1(600, 325, coin, screen, Figure::GRAVITY_DISABLED, false,
-            0, 0, 0, 1, LEVEL_WIDTH, LEVEL_HEIGHT, Figure::POINT);
+      RectFigure rf2(500, 125, rect, screen, Figure::GRAVITY_DISABLED,
+            LEVEL_WIDTH, LEVEL_HEIGHT, OTHER_LEADER, OTHER_SPEED, OTHER_GRAVITY,
+            OTHER_JUMPSTRENGTH, OTHER_NUMCLIPS);
+      CircFigure cf1(700, 525, dot, screen, Figure::GRAVITY_DISABLED,
+            LEVEL_WIDTH, LEVEL_HEIGHT, OTHER_LEADER, OTHER_SPEED, OTHER_GRAVITY,
+            OTHER_JUMPSTRENGTH, OTHER_NUMCLIPS);
+      CircFigure cf2(900, 350, dot, screen, Figure::GRAVITY_DISABLED,
+            LEVEL_WIDTH, LEVEL_HEIGHT, OTHER_LEADER, OTHER_SPEED, OTHER_GRAVITY,
+            OTHER_JUMPSTRENGTH, OTHER_NUMCLIPS, Figure::BOUNDARY, &red,
+            &shimmer);
+      TempFigure coin1(600, 325, coin, screen, LEVEL_WIDTH, LEVEL_HEIGHT);
 
       RectFigure rf;
       CircFigure cf;
@@ -101,10 +112,15 @@ int main(int argc, char* argv[]) {
          rf.setFigure(100, 300, foo, screen, gravEnDis, true, FS, G, FJS, FNC,
                LEVEL_WIDTH, LEVEL_HEIGHT, Figure::PLAYER, &red, &green, &blue,
                &shimmer);
+
+         collisions.push_back(&rf);
       }
-      else
+      else {
          cf.setFigure(100, 300, dot, screen, gravEnDis, true, CS, G, CJS, CNC,
                LEVEL_WIDTH, LEVEL_HEIGHT);
+
+         collisions.push_back(&cf);
+      }
 
       //Test constructors
       /*
@@ -118,7 +134,6 @@ int main(int argc, char* argv[]) {
       SDL_Event event;
       Timer timer;
 
-      vector<Figure*> collisions;
       collisions.push_back(&rf1);
       collisions.push_back(&rf2);
       collisions.push_back(&cf1);
@@ -164,6 +179,8 @@ int main(int argc, char* argv[]) {
             rf2.show(rf.getCameraClip());
             cf1.show(rf.getCameraClip());
             cf2.show(rf.getCameraClip());
+
+            coin1.move(collisions, 0);
             coin1.show(rf.getCameraClip());
          }
          else {

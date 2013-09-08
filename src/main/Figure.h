@@ -66,14 +66,6 @@ public:
       BOUNDARY, PLAYER, POINT
    };
 
-   /*
-    * Description: Enum table for revised Marker. Marker describes the status of the Figure
-    * in terms of whether or not it should be shown on the screen
-    */
-   enum Marker {
-      ACTIVE, REMOVE, INACTIVE
-   };
-
 private:
 
    /*
@@ -88,12 +80,6 @@ protected:
     * Figure has
     */
    Resolves resolution;
-
-   /*
-    * Description: marker contains the status of the Figure in terms of whether or not
-    * it should be shown on the screen (active or inactive) or marked for removal
-    */
-   Marker marker;
 
    // TODO REBEL: hacking together a solution for ledge problem
    // custom hitboxes depending on frame (tried to implement this in my engine)
@@ -467,6 +453,11 @@ public:
    virtual int getY();
 
    /*
+    * Description: obtains the Resolves resolution of the Figure
+    */
+   virtual Resolves getResolution();
+
+   /*
     * Description: parses through the subclasses to see what kind of Figure the this instance is colliding with, then calls
     * the respective checkCollision.
     *
@@ -522,7 +513,7 @@ public:
     * Parameter: Component dir is the axis that collision occurred on
     * Precondition: Figure* other is valid and not NULL
     */
-   void resolveCollision(Figure* other, double timeStep, Component dir);
+   virtual void resolveCollision(Figure* other, double timeStep, Component dir);
 
    /*
     * Description: handles input with directional keys and adjusts the velocity respectively
@@ -554,7 +545,7 @@ public:
     * Exception: throws InvalidMarkerException()
     * Return: Marker describing whether the Figure is ACTIVE, INACTIVE, or set to REMOVE
     */
-   virtual Marker show(SDL_Rect* otherCamera = NULL);
+   virtual void show(SDL_Rect* otherCamera = NULL);
 
    /*
     * Description: applies the particles to screen
@@ -577,6 +568,16 @@ public:
     * Return: the class name of the subclass instantiated
     */
    string getClassName();
+
+   /*
+    * Description: true if Figures are equal, false otherwise
+    */
+   bool operator==(const Figure& other);
+
+   /*
+    * Description: true if Figures are not equal, false otherwise
+    */
+   bool operator!=(const Figure& other);
 
    /*
     * Description: destructor
@@ -638,9 +639,9 @@ public:
     * Parameter: Surface* p4 is the pointer to particle 4. Default is NULL.
     */
    RectFigure(int x, int y, Surface& image, SDL_Surface* screen,
-         Gravity gravityEnabled, bool leader = false, double speed = 5,
-         double gravity = 1, double jumpStrength = 1, int numClips = 1,
-         int levelWidth = -1, int levelHeight = -1, Resolves resolve = BOUNDARY,
+         Gravity gravityEnabled, int levelWidth = -1, int levelHeight = -1,
+         bool leader = false, double speed = 5, double gravity = 1,
+         double jumpStrength = 1, int numClips = 1, Resolves resolve = BOUNDARY,
          Surface* p1 = NULL, Surface* p2 = NULL, Surface* p3 =
          NULL, Surface* p4 = NULL);
 
@@ -753,9 +754,9 @@ public:
     * Parameter: Surface* p4 is the pointer to particle 4. Default is NULL.
     */
    CircFigure(int x, int y, Surface& image, SDL_Surface* screen,
-         Gravity gravityEnabled, bool leader = false, double speed = 5,
-         double gravity = 1, double jumpStrength = 1, int numClips = 1,
-         int levelWidth = -1, int levelHeight = -1, Resolves resolve = BOUNDARY,
+         Gravity gravityEnabled, int levelWidth = -1, int levelHeight = -1,
+         bool leader = false, double speed = 5, double gravity = 1,
+         double jumpStrength = 1, int numClips = 1, Resolves resolve = BOUNDARY,
          Surface* p1 = NULL, Surface* p2 = NULL, Surface* p3 = NULL,
          Surface* p4 = NULL);
 
@@ -822,7 +823,7 @@ public:
     * the player. When showing cf1, it would look like this: cf1.show(cf2.getCameraClip()).
     * Default value for otherCamera is NULL.
     */
-   virtual Marker show(SDL_Rect* otherCamera = NULL);
+   virtual void show(SDL_Rect* otherCamera = NULL);
 
    /*
     * Description: applies the particles to screen

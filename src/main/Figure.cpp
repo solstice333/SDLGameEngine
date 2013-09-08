@@ -19,7 +19,6 @@ int Figure::determineGravity() {
 }
 
 int Figure::determineJump() {
-
    if (gravityEnabled && u && !jumpAction) {
       jumpAction = true;
       u = false;
@@ -61,7 +60,6 @@ void Figure::initialize(int x, int y, double gravity, double speed,
    p.y = y;
    this->leader = leader;
    resolution = resolve;
-   marker = ACTIVE;
 
    jumpFrame = 0;
    this->numClips = numClips;
@@ -188,12 +186,8 @@ void Figure::yMovement(vector<Figure*>& other, int deltaTicks) {
    //collision with boundaries or other Figures
    p.y += v.y * deltaTicks / 1000.0;
 
-   if (isCollided(other, count) && count != -1) {
-      //TODO Kevin - hey rebel, here's an example of how count works
-      cout << "count: " << count << endl;
-
+   if (isCollided(other, count) && count != -1)
       resolveCollision(other[count], deltaTicks, YHAT);
-   }
    else if (p.y > lh - dim.h)
       p.y = lh - dim.h;
 }
@@ -320,6 +314,10 @@ int Figure::getY() {
    return p.y;
 }
 
+Figure::Resolves Figure::getResolution() {
+   return resolution;
+}
+
 bool Figure::checkCollision(Figure* f) {
    RectFigure* r;
    CircFigure* c;
@@ -344,9 +342,8 @@ bool Figure::isCollided(vector<Figure*>& other, int& count) {
    if (!other.empty()) {
       for (vector<Figure*>::iterator i = other.begin(), end = other.end();
             i != end; i++) {
-         if (checkCollision(*i)) {
+         if (*this != **i && checkCollision(*i))
             return true;
-         }
 
          count++;
       }
@@ -429,66 +426,45 @@ void Figure::move(vector<Figure*>& other, int deltaTicks) {
    }
 }
 
-Figure::Marker Figure::show(SDL_Rect* otherCamera) {
-   if (marker == INACTIVE)
-      return marker;
-   else if (marker == REMOVE) {
-      bool animationDone = false;
-      marker = INACTIVE;
-
-      if (animationDone) {
-         //TODO: Add animation and sound for this
-         //do a special animation if needed for however many frames
+void Figure::show(SDL_Rect* otherCamera) {
+   if (numClips > 0) {
+      if (v.x < 0) {
+         status = LEFT;
+         animationFrame += AFVALUE;
       }
-
-      return marker;
-   }
-   else if (marker == ACTIVE) {
-      if (numClips > 0) {
-         if (v.x < 0) {
-            status = LEFT;
-            animationFrame += AFVALUE;
-         }
-         else if (v.x > 0) {
-            status = RIGHT;
-            animationFrame += AFVALUE;
-         }
-         else
-            animationFrame = 0;
-
-         if (animationFrame >= numClips)
-            animationFrame = 0;
-
-         if (leader) {
-            if (status == LEFT)
-               applySurface((int) p.x - camera->x, (int) p.y - camera->y,
-                     *image, screen, &cl[static_cast<int>(animationFrame)]);
-            else if (status == RIGHT)
-               applySurface((int) p.x - camera->x, (int) p.y - camera->y,
-                     *image, screen, &cr[static_cast<int>(animationFrame)]);
-
-            if (particleEffects)
-               showParticles(camera);
-         }
-         else {
-            if (status == LEFT)
-               applySurface((int) p.x - otherCamera->x,
-                     (int) p.y - otherCamera->y, *image, screen,
-                     &cl[static_cast<int>(animationFrame)]);
-            else if (status == RIGHT)
-               applySurface((int) p.x - otherCamera->x,
-                     (int) p.y - otherCamera->y, *image, screen,
-                     &cr[static_cast<int>(animationFrame)]);
-
-            if (particleEffects)
-               showParticles(otherCamera);
-         }
+      else if (v.x > 0) {
+         status = RIGHT;
+         animationFrame += AFVALUE;
       }
+      else
+         animationFrame = 0;
 
-      return marker;
+      if (animationFrame >= numClips)
+         animationFrame = 0;
+
+      if (leader) {
+         if (status == LEFT)
+            applySurface((int) p.x - camera->x, (int) p.y - camera->y, *image,
+                  screen, &cl[static_cast<int>(animationFrame)]);
+         else if (status == RIGHT)
+            applySurface((int) p.x - camera->x, (int) p.y - camera->y, *image,
+                  screen, &cr[static_cast<int>(animationFrame)]);
+
+         if (particleEffects)
+            showParticles(camera);
+      }
+      else {
+         if (status == LEFT)
+            applySurface((int) p.x - otherCamera->x, (int) p.y - otherCamera->y,
+                  *image, screen, &cl[static_cast<int>(animationFrame)]);
+         else if (status == RIGHT)
+            applySurface((int) p.x - otherCamera->x, (int) p.y - otherCamera->y,
+                  *image, screen, &cr[static_cast<int>(animationFrame)]);
+
+         if (particleEffects)
+            showParticles(otherCamera);
+      }
    }
-   else
-      throw InvalidMarkerException();
 }
 
 void Figure::showParticles(SDL_Rect* camera) {
@@ -530,18 +506,9 @@ void Figure::addHitBoxes(vector<AABB*> allocator) {
  */
 void Figure::resolveCollision(Figure* other, double timeStep, Component dir) {
    switch (this->resolution) {
-   case (BOUNDARY): {
-      //we're a BOUNDARY - we don't do anything cause we're cool
-
-      break;
-   }
-   case (PLAYER): {
-      //we're the player - we have special interactions depending on the
-      //other resolve
+   case (PLAYER):
       switch (other->resolution) {
       case (BOUNDARY): {
-         //Player runs into a boundary type object
-         //do what we expect it to do
          if (dir == XHAT)
             p.x -= v.x * timeStep / 1000.0;
          if (dir == YHAT) {
@@ -551,29 +518,25 @@ void Figure::resolveCollision(Figure* other, double timeStep, Component dir) {
          }
          break;
       }
-      case (PLAYER): {
-         //Player runs into another player
-         //TODO: probably won't be doing anything until we have multiplayer
+      default:
          break;
       }
-      case (POINT): {
-         //player runs into a point
-         // mark point for deletion
-         other->marker = REMOVE;
-         break;
-      }
-      }
-
       break;
-   }
-   case (POINT): {
+   default:
       break;
-   }
    }
 }
 
 string Figure::getClassName() {
    return className;
+}
+
+bool Figure::operator==(const Figure& other) {
+   return this->p.x == other.p.x && this->p.y == other.p.y;
+}
+
+bool Figure::operator!=(const Figure& other) {
+   return this->p.x != other.p.x || this->p.y != other.p.y;
 }
 
 Figure::~Figure() {
@@ -597,8 +560,8 @@ RectFigure::RectFigure() {
 }
 
 RectFigure::RectFigure(int x, int y, Surface& image, SDL_Surface* screen,
-      Gravity gravityEnabled, bool leader, double speed, double gravity,
-      double jumpStrength, int numClips, int levelWidth, int levelHeight,
+      Gravity gravityEnabled, int levelWidth, int levelHeight, bool leader,
+      double speed, double gravity, double jumpStrength, int numClips,
       Resolves resolve, Surface* p1, Surface* p2, Surface* p3, Surface* p4) :
       Figure(x, y, image, screen, gravityEnabled, leader, speed, gravity,
             jumpStrength, numClips, levelWidth, levelHeight, resolve, p1, p2,
@@ -728,8 +691,8 @@ CircFigure::CircFigure() {
 }
 
 CircFigure::CircFigure(int x, int y, Surface& image, SDL_Surface* screen,
-      Gravity gravityEnabled, bool leader, double speed, double gravity,
-      double jumpStrength, int numClips, int levelWidth, int levelHeight,
+      Gravity gravityEnabled, int levelWidth, int levelHeight, bool leader,
+      double speed, double gravity, double jumpStrength, int numClips,
       Resolves resolve, Surface* p1, Surface* p2, Surface* p3, Surface* p4) :
       Figure(x, y, image, screen, gravityEnabled, leader, speed, gravity,
             jumpStrength, numClips, levelWidth, levelHeight, resolve, p1, p2,
@@ -766,7 +729,7 @@ int CircFigure::getR() {
    return r;
 }
 
-Figure::Marker CircFigure::show(SDL_Rect* otherCamera) {
+void CircFigure::show(SDL_Rect* otherCamera) {
    if (numClips > 0) {
       if (v.x < 0) {
          status = LEFT;
@@ -807,8 +770,6 @@ Figure::Marker CircFigure::show(SDL_Rect* otherCamera) {
             showParticles(otherCamera);
       }
    }
-
-   return marker;
 }
 
 void CircFigure::showParticles(SDL_Rect* camera) {
