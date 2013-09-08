@@ -7,10 +7,19 @@
 
 #include "TempFigure.h"
 
+TempFigure::TempFigure() {}
+
 TempFigure::TempFigure(int x, int y, Surface& image, SDL_Surface* screen,
       int levelWidth, int levelHeight) :
       RectFigure(x, y, image, screen, GRAVITY_DISABLED, levelWidth, levelHeight,
             false, 5, 1, 1, 1, POINT), marker(ACTIVE) {
+}
+
+void TempFigure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
+      int levelWidth, int levelHeight) {
+   Figure::setFigure(x, y, image, screen, GRAVITY_DISABLED, levelWidth, levelHeight,
+            false, 5, 1, 1, 1, POINT);
+   marker = ACTIVE;
 }
 
 void TempFigure::resolveCollision(Figure* other, double timeStep,

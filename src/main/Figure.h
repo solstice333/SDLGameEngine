@@ -426,9 +426,9 @@ public:
     * Parameter: Surface* p4 is the pointer to particle 4. Default is NULL.
     */
    virtual void setFigure(int x, int y, Surface& image, SDL_Surface* screen,
-         Gravity gravityEnabled, bool leader = false, double speed = 5,
-         double gravity = 1, double jumpStrength = 1, int numClips = 1,
-         int levelWidth = -1, int levelHeight = -1, Resolves resolve = BOUNDARY,
+         Gravity gravityEnabled, int levelWidth = -1, int levelHeight = -1,
+         bool leader = false, double speed = 5, double gravity = 1,
+         double jumpStrength = 1, int numClips = 1, Resolves resolve = BOUNDARY,
          Surface* p1 = NULL, Surface* p2 = NULL, Surface* p3 = NULL,
          Surface* p4 = NULL);
 
@@ -489,7 +489,9 @@ public:
     * where the Figures need to be parsed through to check for collision with the this Figure.
     *
     * Parameter: vector<Figure*>& other is the reference to a vector holding the Figure pointers
-    * that require parsing for collision detection
+    * that require parsing for collision detection i.e. the vector that contains all the
+    * instantiated Figures. isCollided() is aware of reflexive properties between Figures and
+    * ignores checking collision for a Figure that is itself
     *
     * Parameter: int& count is the reference to the counter describing which index of the vector
     * the collision occurred on. After the method has been executed, if count results as -1,
@@ -801,9 +803,9 @@ public:
     * Parameter: Surface* p4 is the pointer to particle 4. Default is NULL.
     */
    virtual void setFigure(int x, int y, Surface& image, SDL_Surface* screen,
-         Gravity gravityEnabled, bool leader = false, double speed = 5,
-         double gravity = 1, double jumpStrength = 1, int numClips = 1,
-         int levelWidth = -1, int levelHeight = -1, Resolves resolve = BOUNDARY,
+         Gravity gravityEnabled, int levelWidth = -1, int levelHeight = -1,
+         bool leader = false, double speed = 5, double gravity = 1,
+         double jumpStrength = 1, int numClips = 1, Resolves resolve = BOUNDARY,
          Surface* p1 = NULL, Surface* p2 = NULL, Surface* p3 = NULL,
          Surface* p4 = NULL);
 

@@ -283,8 +283,8 @@ Figure::Figure(int x, int y, Surface& image, SDL_Surface* screen,
 }
 
 void Figure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
-      Gravity gravityEnabled, bool leader, double speed, double gravity,
-      double jumpStrength, int numClips, int levelWidth, int levelHeight,
+      Gravity gravityEnabled, int levelWidth, int levelHeight, bool leader,
+      double speed, double gravity, double jumpStrength, int numClips,
       Resolves resolve, Surface* p1, Surface* p2, Surface* p3, Surface* p4) {
 
    dim.w = image.getSDL_Surface()->w / numClips;
@@ -709,12 +709,12 @@ CircFigure::CircFigure(int x, int y, Surface& image, SDL_Surface* screen,
 }
 
 void CircFigure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
-      Gravity gravityEnabled, bool leader, double speed, double gravity,
-      double jumpStrength, int numClips, int levelWidth, int levelHeight,
+      Gravity gravityEnabled, int levelWidth, int levelHeight, bool leader,
+      double speed, double gravity, double jumpStrength, int numClips,
       Resolves resolve, Surface* p1, Surface* p2, Surface* p3, Surface* p4) {
-   Figure::setFigure(x, y, image, screen, gravityEnabled, leader, speed,
-         gravity, jumpStrength, numClips, levelWidth, levelHeight, resolve, p1,
-         p2, p3, p4);
+   Figure::setFigure(x, y, image, screen, gravityEnabled, levelWidth,
+         levelHeight, leader, speed, gravity, jumpStrength, numClips, resolve,
+         p1, p2, p3, p4);
 
    if (dim.w > dim.h)
       r = dim.w / 2;

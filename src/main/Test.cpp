@@ -109,15 +109,15 @@ int main(int argc, char* argv[]) {
       CircFigure cf;
 
       if (FOO) {
-         rf.setFigure(100, 300, foo, screen, gravEnDis, true, FS, G, FJS, FNC,
-               LEVEL_WIDTH, LEVEL_HEIGHT, Figure::PLAYER, &red, &green, &blue,
-               &shimmer);
+         rf.setFigure(100, 300, foo, screen, gravEnDis, LEVEL_WIDTH,
+               LEVEL_HEIGHT, true, FS, G, FJS, FNC, Figure::PLAYER, &red,
+               &green, &blue, &shimmer);
 
          collisions.push_back(&rf);
       }
       else {
-         cf.setFigure(100, 300, dot, screen, gravEnDis, true, CS, G, CJS, CNC,
-               LEVEL_WIDTH, LEVEL_HEIGHT);
+         cf.setFigure(100, 300, dot, screen, gravEnDis, LEVEL_WIDTH,
+               LEVEL_HEIGHT, true, CS, G, CJS, CNC);
 
          collisions.push_back(&cf);
       }
