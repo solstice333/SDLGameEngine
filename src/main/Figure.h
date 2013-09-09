@@ -569,7 +569,7 @@ public:
     * Description: obtains the class name of the subclass instance
     * Return: the class name of the subclass instantiated
     */
-   string getClassName();
+   virtual string getClassName();
 
    /*
     * Description: true if Figures are equal, false otherwise
