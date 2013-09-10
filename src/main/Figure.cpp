@@ -368,7 +368,9 @@ void Figure::handleInput(SDL_Event& event) {
 
          break;
       case SDLK_DOWN:
-         v.y += dim.h * speed / 100;
+         if (!gravityEnabled)
+            v.y += dim.h * speed / 100;
+
          d = true;
          break;
       case SDLK_LEFT:
@@ -389,10 +391,13 @@ void Figure::handleInput(SDL_Event& event) {
       case SDLK_UP:
          if (!gravityEnabled)
             v.y += dim.h * speed / 100 * jumpStrength;
+
          u = false;
          break;
       case SDLK_DOWN:
-         v.y -= dim.h * speed / 100;
+         if (!gravityEnabled)
+            v.y -= dim.h * speed / 100;
+
          d = false;
          break;
       case SDLK_LEFT:

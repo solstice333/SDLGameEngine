@@ -566,7 +566,11 @@ public:
    virtual SDL_Rect* getCameraClip();
 
    /*
-    * Description: obtains the class name of the subclass instance
+    * Description: performs instanceof check to see if subclass is an instance of
+    * RectFigure or CircFigure. Can be overrided, but user must Figure::checkCollision() must
+    * be edited, else a FigureException will be thrown. It is advised not to override this
+    * if it can be avoided
+    *
     * Return: the class name of the subclass instantiated
     */
    virtual string getClassName();
