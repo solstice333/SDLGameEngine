@@ -28,7 +28,7 @@ void TempFigure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
 
 void TempFigure::resolveCollision(Figure* other, double timeStep,
       enum Component dir) {
-   if (typeid(*other) == typeid(PlayerFigure))
+   if (typeid(*other) == typeid(PlayerFigure) && marker == ACTIVE)
       this->marker = REMOVE;
 }
 
@@ -36,10 +36,9 @@ void TempFigure::show(SDL_Rect* otherCamera) {
    if (marker == INACTIVE)
       return;
    else if (marker == REMOVE) {
-      bool animationDone = false;
+      bool animationDone = true;
       marker = INACTIVE;
 
-      //TODO debug this sound effect. issue playing the chunk.
       if (animationDone) {
          if (Mix_PlayChannel(-1, scratch.getMix_Chunk(), 0) < 0) {
             printf("Mix_PlayChannel: %s\n", Mix_GetError());

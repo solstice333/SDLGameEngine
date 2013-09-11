@@ -142,13 +142,11 @@ int main(int argc, char* argv[]) {
 
       timer.start();
 
-      /*
-       if (Mix_PlayingMusic() == 0)
-       if (Mix_PlayMusic(m.getMix_Music(), -1) < 0)
-       throw SoundException();
-       */
+      if (Mix_PlayingMusic() == 0)
+         if (Mix_PlayMusic(m.getMix_Music(), -1) < 0)
+            throw SoundException();
 
-      //Mix_VolumeMusic(32); //0 to 128
+      Mix_VolumeMusic(32); //0 to 128
 
       while (!quit) {
          if (SDL_PollEvent(&event)) {
@@ -192,7 +190,7 @@ int main(int argc, char* argv[]) {
          flip(screen);
       }
 
-      //Mix_HaltMusic();
+      Mix_HaltMusic();
    }
 
    cleanUp();
