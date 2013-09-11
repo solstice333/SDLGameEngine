@@ -9,6 +9,7 @@
 #define TEMPFIGURE_H_
 
 #include "SDLAbstractionLayer.h"
+#include "PlayerFigure.h"
 #include "Figure.h"
 #include "Exception.h"
 
@@ -34,6 +35,9 @@ private:
     * it's being shown to the screen
     */
    Marker marker;
+
+   //TODO description here
+   Chunk scratch;
 
 public:
 

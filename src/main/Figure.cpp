@@ -55,11 +55,10 @@ void Figure::checkIfInAir(vector<Figure*>& other) {
 void Figure::initialize(int x, int y, double gravity, double speed,
       double jumpStrength, SDL_Surface* screen, Gravity gravityEnabled,
       bool leader, int numClips, int levelWidth, int levelHeight, Surface* p1,
-      Surface* p2, Surface* p3, Surface* p4, Resolves resolve) {
+      Surface* p2, Surface* p3, Surface* p4) {
    p.x = x;
    p.y = y;
    this->leader = leader;
-   resolution = resolve;
 
    jumpFrame = 0;
    this->numClips = numClips;
@@ -272,27 +271,27 @@ Figure::Figure() {
 Figure::Figure(int x, int y, Surface& image, SDL_Surface* screen,
       Gravity gravityEnabled, bool leader, double speed, double gravity,
       double jumpStrength, int numClips, int levelWidth, int levelHeight,
-      Resolves resolve, Surface* p1, Surface* p2, Surface* p3, Surface* p4) :
+      Surface* p1, Surface* p2, Surface* p3, Surface* p4) :
       image(&image) {
 
    dim.w = image.getSDL_Surface()->w / numClips;
    dim.h = image.getSDL_Surface()->h / 2;
 
    initialize(x, y, gravity, speed, jumpStrength, screen, gravityEnabled,
-         leader, numClips, levelWidth, levelHeight, p1, p2, p3, p4, resolve);
+         leader, numClips, levelWidth, levelHeight, p1, p2, p3, p4);
 }
 
 void Figure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
       Gravity gravityEnabled, int levelWidth, int levelHeight, bool leader,
       double speed, double gravity, double jumpStrength, int numClips,
-      Resolves resolve, Surface* p1, Surface* p2, Surface* p3, Surface* p4) {
+      Surface* p1, Surface* p2, Surface* p3, Surface* p4) {
 
    dim.w = image.getSDL_Surface()->w / numClips;
    dim.h = image.getSDL_Surface()->h / 2;
    this->image = &image;
 
    initialize(x, y, gravity, speed, jumpStrength, screen, gravityEnabled,
-         leader, numClips, levelWidth, levelHeight, p1, p2, p3, p4, resolve);
+         leader, numClips, levelWidth, levelHeight, p1, p2, p3, p4);
 
    if (DEBUG_PRIVATES && this->className == "RectFigure")
       debug();
@@ -312,10 +311,6 @@ int Figure::getX() {
 
 int Figure::getY() {
    return p.y;
-}
-
-Figure::Resolves Figure::getResolution() {
-   return resolution;
 }
 
 bool Figure::checkCollision(Figure* f) {
@@ -488,13 +483,6 @@ SDL_Rect* Figure::getCameraClip() {
 }
 
 /*
- * TODO Rebel: Attempting to fix ledge problem
- */
-void Figure::addHitBoxes(vector<AABB*> allocator) {
-
-}
-
-/*
  * Collision resolver -
  * Uses a int given in the figure, and int given in other
  * object that is involved with the collision
@@ -510,25 +498,12 @@ void Figure::addHitBoxes(vector<AABB*> allocator) {
  * thinking of a multi-dimensional list-like data structure (vector, array) perhaps?
  */
 void Figure::resolveCollision(Figure* other, double timeStep, Component dir) {
-   switch (this->resolution) {
-   case (PLAYER):
-      switch (other->resolution) {
-      case (BOUNDARY): {
-         if (dir == XHAT)
-            p.x -= v.x * timeStep / 1000.0;
-         if (dir == YHAT) {
-            p.y -= v.y * timeStep / 1000.0;
-            if (gravityEnabled)
-               v.y = 0;
-         }
-         break;
-      }
-      default:
-         break;
-      }
-      break;
-   default:
-      break;
+   if (dir == XHAT)
+      p.x -= v.x * timeStep / 1000.0;
+   else if (dir == YHAT) {
+      p.y -= v.y * timeStep / 1000.0;
+      if (gravityEnabled)
+         v.y = 0;
    }
 }
 
@@ -567,10 +542,9 @@ RectFigure::RectFigure() {
 RectFigure::RectFigure(int x, int y, Surface& image, SDL_Surface* screen,
       Gravity gravityEnabled, int levelWidth, int levelHeight, bool leader,
       double speed, double gravity, double jumpStrength, int numClips,
-      Resolves resolve, Surface* p1, Surface* p2, Surface* p3, Surface* p4) :
+      Surface* p1, Surface* p2, Surface* p3, Surface* p4) :
       Figure(x, y, image, screen, gravityEnabled, leader, speed, gravity,
-            jumpStrength, numClips, levelWidth, levelHeight, resolve, p1, p2,
-            p3, p4) {
+            jumpStrength, numClips, levelWidth, levelHeight, p1, p2, p3, p4) {
    className = "RectFigure";
 
    if (DEBUG_PRIVATES)
@@ -698,10 +672,9 @@ CircFigure::CircFigure() {
 CircFigure::CircFigure(int x, int y, Surface& image, SDL_Surface* screen,
       Gravity gravityEnabled, int levelWidth, int levelHeight, bool leader,
       double speed, double gravity, double jumpStrength, int numClips,
-      Resolves resolve, Surface* p1, Surface* p2, Surface* p3, Surface* p4) :
+      Surface* p1, Surface* p2, Surface* p3, Surface* p4) :
       Figure(x, y, image, screen, gravityEnabled, leader, speed, gravity,
-            jumpStrength, numClips, levelWidth, levelHeight, resolve, p1, p2,
-            p3, p4) {
+            jumpStrength, numClips, levelWidth, levelHeight, p1, p2, p3, p4) {
    className = "CircFigure";
 
    if (dim.w > dim.h)
@@ -716,10 +689,10 @@ CircFigure::CircFigure(int x, int y, Surface& image, SDL_Surface* screen,
 void CircFigure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
       Gravity gravityEnabled, int levelWidth, int levelHeight, bool leader,
       double speed, double gravity, double jumpStrength, int numClips,
-      Resolves resolve, Surface* p1, Surface* p2, Surface* p3, Surface* p4) {
+      Surface* p1, Surface* p2, Surface* p3, Surface* p4) {
    Figure::setFigure(x, y, image, screen, gravityEnabled, levelWidth,
-         levelHeight, leader, speed, gravity, jumpStrength, numClips, resolve,
-         p1, p2, p3, p4);
+         levelHeight, leader, speed, gravity, jumpStrength, numClips, p1, p2,
+         p3, p4);
 
    if (dim.w > dim.h)
       r = dim.w / 2;

@@ -9,7 +9,10 @@
 #include "SDLAbstractionLayer.h"
 #include "Exception.h"
 #include "Figure.h"
+#include "RectBoundaryFigure.h"
+#include "CircBoundaryFigure.h"
 #include "TempFigure.h"
+#include "PlayerFigure.h"
 #include "SDL/SDL.h"
 #include "SDL/SDL_image.h"
 
@@ -89,29 +92,24 @@ int main(int argc, char* argv[]) {
       Surface green("images/green.bmp", Surface::CYAN);
       Surface shimmer("images/shimmer.bmp", Surface::CYAN);
 
-      RectFigure rf1(300, 525, rect, screen, Figure::GRAVITY_DISABLED,
-            LEVEL_WIDTH, LEVEL_HEIGHT, OTHER_LEADER, OTHER_SPEED, OTHER_GRAVITY,
-            OTHER_JUMPSTRENGTH, OTHER_NUMCLIPS, Figure::BOUNDARY, &red,
-            &shimmer);
-      RectFigure rf2(500, 125, rect, screen, Figure::GRAVITY_DISABLED,
-            LEVEL_WIDTH, LEVEL_HEIGHT, OTHER_LEADER, OTHER_SPEED, OTHER_GRAVITY,
-            OTHER_JUMPSTRENGTH, OTHER_NUMCLIPS);
-      CircFigure cf1(700, 525, dot, screen, Figure::GRAVITY_DISABLED,
-            LEVEL_WIDTH, LEVEL_HEIGHT, OTHER_LEADER, OTHER_SPEED, OTHER_GRAVITY,
-            OTHER_JUMPSTRENGTH, OTHER_NUMCLIPS);
-      CircFigure cf2(900, 350, dot, screen, Figure::GRAVITY_DISABLED,
-            LEVEL_WIDTH, LEVEL_HEIGHT, OTHER_LEADER, OTHER_SPEED, OTHER_GRAVITY,
-            OTHER_JUMPSTRENGTH, OTHER_NUMCLIPS, Figure::BOUNDARY, &red,
-            &shimmer);
+      RectBoundaryFigure rf1(300, 525, rect, screen, LEVEL_WIDTH, LEVEL_HEIGHT,
+            OTHER_NUMCLIPS);
+      RectBoundaryFigure rf2(500, 125, rect, screen, LEVEL_WIDTH, LEVEL_HEIGHT,
+            OTHER_NUMCLIPS);
+      CircBoundaryFigure cf1(700, 525, dot, screen, LEVEL_WIDTH, LEVEL_HEIGHT,
+            OTHER_NUMCLIPS);
+      CircBoundaryFigure cf2(900, 350, dot, screen, LEVEL_WIDTH, LEVEL_HEIGHT,
+            OTHER_NUMCLIPS);
+
       TempFigure coin1(600, 325, coin, screen, LEVEL_WIDTH, LEVEL_HEIGHT);
 
-      RectFigure rf;
+      PlayerFigure rf;
       CircFigure cf;
 
       if (FOO) {
-         rf.setFigure(100, 300, foo, screen, gravEnDis, LEVEL_WIDTH,
-               LEVEL_HEIGHT, true, FS, G, FJS, FNC, Figure::PLAYER, &red,
-               &green, &blue, &shimmer);
+         rf.setFigure(100, LEVEL_HEIGHT - foo.getSDL_Surface()->h / 2, foo,
+               screen, FS, G, FJS, FNC, LEVEL_WIDTH, LEVEL_HEIGHT, &red, &green,
+               &blue, &shimmer);
 
          collisions.push_back(&rf);
       }
@@ -144,11 +142,13 @@ int main(int argc, char* argv[]) {
 
       timer.start();
 
-      if (Mix_PlayingMusic() == 0)
-         if (Mix_PlayMusic(m.getMix_Music(), -1) < 0)
-            throw SoundException();
+      /*
+       if (Mix_PlayingMusic() == 0)
+       if (Mix_PlayMusic(m.getMix_Music(), -1) < 0)
+       throw SoundException();
+       */
 
-      Mix_VolumeMusic(32); //0 to 128
+      //Mix_VolumeMusic(32); //0 to 128
 
       while (!quit) {
          if (SDL_PollEvent(&event)) {
@@ -167,13 +167,6 @@ int main(int argc, char* argv[]) {
 
             applySurface(0, 0, bgnd, screen, rf.getCameraClip());
             rf.show(rf.getCameraClip());
-
-            //TODO Kevin - commented this for now
-            /*for (int i = 0; i < (int) collisions.size(); i++) {
-             int marker = collisions[i]->show(rf.getCameraClip());
-             if (marker == 2)
-             removeIndex(collisions, i);
-             }*/
 
             rf1.show(rf.getCameraClip());
             rf2.show(rf.getCameraClip());
@@ -199,52 +192,7 @@ int main(int argc, char* argv[]) {
          flip(screen);
       }
 
-      Mix_HaltMusic();
-
-      if (TEST_STRING_INPUT) {
-         quit = false;
-         bool nameEntered = false;
-
-         StringInput name(TTF_PATH, FONT_SIZE, FONT_COLOR, screen);
-         Surface msg(TTF_PATH, FONT_SIZE, FONT_COLOR,
-               "New High Score! Enter Name: ");
-
-         fillScreen(screen, Surface::WHITE);
-         applySurface(getHorizontalMiddlePosition(msg, screen), 100, msg,
-               screen);
-         flip(screen);
-
-         while (!quit) {
-            if (SDL_PollEvent(&event)) {
-               if (event.type == SDL_QUIT) {
-                  quit = true;
-                  break;
-               }
-
-               if (!nameEntered) {
-                  name.handleInput(event);
-
-                  if (event.type == SDL_KEYDOWN
-                        && event.key.keysym.sym == SDLK_RETURN) {
-                     nameEntered = true;
-                     msg.setSDL_Surface(TTF_PATH, FONT_SIZE, FONT_COLOR,
-                           "Rank 1st: ");
-                     quit = true;
-                  }
-               }
-
-               fillScreen(screen, Surface::WHITE);
-               applySurface(getHorizontalMiddlePosition(msg, screen), 100, msg,
-                     screen);
-               name.showCentered();
-
-               flip(screen);
-
-               if (nameEntered)
-                  SDL_Delay(500);
-            }
-         }
-      }
+      //Mix_HaltMusic();
    }
 
    cleanUp();
