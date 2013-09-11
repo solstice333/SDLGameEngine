@@ -9,3 +9,6 @@ SDL_image
 SDL_ttf
 
 SDL_mixer 
+
+##Documentation##
+All documentation is stored inside the header files
