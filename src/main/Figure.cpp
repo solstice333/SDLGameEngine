@@ -358,9 +358,6 @@ void Figure::handleInput(SDL_Event& event) {
             v.y -= dim.h * speed / 100 * jumpStrength;
 
          u = true;
-         if (inAir)
-            u = false;
-
          break;
       case SDLK_DOWN:
          if (!gravityEnabled)
@@ -387,7 +384,7 @@ void Figure::handleInput(SDL_Event& event) {
          if (!gravityEnabled)
             v.y += dim.h * speed / 100 * jumpStrength;
 
-         u = false;
+         u = true;
          break;
       case SDLK_DOWN:
          if (!gravityEnabled)
@@ -436,10 +433,7 @@ void Figure::show(SDL_Rect* otherCamera) {
          status = RIGHT;
          animationFrame += AFVALUE;
       }
-      else
-         animationFrame = 0;
-
-      if (animationFrame >= numClips)
+      if (v.x == 0 || animationFrame >= numClips)
          animationFrame = 0;
 
       if (leader) {
@@ -527,6 +521,9 @@ Figure::~Figure() {
       if (particles[i] != NULL)
          delete particles[i];
    }
+
+   delete[] cl;
+   delete[] cr;
 }
 
 RectFigure::RectFigure() {

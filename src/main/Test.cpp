@@ -34,7 +34,7 @@ const int LEVEL_HEIGHT = 670;
 const double FS = 200;
 const double CS = 1200;
 const double CJS = 11;
-const double FJS = 7;
+const double FJS = 4;
 const double G = 4;
 const int CNC = 1;
 const int FNC = 4;
@@ -129,15 +129,14 @@ int main(int argc, char* argv[]) {
       //move Player Figure to new position based on input given
       rf.move(collisions, timer.getTicks());
 
+      //move rf2 Figure just for fun as an example to show dynamic properties
+      rf2.move(collisions, timer.getTicks());
+
       //restart timer since movement is time-based and independent of framerate
       timer.start();
 
       //blit background image to screen with respect to the camera following Player Figure
       applySurface(0, 0, bgnd, screen, rf.getCameraClip());
-
-      //show the Player Figure (argument is optional here since the relative camera is
-      //the Player Figure's camera
-      rf.show(rf.getCameraClip());
 
       //show all other Figures with respect to the relative camera i.e. the Player
       //Figure's camera
@@ -155,6 +154,9 @@ int main(int argc, char* argv[]) {
 
       //show coin1 based on the update caused by move()
       coin1.show(rf.getCameraClip());
+
+      //show the Player Figure
+      rf.show();
 
       //update the screen by swapping video buffers
       flip(screen);

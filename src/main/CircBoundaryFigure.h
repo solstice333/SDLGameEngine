@@ -51,7 +51,7 @@ public:
     * Parameter: int numClips is the number of clips (in the horizontal direction) of
     * which to clip the sprite sheet
     */
-   void setFigure(int x, int y, Surface& image, SDL_Surface* screen,
+   virtual void setFigure(int x, int y, Surface& image, SDL_Surface* screen,
          int levelWidth, int levelHeight, int numClips);
 };
 

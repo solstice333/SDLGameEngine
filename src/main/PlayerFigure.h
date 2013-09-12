@@ -8,14 +8,20 @@
 #ifndef PLAYERFIGURE_H_
 #define PLAYERFIGURE_H_
 
+#include "SDLAbstractionLayer.h"
 #include "Figure.h"
 #include "RectBoundaryFigure.h"
 #include "CircBoundaryFigure.h"
+#include "TempFigure.h"
 
 /*
  * Description: PlayerFigure represents the Figure that the player controls
  */
 class PlayerFigure: public RectFigure {
+private:
+   Surface target;
+   int cursor_x, cursor_y;
+
 public:
 
    /*
@@ -64,10 +70,23 @@ public:
     * Parameter: int levelHeight is the level height
     * Parameter: p1, p2, p3, p4 are all Surface pointers pointing to particle images
     */
-   void setFigure(int x, int y, Surface& image, SDL_Surface* screen,
+   virtual void setFigure(int x, int y, Surface& image, SDL_Surface* screen,
          double speed, double gravity, double jumpStrength, int numClips,
          int levelWidth, int levelHeight, Surface * p1 = NULL, Surface* p2 =
          NULL, Surface* p3 = NULL, Surface* p4 = NULL);
+
+   /*
+    * Description: overrided from Figure parent class. Takes in input from the user
+    * and adjusts velocity or sets Player states
+    *
+    * Parameter: SDL_Event& event is the reference to the event located in the event
+    * loop
+    *
+    * Preconditions: Gravity must be set to GRAVITY_ENABLED. Not sure what this does
+    * when it's not. Don't worry though. PlayerFigure constructor and setFigure is
+    * set to that configuration already.
+    */
+   virtual void handleInput(SDL_Event& event);
 
    /*
     * Description: resolves collision on the x and y axes
@@ -78,6 +97,11 @@ public:
     * Parameter: Component dir is the axis of which the collision occurred on
     */
    virtual void resolveCollision(Figure* other, double timeStep, Component dir);
+
+   /*
+    * TODO description
+    */
+   virtual void show();
 };
 
 #endif /* PLAYERFIGURE_H_ */
