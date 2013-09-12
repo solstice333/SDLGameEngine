@@ -13,7 +13,12 @@
 #include "GrabbableFigure.h"
 
 class CursorFigure: public CircFigure {
+   //Don't try to clean this up. The data that this pointer points to will automatically
+   //get deleted by the virtual destructors belonging to PlayerFigure
    SDL_Rect* offset;
+
+   bool grabbable;
+
 public:
    CursorFigure();
    CursorFigure(int x, int y, Surface& image, SDL_Surface* screen,
