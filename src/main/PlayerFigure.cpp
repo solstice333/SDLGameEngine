@@ -7,6 +7,27 @@
 
 #include "PlayerFigure.h"
 
+void PlayerFigure::checkIfInAir(vector<Figure*>& other) {
+   int count = 0;
+
+   inAir = true;
+   p.y += 3;
+
+   //standing on ground or other Figure
+   if ((v.y == 0 && p.y >= lh - dim.h)
+         || (v.y <= gravity && isCollided(other, count)))
+      inAir = false;
+   p.y -= 3;
+
+   //peak of trajectory
+   if (p.y < lh - dim.h && v.y <= 0.5 && v.y >= -0.5)
+      inAir = true;
+
+   //collided with TempFigure
+   if (count != -1 && typeid(*other[count]) == typeid(TempFigure))
+      inAir = true;
+}
+
 PlayerFigure::PlayerFigure() {
 }
 
@@ -76,7 +97,9 @@ void PlayerFigure::handleInput(SDL_Event& event) {
 
 void PlayerFigure::resolveCollision(Figure* other, double timeStep,
       Component dir) {
-   if (typeid(*other) == typeid(RectBoundaryFigure)
+   if (typeid(*other) == typeid(TempFigure))
+      inAir = true;
+   else if (typeid(*other) == typeid(RectBoundaryFigure)
          || typeid(*other) == typeid(CircBoundaryFigure)) {
       if (dir == XHAT)
          p.x -= v.x * timeStep / 1000.0;
@@ -86,9 +109,6 @@ void PlayerFigure::resolveCollision(Figure* other, double timeStep,
             v.y = 0;
       }
    }
-
-   else if (typeid(*other) == typeid(TempFigure))
-      inAir = true;
 }
 
 void PlayerFigure::show() {

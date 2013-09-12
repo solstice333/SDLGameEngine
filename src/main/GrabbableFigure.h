@@ -10,6 +10,11 @@
 
 #include "RectBoundaryFigure.h"
 
+/*
+ * TODO: the idea here is that the Player can extend his/her arm in a grappling hook
+ * fashion and then grab the GrabbableFigure object and then pull himself/herself towards
+ * that object
+ */
 class GrabbableFigure: public RectBoundaryFigure {
 public:
    GrabbableFigure();

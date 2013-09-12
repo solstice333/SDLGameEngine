@@ -22,6 +22,9 @@ private:
    Surface target;
    int cursor_x, cursor_y;
 
+protected:
+   virtual void checkIfInAir(vector<Figure*>& other);
+
 public:
 
    /*
@@ -102,6 +105,11 @@ public:
     * TODO description
     */
    virtual void show();
+
+   /*
+    * TODO description
+    */
+   void resolveGrabbableCollision();
 };
 
 #endif /* PLAYERFIGURE_H_ */
