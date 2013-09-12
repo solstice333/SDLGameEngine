@@ -31,6 +31,11 @@ void CursorFigure::handleInput(SDL_Event& event) {
 
 void CursorFigure::move(vector<Figure*>& other, int deltaTicks) {
    //TODO change collision detection to detect only GrabbableFigures
+   int x, y;
+   SDL_GetMouseState(&x, &y);
+   p.x = static_cast<double>(x) + offset->x;
+   p.y = static_cast<double>(y) + offset->y;
+
    int count = 0;
 
    if (isCollided(other, count) && count != -1) {

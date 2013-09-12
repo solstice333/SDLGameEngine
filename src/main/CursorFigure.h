@@ -12,7 +12,6 @@
 #include "SDLAbstractionLayer.h"
 
 class CursorFigure: public CircFigure {
-private:
    SDL_Rect* offset;
 public:
    CursorFigure();
