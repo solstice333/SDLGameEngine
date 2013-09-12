@@ -12,6 +12,7 @@
 #include "Figure.h"
 #include "RectBoundaryFigure.h"
 #include "CircBoundaryFigure.h"
+#include "CursorFigure.h"
 #include "TempFigure.h"
 
 /*
@@ -20,7 +21,7 @@
 class PlayerFigure: public RectFigure {
 private:
    Surface target;
-   Position cursor;
+   CursorFigure cursor;
 
 protected:
    virtual void checkIfInAir(vector<Figure*>& other);
@@ -92,6 +93,11 @@ public:
    virtual void handleInput(SDL_Event& event);
 
    /*
+    * TODO doc
+    */
+   virtual void move(vector<Figure*>& other, int deltaTicks);
+
+   /*
     * Description: resolves collision on the x and y axes
     * Parameter: Figure* other points the Figure collided with
     * Parameter: double timeStep is the delta ticks from the start of the timer to
@@ -104,7 +110,7 @@ public:
    /*
     * TODO description
     */
-   virtual void show();
+   virtual void show(SDL_Rect* otherCamera = NULL);
 };
 
 #endif /* PLAYERFIGURE_H_ */

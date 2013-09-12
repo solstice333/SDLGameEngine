@@ -11,11 +11,18 @@
 #include "Figure.h"
 #include "SDLAbstractionLayer.h"
 
-class CursorFigure : public CircFigure {
+class CursorFigure: public CircFigure {
+private:
+   SDL_Rect* offset;
 public:
    CursorFigure();
-   CursorFigure(int x, int y, Surface& image, SDL_Surface* screen);
-   void setFigure(int x, int y, Surface& image, SDL_Surface* screen);
+   CursorFigure(int x, int y, Surface& image, SDL_Surface* screen,
+         SDL_Rect* offset);
+   virtual void setFigure(int x, int y, Surface& image, SDL_Surface* screen,
+         SDL_Rect* offset);
+   virtual void handleInput(SDL_Event& event);
+   virtual void move(vector<Figure*>& other, int deltaTicks);
+   virtual void show(SDL_Rect* otherCamera = NULL);
 };
 
 #endif /* CURSORFIGURE_H_ */

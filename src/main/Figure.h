@@ -421,9 +421,19 @@ public:
    virtual int getHeight();
 
    /*
+    * Description: sets the x position of the Figure
+    */
+   virtual void setX(int x);
+
+   /*
     * Description: obtains the x position of the Figure
     */
    virtual int getX();
+
+   /*
+    * Description: sets the y position of the Figure
+    */
+   virtual void setY(int y);
 
    /*
     * Description: obtains the y position of the Figure
@@ -647,7 +657,7 @@ public:
  * of collision with other Figures
  */
 class CircFigure: public Figure {
-private:
+protected:
 
    /*
     * Description: int r is the radius of the CircFigure

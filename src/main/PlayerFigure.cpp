@@ -37,8 +37,7 @@ PlayerFigure::PlayerFigure(int x, int y, Surface& image, SDL_Surface* screen,
       Surface* p4) :
       RectFigure(x, y, image, screen, GRAVITY_ENABLED, levelWidth, levelHeight,
             true, speed, gravity, jumpStrength, numClips, p1, p2, p3, p4), target(
-            "images/target.png", Surface::CYAN) {
-   cursor.x = cursor.y = 0;
+            "images/target2.png", Surface::CYAN), cursor(x, y, target, screen, camera) {
 }
 
 void PlayerFigure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
@@ -48,8 +47,8 @@ void PlayerFigure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
    Figure::setFigure(x, y, image, screen, GRAVITY_ENABLED, levelWidth,
          levelHeight, true, speed, gravity, jumpStrength, numClips, p1, p2, p3,
          p4);
-   target.setSDL_Surface("images/target.png", Surface::CYAN);
-   cursor.x = cursor.y = 0;
+   target.setSDL_Surface("images/target2.png", Surface::CYAN);
+   cursor.setFigure(x, y, target, screen, camera);
 }
 
 void PlayerFigure::handleInput(SDL_Event& event) {
@@ -89,10 +88,15 @@ void PlayerFigure::handleInput(SDL_Event& event) {
       }
    }
 
-   else if (event.type == SDL_MOUSEMOTION) {
-      cursor.x = event.button.x;
-      cursor.y = event.button.y;
-   }
+   cursor.handleInput(event);
+}
+
+void PlayerFigure::move(vector<Figure*>& other, int deltaTicks) {
+   xMovement(other, deltaTicks);
+   yMovement(other, deltaTicks);
+   cursor.move(other, deltaTicks);
+
+   setCamera();
 }
 
 void PlayerFigure::resolveCollision(Figure* other, double timeStep,
@@ -111,7 +115,7 @@ void PlayerFigure::resolveCollision(Figure* other, double timeStep,
    }
 }
 
-void PlayerFigure::show() {
+void PlayerFigure::show(SDL_Rect* otherCamera) {
    if (numClips > 0) {
       if (v.x < 0) {
          status = LEFT;
@@ -125,16 +129,17 @@ void PlayerFigure::show() {
          animationFrame = 0;
 
       if (status == LEFT)
-         applySurface((int) p.x - camera->x, (int) p.y - camera->y, *image,
-               screen, &cl[static_cast<int>(animationFrame)]);
+         applySurface(static_cast<int>(p.x) - camera->x,
+               static_cast<int>(p.y) - camera->y, *image, screen,
+               &cl[static_cast<int>(animationFrame)]);
       else if (status == RIGHT)
-         applySurface((int) p.x - camera->x, (int) p.y - camera->y, *image,
-               screen, &cr[static_cast<int>(animationFrame)]);
+         applySurface(static_cast<int>(p.x) - camera->x,
+               static_cast<int>(p.y) - camera->y, *image, screen,
+               &cr[static_cast<int>(animationFrame)]);
 
       if (particleEffects)
          showParticles(camera);
 
-      applySurface(cursor.x - target.getSDL_Surface()->w / 2,
-            cursor.y - target.getSDL_Surface()->h / 2, target, screen);
+      cursor.show();
    }
 }

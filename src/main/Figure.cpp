@@ -305,8 +305,16 @@ int Figure::getHeight() {
    return dim.h;
 }
 
+void Figure::setX(int x) {
+   p.x = x;
+}
+
 int Figure::getX() {
    return p.x;
+}
+
+void Figure::setY(int y) {
+   p.y = y;
 }
 
 int Figure::getY() {
