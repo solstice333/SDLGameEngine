@@ -20,7 +20,7 @@
 class PlayerFigure: public RectFigure {
 private:
    Surface target;
-   int cursor_x, cursor_y;
+   Position cursor;
 
 protected:
    virtual void checkIfInAir(vector<Figure*>& other);
@@ -105,11 +105,6 @@ public:
     * TODO description
     */
    virtual void show();
-
-   /*
-    * TODO description
-    */
-   void resolveGrabbableCollision();
 };
 
 #endif /* PLAYERFIGURE_H_ */

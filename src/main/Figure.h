@@ -470,6 +470,8 @@ public:
     * the collision occurred on. After the method has been executed, if count results as -1,
     * then no collision occurred
     *
+    * Precondition: count must be passed in with the value of 0
+    *
     * Return: true if collision occurred, false otherwise
     */
    virtual bool isCollided(vector<Figure*>& other, int& count);

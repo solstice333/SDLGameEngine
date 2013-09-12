@@ -38,7 +38,7 @@ PlayerFigure::PlayerFigure(int x, int y, Surface& image, SDL_Surface* screen,
       RectFigure(x, y, image, screen, GRAVITY_ENABLED, levelWidth, levelHeight,
             true, speed, gravity, jumpStrength, numClips, p1, p2, p3, p4), target(
             "images/target.png", Surface::CYAN) {
-   cursor_x = cursor_y = 0;
+   cursor.x = cursor.y = 0;
 }
 
 void PlayerFigure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
@@ -49,7 +49,7 @@ void PlayerFigure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
          levelHeight, true, speed, gravity, jumpStrength, numClips, p1, p2, p3,
          p4);
    target.setSDL_Surface("images/target.png", Surface::CYAN);
-   cursor_x = cursor_y = 0;
+   cursor.x = cursor.y = 0;
 }
 
 void PlayerFigure::handleInput(SDL_Event& event) {
@@ -90,8 +90,8 @@ void PlayerFigure::handleInput(SDL_Event& event) {
    }
 
    else if (event.type == SDL_MOUSEMOTION) {
-      cursor_x = event.button.x;
-      cursor_y = event.button.y;
+      cursor.x = event.button.x;
+      cursor.y = event.button.y;
    }
 }
 
@@ -134,7 +134,7 @@ void PlayerFigure::show() {
       if (particleEffects)
          showParticles(camera);
 
-      applySurface(cursor_x - target.getSDL_Surface()->w / 2,
-            cursor_y - target.getSDL_Surface()->h / 2, target, screen);
+      applySurface(cursor.x - target.getSDL_Surface()->w / 2,
+            cursor.y - target.getSDL_Surface()->h / 2, target, screen);
    }
 }
