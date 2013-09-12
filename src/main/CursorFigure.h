@@ -10,6 +10,7 @@
 
 #include "Figure.h"
 #include "SDLAbstractionLayer.h"
+#include "GrabbableFigure.h"
 
 class CursorFigure: public CircFigure {
    SDL_Rect* offset;
