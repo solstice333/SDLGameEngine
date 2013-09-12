@@ -24,7 +24,9 @@ void PlayerFigure::checkIfInAir(vector<Figure*>& other) {
       inAir = true;
 
    //collided with TempFigure
-   if (count != -1 && typeid(*other[count]) == typeid(TempFigure))
+   if (count != -1
+         && (typeid(*other[count]) == typeid(TempFigure)
+               || typeid(*other[count]) == typeid(GrabbableFigure)))
       inAir = true;
 }
 
@@ -37,7 +39,8 @@ PlayerFigure::PlayerFigure(int x, int y, Surface& image, SDL_Surface* screen,
       Surface* p4) :
       RectFigure(x, y, image, screen, GRAVITY_ENABLED, levelWidth, levelHeight,
             true, speed, gravity, jumpStrength, numClips, p1, p2, p3, p4), target(
-            "images/target2.png", Surface::CYAN), cursor(x, y, target, screen, camera) {
+            "images/target2.png", Surface::CYAN), cursor(x, y, target, screen,
+            camera) {
 }
 
 void PlayerFigure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
