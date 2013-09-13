@@ -8,20 +8,33 @@
 #include "CursorFigure.h"
 
 CursorFigure::CursorFigure() :
-      offset(NULL) {
+      offset(NULL), gf(NULL) {
 }
 
 CursorFigure::CursorFigure(int x, int y, Surface& image, SDL_Surface* screen,
       SDL_Rect* offset) :
       CircFigure(x, y, image, screen, GRAVITY_DISABLED), offset(offset), grabbable(
-            false) {
+            false), grabstate(false), gf(NULL) {
 }
 
 void CursorFigure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
       SDL_Rect* offset) {
    Figure::setFigure(x, y, image, screen, GRAVITY_DISABLED);
    this->offset = offset;
-   grabbable = false;
+   grabbable = grabstate = false;
+   gf = NULL;
+}
+
+void CursorFigure::setGrabState(bool grabstate) {
+   this->grabstate = grabstate;
+}
+
+bool CursorFigure::getGrabState() {
+   return grabstate;
+}
+
+GrabbableFigure* CursorFigure::getGrabbableFigure() {
+   return gf;
 }
 
 void CursorFigure::handleInput(SDL_Event& event) {
@@ -29,11 +42,9 @@ void CursorFigure::handleInput(SDL_Event& event) {
       p.x = event.button.x + offset->x;
       p.y = event.button.y + offset->y;
    }
-   //TODO enter GRAB_STATE (signal PlayerFigure) - PlayerFigure moves linearly toward
-   //the GrabbableFigure inside PlayerFigure::move()
    if (event.type == SDL_MOUSEBUTTONDOWN) {
       if (event.button.button == SDL_BUTTON_LEFT && grabbable)
-         cout << "left click hit and grabbable!" << endl;
+         grabstate = true;
    }
 }
 
@@ -46,8 +57,10 @@ void CursorFigure::move(vector<Figure*>& other, int deltaTicks) {
    int count = 0;
 
    if (isCollided(other, count)
-         && typeid(*other[count]) == typeid(GrabbableFigure) && count != -1)
+         && typeid(*other[count]) == typeid(GrabbableFigure) && count != -1) {
       grabbable = true;
+      gf = static_cast<GrabbableFigure*>(other[count]);
+   }
    else
       grabbable = false;
 }

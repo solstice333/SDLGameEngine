@@ -22,9 +22,14 @@ class PlayerFigure: public RectFigure {
 private:
    Surface target;
    CursorFigure cursor;
+   bool grabstate;
 
 protected:
+   virtual void determineGrabX();
+   virtual void determineGrabY();
    virtual void checkIfInAir(vector<Figure*>& other);
+   virtual void xMovement(vector<Figure*>& other, int deltaTicks);
+   virtual void yMovement(vector<Figure*>& other, int deltaTicks);
 
 public:
 
