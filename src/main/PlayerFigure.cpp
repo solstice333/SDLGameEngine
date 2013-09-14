@@ -201,7 +201,9 @@ void PlayerFigure::handleInput(SDL_Event& event) {
 }
 
 void PlayerFigure::move(vector<Figure*>& other, int deltaTicks) {
+   cursor.move(other, deltaTicks);
    grabstate = cursor.getGrabState();
+
    if (grabstate) {
       A.x = p.x + dim.w / 2;
       A.y = p.y + dim.h / 2;
@@ -218,9 +220,6 @@ void PlayerFigure::move(vector<Figure*>& other, int deltaTicks) {
 
    xMovement(other, deltaTicks);
    yMovement(other, deltaTicks);
-
-   cursor.move(other, deltaTicks);
-
    setCamera();
 }
 

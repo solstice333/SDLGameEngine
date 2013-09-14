@@ -23,6 +23,7 @@ class CursorFigure: public CircFigure {
 
    bool grabbable;
    bool grabstate;
+   bool leftClick;
 
 public:
    CursorFigure();

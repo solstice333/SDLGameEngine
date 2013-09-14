@@ -14,7 +14,7 @@ CursorFigure::CursorFigure() :
 CursorFigure::CursorFigure(int x, int y, Surface& image, SDL_Surface* screen,
       SDL_Rect* offset) :
       CircFigure(x, y, image, screen, GRAVITY_DISABLED), offset(offset), grabbable(
-            false), grabstate(false), gf(NULL) {
+            false), grabstate(false), gf(NULL), leftClick(false) {
 }
 
 void CursorFigure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
@@ -22,6 +22,7 @@ void CursorFigure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
    Figure::setFigure(x, y, image, screen, GRAVITY_DISABLED);
    this->offset = offset;
    grabbable = grabstate = false;
+   leftClick = false;
    gf = NULL;
 }
 
@@ -43,8 +44,12 @@ void CursorFigure::handleInput(SDL_Event& event) {
       p.y = event.button.y + offset->y;
    }
    if (event.type == SDL_MOUSEBUTTONDOWN) {
-      if (event.button.button == SDL_BUTTON_LEFT && grabbable)
-         grabstate = true;
+      if (event.button.button == SDL_BUTTON_LEFT) {
+         leftClick = true;
+
+         if (grabbable)
+            grabstate = true;
+      }
    }
 }
 
@@ -59,7 +64,11 @@ void CursorFigure::move(vector<Figure*>& other, int deltaTicks) {
    if (isCollided(other, count)
          && typeid(*other[count]) == typeid(GrabbableFigure) && count != -1) {
       grabbable = true;
-      gf = static_cast<GrabbableFigure*>(other[count]);
+
+      if (leftClick) {
+         gf = static_cast<GrabbableFigure*>(other[count]);
+         leftClick = false;
+      }
    }
    else
       grabbable = false;

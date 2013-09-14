@@ -87,6 +87,8 @@ int main(int argc, char* argv[]) {
 
    GrabbableFigure g(350, 100, cloud, screen, LEVEL_WIDTH, LEVEL_HEIGHT,
          OTHER_NUMCLIPS);
+   GrabbableFigure g1(1000, 50, cloud, screen, LEVEL_WIDTH, LEVEL_HEIGHT,
+         OTHER_NUMCLIPS);
 
    PlayerFigure rf(100, LEVEL_HEIGHT - foo.getSDL_Surface()->h / 2, foo, screen,
          FS, G, FJS, FNC, LEVEL_WIDTH, LEVEL_HEIGHT, &red, &green, &blue,
@@ -106,6 +108,7 @@ int main(int argc, char* argv[]) {
    collisions.push_back(&coin1);
    collisions.push_back(&rf);
    collisions.push_back(&g);
+   collisions.push_back(&g1);
 
    //Prepare bool quit variable, SDL_Event event, and Timer timer. All of these
    //variables will be used in the event loop
@@ -150,6 +153,7 @@ int main(int argc, char* argv[]) {
       cf1.show(rf.getCameraClip());
       cf2.show(rf.getCameraClip());
       g.show(rf.getCameraClip());
+      g1.show(rf.getCameraClip());
 
       //we need to move coin1 so that collision detection is not
       //ignored (although actual movement of coin1 doesn't happen because no input

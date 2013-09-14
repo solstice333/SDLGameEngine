@@ -15,6 +15,10 @@
 #include "CursorFigure.h"
 #include "TempFigure.h"
 
+
+//TODO arm animation is needed between the PlayerFigure sprite and the GrabbableFigure sprite
+//when grabstate is active
+
 /*
  * Description: PlayerFigure represents the Figure that the player controls
  */
