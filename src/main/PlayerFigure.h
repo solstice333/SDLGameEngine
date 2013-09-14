@@ -23,10 +23,14 @@ private:
    Surface target;
    CursorFigure cursor;
    bool grabstate;
+   bool resetVelY;
+   Point A, B;
+   double multiplier;
+   Velocity grabVel;
 
 protected:
-   virtual void determineGrabX();
-   virtual void determineGrabY();
+   virtual void determineGrabX(int deltaTicks);
+   virtual void determineGrabY(int deltaTicks);
    virtual void checkIfInAir(vector<Figure*>& other);
    virtual void xMovement(vector<Figure*>& other, int deltaTicks);
    virtual void yMovement(vector<Figure*>& other, int deltaTicks);

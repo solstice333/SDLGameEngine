@@ -381,6 +381,15 @@ int randRange(int low, int high) {
    return rand() % (high + 1 - low) + low;
 }
 
+double slope(Point A, Point B) {
+   return (B.y - A.y) / (B.x - A.x);
+}
+
+Point pointOnLine(double m, Point p, double x) {
+   double y = m * (x - p.x) + p.y;
+   return {x, y};
+}
+
 SDL_Surface* init(int w, int h, string title) {
    SDL_Surface* screen = NULL;
 

@@ -7,20 +7,39 @@
 
 #include "PlayerFigure.h"
 
-void PlayerFigure::determineGrabX() {
-   //TODO this needs to be animated with the PlayerFigure moving toward the GrabbableFigure
-   //instead of teleporting
-   if (grabstate) {
-      p.x = cursor.getGrabbableFigure()->getX();
-   }
+const double MULTIPLIER = 200;
+const double MAX = 7;
+const double MIN = 0.2;
 
+void PlayerFigure::determineGrabX(int deltaTicks) {
+   if (grabstate) {
+      double unitDir = (B.x - A.x) / abs(B.x - A.x);
+      double dir = unitDir * deltaTicks / 1000.0;
+
+      if (abs(slope(A, B)) <= MIN)
+         multiplier /= MIN;
+      else if (abs(slope(A, B)) < 1.0)
+         multiplier /= abs(slope(A, B));
+
+      grabVel.x = multiplier * dir;
+      multiplier = MULTIPLIER;
+   }
 }
 
-void PlayerFigure::determineGrabY() {
-   //TODO this needs to be animated with the PlayerFigure moving toward the GrabbableFigure
-   //instead of teleporting
+void PlayerFigure::determineGrabY(int deltaTicks) {
    if (grabstate) {
-      p.y = cursor.getGrabbableFigure()->getY();
+      gravityEnabled = false;
+
+      double unitDir = (B.y - A.y) / abs(B.y - A.y);
+      double dir = unitDir * deltaTicks / 1000.0;
+
+      if (abs(slope(A, B)) >= MAX)
+         multiplier *= MAX;
+      else if (abs(slope(A, B)) >= 1.0)
+         multiplier *= abs(slope(A, B));
+
+      grabVel.y = multiplier * dir;
+      multiplier = MULTIPLIER;
    }
 }
 
@@ -51,9 +70,9 @@ void PlayerFigure::xMovement(vector<Figure*>& other, int deltaTicks) {
    int count = 0;
 
    //x movement grabstate
-   determineGrabX();
+   determineGrabX(deltaTicks);
 
-   p.x += v.x * deltaTicks / 1000.0;
+   p.x += (v.x * deltaTicks / 1000.0) + grabVel.x;
 
    if (isCollided(other, count) && count != -1)
       resolveCollision(other[count], deltaTicks, XHAT);
@@ -76,10 +95,10 @@ void PlayerFigure::yMovement(vector<Figure*>& other, int deltaTicks) {
    checkIfInAir(other);
 
    //y movement grabstate
-   determineGrabY();
+   determineGrabY(deltaTicks);
 
    //collision with boundaries or other Figures
-   p.y += v.y * deltaTicks / 1000.0;
+   p.y += (v.y * deltaTicks / 1000.0) + grabVel.y;
 
    if (isCollided(other, count) && count != -1)
       resolveCollision(other[count], deltaTicks, YHAT);
@@ -97,7 +116,10 @@ PlayerFigure::PlayerFigure(int x, int y, Surface& image, SDL_Surface* screen,
       RectFigure(x, y, image, screen, GRAVITY_ENABLED, levelWidth, levelHeight,
             true, speed, gravity, jumpStrength, numClips, p1, p2, p3, p4), target(
             "images/target2.png", Surface::CYAN), cursor(x, y, target, screen,
-            camera), grabstate(false) {
+            camera), grabstate(false), multiplier(MULTIPLIER), resetVelY(true) {
+   A.x = A.y = 0;
+   B.x = B.y = 0;
+   grabVel.x = grabVel.y = 0;
 }
 
 void PlayerFigure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
@@ -107,16 +129,25 @@ void PlayerFigure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
    Figure::setFigure(x, y, image, screen, GRAVITY_ENABLED, levelWidth,
          levelHeight, true, speed, gravity, jumpStrength, numClips, p1, p2, p3,
          p4);
+
    target.setSDL_Surface("images/target2.png", Surface::CYAN);
    cursor.setFigure(x, y, target, screen, camera);
    grabstate = false;
+   resetVelY = true;
+   multiplier = MULTIPLIER;
+
+   A.x = A.y = 0;
+   B.x = B.y = 0;
+   grabVel.x = grabVel.y = 0;
 }
 
 void PlayerFigure::handleInput(SDL_Event& event) {
    if (event.type == SDL_KEYDOWN) {
       switch (event.key.keysym.sym) {
       case SDLK_w:
-         if ((!jumpAction && !inAir))
+         if (grabstate)
+            v.y -= dim.h * speed / 100;
+         else if ((!jumpAction && !inAir))
             v.y -= dim.h * speed / 100 * jumpStrength;
 
          u = true;
@@ -129,6 +160,12 @@ void PlayerFigure::handleInput(SDL_Event& event) {
          v.x += dim.w * speed / 100;
          r = true;
          break;
+      case SDLK_s:
+         if (grabstate)
+            v.y += dim.h * speed / 100;
+
+         d = true;
+         break;
       default:
          break;
       }
@@ -136,6 +173,11 @@ void PlayerFigure::handleInput(SDL_Event& event) {
 
    else if (event.type == SDL_KEYUP) {
       switch (event.key.keysym.sym) {
+      case SDLK_w:
+         if (grabstate)
+            v.y += dim.h * speed / 100;
+
+         break;
       case SDLK_a:
          v.x += dim.w * speed / 100;
          l = false;
@@ -143,6 +185,12 @@ void PlayerFigure::handleInput(SDL_Event& event) {
       case SDLK_d:
          v.x -= dim.w * speed / 100;
          r = false;
+         break;
+      case SDLK_s:
+         if (grabstate)
+            v.y -= dim.h * speed / 100;
+
+         d = false;
          break;
       default:
          break;
@@ -154,6 +202,19 @@ void PlayerFigure::handleInput(SDL_Event& event) {
 
 void PlayerFigure::move(vector<Figure*>& other, int deltaTicks) {
    grabstate = cursor.getGrabState();
+   if (grabstate) {
+      A.x = p.x + dim.w / 2;
+      A.y = p.y + dim.h / 2;
+      B.x = cursor.getGrabbableFigure()->getX()
+            + cursor.getGrabbableFigure()->getWidth() / 2;
+      B.y = cursor.getGrabbableFigure()->getY()
+            + cursor.getGrabbableFigure()->getHeight() / 2;
+
+      if (resetVelY) {
+         v.y = 0;
+         resetVelY = false;
+      }
+   }
 
    xMovement(other, deltaTicks);
    yMovement(other, deltaTicks);
@@ -170,9 +231,9 @@ void PlayerFigure::resolveCollision(Figure* other, double timeStep,
    else if (typeid(*other) == typeid(RectBoundaryFigure)
          || typeid(*other) == typeid(CircBoundaryFigure)) {
       if (dir == XHAT)
-         p.x -= v.x * timeStep / 1000.0;
+         p.x -= (v.x * timeStep / 1000.0) + grabVel.x;
       else if (dir == YHAT) {
-         p.y -= v.y * timeStep / 1000.0;
+         p.y -= (v.y * timeStep / 1000.0) + grabVel.y;
          if (gravityEnabled)
             v.y = 0;
       }
@@ -180,6 +241,9 @@ void PlayerFigure::resolveCollision(Figure* other, double timeStep,
    else if (typeid(*other) == typeid(GrabbableFigure)) {
       grabstate = false;
       cursor.setGrabState(grabstate);
+      gravityEnabled = true;
+      resetVelY = true;
+      grabVel.x = grabVel.y = 0;
    }
 }
 

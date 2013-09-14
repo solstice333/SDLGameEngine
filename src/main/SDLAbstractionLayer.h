@@ -650,6 +650,21 @@ void fillScreen(SDL_Surface* screen, Surface::Color color);
 int randRange(int low, int high);
 
 /*
+ * Description: returns the slope based on two points given (A and B)
+ * Parameter: Point A is the first point
+ * Parameter: Point B is the second point
+ */
+double slope(Point A, Point B);
+
+/*
+ * Description: returns a point on the line associated to int x passed in as an arg
+ * Parameter: double m is the slope of the line
+ * Parameter: Point p is any point on the line
+ * Parameter: int x is the x point associated with the y output that we are interested in
+ */
+Point pointOnLine(double m, Point p, double x);
+
+/*
  * Description: init initializes all SDL subsystems, sets the video mode, and sets the caption
  * Parameter: int w is the width of the screen
  * Parameter: int h is the height of the screen
