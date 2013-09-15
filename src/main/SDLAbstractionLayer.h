@@ -157,6 +157,16 @@ public:
    SDL_Surface* getSDL_Surface();
 
    /*
+    * Description: checks if Surface is empty. True if empty, false otherwise.
+    */
+   bool isEmpty();
+
+   /*
+    * Description: clears the Surface by making SDL_Surface* s NULL
+    */
+   void clear();
+
+   /*
     * Description: Destructor for Surface objects
     */
    ~Surface();
@@ -411,8 +421,6 @@ public:
     */
    bool isDead();
 };
-
-
 
 /*
  * Description: Convenience class for accepting user input and outputting text

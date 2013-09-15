@@ -41,6 +41,14 @@ SDL_Surface * Surface::getSDL_Surface() {
    return s;
 }
 
+bool Surface::isEmpty() {
+   return s == NULL;
+}
+
+void Surface::clear() {
+   s = NULL;
+}
+
 Surface::~Surface() {
    SDL_FreeSurface(s);
 }

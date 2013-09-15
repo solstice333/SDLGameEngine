@@ -78,7 +78,6 @@ void PlayerFigure::xMovement(vector<Figure*>& other, int deltaTicks) {
    //x movement grabstate
    determineGrabX(deltaTicks);
 
-   cout << "grabVel.x: " << grabVel.x << endl;
    p.x += (v.x * deltaTicks / 1000.0) + grabVel.x;
 
    if (isCollided(other, count) && count != -1)
@@ -105,7 +104,6 @@ void PlayerFigure::yMovement(vector<Figure*>& other, int deltaTicks) {
    determineGrabY(deltaTicks);
 
    //collision with boundaries or other Figures
-   //cout << "grabVel.y: " << grabVel.y << endl;
    p.y += (v.y * deltaTicks / 1000.0) + grabVel.y;
 
    if (isCollided(other, count) && count != -1)
