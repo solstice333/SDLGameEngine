@@ -7,7 +7,7 @@
 
 #include "PlayerFigure.h"
 
-const double MULTIPLIER = 200;
+const double MULTIPLIER = 300;
 const double MAX = 7;
 const double MIN = 0.2;
 
@@ -15,6 +15,9 @@ void PlayerFigure::determineGrabX(int deltaTicks) {
    if (grabstate) {
       double unitDir = (B.x - A.x) / abs(B.x - A.x);
       double dir = unitDir * deltaTicks / 1000.0;
+
+      if (isnan(dir))
+         dir = 0;
 
       if (abs(slope(A, B)) <= MIN)
          multiplier /= MIN;
@@ -32,6 +35,9 @@ void PlayerFigure::determineGrabY(int deltaTicks) {
 
       double unitDir = (B.y - A.y) / abs(B.y - A.y);
       double dir = unitDir * deltaTicks / 1000.0;
+
+      if (isnan(dir))
+         dir = 0;
 
       if (abs(slope(A, B)) >= MAX)
          multiplier *= MAX;
@@ -72,6 +78,7 @@ void PlayerFigure::xMovement(vector<Figure*>& other, int deltaTicks) {
    //x movement grabstate
    determineGrabX(deltaTicks);
 
+   cout << "grabVel.x: " << grabVel.x << endl;
    p.x += (v.x * deltaTicks / 1000.0) + grabVel.x;
 
    if (isCollided(other, count) && count != -1)
@@ -98,6 +105,7 @@ void PlayerFigure::yMovement(vector<Figure*>& other, int deltaTicks) {
    determineGrabY(deltaTicks);
 
    //collision with boundaries or other Figures
+   //cout << "grabVel.y: " << grabVel.y << endl;
    p.y += (v.y * deltaTicks / 1000.0) + grabVel.y;
 
    if (isCollided(other, count) && count != -1)
