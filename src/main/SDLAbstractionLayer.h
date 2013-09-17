@@ -62,15 +62,7 @@ struct Point {
  * enumerated types as an argument to the Surface constructor or setSDL_Surface method.
  */
 class Surface {
-private:
-
-   /*
-    * Description: SDL_Surface pointer that the Surface class encapsulates
-    */
-   SDL_Surface* s;
-
 public:
-
    /*
     * Description: enumerated Color tags. Used for specifying any Color arguments
     * found in the constructor call or setSDL_Surface method. For example, a Color
@@ -80,21 +72,26 @@ public:
       NONE, RED, GREEN, BLUE, CYAN, BLACK, WHITE
    };
 
+private:
+
+   /*
+    * Description: SDL_Surface pointer that the Surface class encapsulates
+    */
+   SDL_Surface* s;
+
+   //TODO doc
+   string filepath;
+
+   //TODO doc
+   Color colorkey;
+
+public:
+
    /*
     * Description: default constructor for Surface. Creates a blank Surface
     * requiring setting of the SDL_Surface pointer.
     */
    Surface();
-
-   /*
-    * Description: overloading constructor. Creates a Surface using the given SDL_Surface*
-    * and color key
-    *
-    * Parameter: SDL_Surface* sdls is the surface to be initialized to
-    * Parameter Color ck is the optional color key representing the color that is to
-    * be transparent
-    */
-   Surface(SDL_Surface* sdls, Color ck = Surface::NONE);
 
    /*
     * Description: overloading constructor. Creates a Surface using the given filepath
@@ -116,14 +113,6 @@ public:
     * Paramater: string msg is the text to be displayed
     */
    Surface(string ttfFile, int fontSize, Color textColor, string msg);
-
-   /*
-    * Description: setSDL_Surface sets the SDL_Surface* s encapsulated within the Surface object
-    * Parameter: SDL_Surface* surface is the SDL_Surface pointer that the Surface object's
-    * SDL_Surface* s is being set to
-    * PostCondition: private SDL_Surface* s value is changed
-    */
-   void setSDL_Surface(SDL_Surface* surface);
 
    /*
     * Description: setSDL_Surface sets the SDL_Surface* s encapsulated within the Surface object.
@@ -155,6 +144,16 @@ public:
     * Return: SDL_Surface* s
     */
    SDL_Surface* getSDL_Surface();
+
+   /*
+    * Description: returns filepath to the image used for the Surface object
+    */
+   string getFilePath();
+
+   /*
+    * Description: returns the colorkey used for the Surface object
+    */
+   Color getColorKey();
 
    /*
     * Description: checks if Surface is empty. True if empty, false otherwise.

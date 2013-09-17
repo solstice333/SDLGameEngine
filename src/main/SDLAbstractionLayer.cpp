@@ -10,35 +10,38 @@ Surface::Surface() :
       s(NULL) {
 }
 
-Surface::Surface(SDL_Surface* sdls, Color ck) {
-   SDL_Surface* optImg = optimizeImage(sdls);
-   setColorKey(ck, optImg);
-   s = optImg;
-}
-
 Surface::Surface(string filepath, Color ck) :
-      s(loadImage(filepath, ck)) {
+      s(loadImage(filepath, ck)), filepath(filepath), colorkey(ck) {
 }
 
 Surface::Surface(string ttfFile, int fontSize, Color textColor, string msg) :
-      s(loadText(ttfFile, fontSize, textColor, msg)) {
-}
-
-void Surface::setSDL_Surface(SDL_Surface* surface) {
-   s = surface;
+      s(loadText(ttfFile, fontSize, textColor, msg)), filepath(ttfFile), colorkey(
+            NONE) {
 }
 
 void Surface::setSDL_Surface(string filepath, Color ck) {
    s = loadImage(filepath, ck);
+   this->filepath = filepath;
+   colorkey = ck;
 }
 
 void Surface::setSDL_Surface(string ttfFile, int fontSize,
       Surface::Color textColor, string msg) {
    s = loadText(ttfFile, fontSize, textColor, msg);
+   filepath = ttfFile;
+   colorkey = NONE;
 }
 
 SDL_Surface * Surface::getSDL_Surface() {
    return s;
+}
+
+string Surface::getFilePath() {
+   return filepath;
+}
+
+Surface::Color Surface::getColorKey() {
+   return colorkey;
 }
 
 bool Surface::isEmpty() {
@@ -47,6 +50,8 @@ bool Surface::isEmpty() {
 
 void Surface::clear() {
    s = NULL;
+   colorkey = NONE;
+   filepath = "";
 }
 
 Surface::~Surface() {
