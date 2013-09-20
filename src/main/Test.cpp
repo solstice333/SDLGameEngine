@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
          OTHER_NUMCLIPS);
    CircBoundaryFigure cf2(900, 350, dot, screen, LEVEL_WIDTH, LEVEL_HEIGHT,
          OTHER_NUMCLIPS);
-   TempFigure coin1(600, 325, coin, screen, LEVEL_WIDTH, LEVEL_HEIGHT);
+   TempFigure coin1(600, 300, coin, screen, LEVEL_WIDTH, LEVEL_HEIGHT);
 
    GrabbableFigure g(350, 100, cloud, screen, LEVEL_WIDTH, LEVEL_HEIGHT,
          OTHER_NUMCLIPS);

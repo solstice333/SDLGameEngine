@@ -51,25 +51,25 @@ void PlayerFigure::determineGrabY(int deltaTicks) {
 
 void PlayerFigure::checkIfInAir(vector<Figure*>& other) {
    int count = 0;
-
-   inAir = true;
-   p.y += 3;
-
-   //standing on ground or other Figure
-   if ((v.y == 0 && p.y >= lh - dim.h)
-         || (v.y <= gravity && isCollided(other, count)))
-      inAir = false;
-   p.y -= 3;
-
-   //peak of trajectory
-   if (p.y < lh - dim.h && v.y <= 0.5 && v.y >= -0.5)
       inAir = true;
 
-   //collided with TempFigure or GrabbableFigure
-   if (count != -1
-         && (typeid(*other[count]) == typeid(TempFigure)
-               || typeid(*other[count]) == typeid(GrabbableFigure)))
-      inAir = true;
+      //standing on ground or other Figure
+      p.y += 3;
+      if ((v.y == 0 && p.y >= lh - dim.h)
+            || (v.y <= gravity && isCollided(other, count)))
+         inAir = false;
+      p.y -= 3;
+
+      //peak of trajectory
+      if (p.y < lh - dim.h && v.y <= 0.5 && v.y >= -0.5)
+         inAir = true;
+
+      //collision with TempFigure when in midair
+      if (count != -1
+            && ((typeid(*other[count]) == typeid(TempFigure) && p.y < lh - dim.h)
+                  || (typeid(*other[count]) == typeid(GrabbableFigure)
+                        && p.y < lh - dim.h)))
+         inAir = true;
 }
 
 void PlayerFigure::xMovement(vector<Figure*>& other, int deltaTicks) {
@@ -231,9 +231,7 @@ void PlayerFigure::move(vector<Figure*>& other, int deltaTicks) {
 
 void PlayerFigure::resolveCollision(Figure* other, double timeStep,
       Component dir) {
-   if (typeid(*other) == typeid(TempFigure))
-      inAir = true;
-   else if (typeid(*other) == typeid(RectBoundaryFigure)
+   if (typeid(*other) == typeid(RectBoundaryFigure)
          || typeid(*other) == typeid(CircBoundaryFigure)) {
       if (dir == XHAT)
          p.x -= (v.x * timeStep / 1000.0) + grabVel.x;
