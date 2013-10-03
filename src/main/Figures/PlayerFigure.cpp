@@ -51,25 +51,25 @@ void PlayerFigure::determineGrabY(int deltaTicks) {
 
 void PlayerFigure::checkIfInAir(vector<Figure*>& other) {
    int count = 0;
+   inAir = true;
+
+   //standing on ground or other Figure
+   p.y += 3;
+   if ((v.y == 0 && p.y >= lh - dim.h)
+         || (v.y <= gravity && isCollided(other, count)))
+      inAir = false;
+   p.y -= 3;
+
+   //peak of trajectory
+   if (p.y < lh - dim.h && v.y <= 0.5 && v.y >= -0.5)
       inAir = true;
 
-      //standing on ground or other Figure
-      p.y += 3;
-      if ((v.y == 0 && p.y >= lh - dim.h)
-            || (v.y <= gravity && isCollided(other, count)))
-         inAir = false;
-      p.y -= 3;
-
-      //peak of trajectory
-      if (p.y < lh - dim.h && v.y <= 0.5 && v.y >= -0.5)
-         inAir = true;
-
-      //collision with TempFigure when in midair
-      if (count != -1
-            && ((typeid(*other[count]) == typeid(TempFigure) && p.y < lh - dim.h)
-                  || (typeid(*other[count]) == typeid(GrabbableFigure)
-                        && p.y < lh - dim.h)))
-         inAir = true;
+   //collision with TempFigure when in midair
+   if (count != -1
+         && ((typeid(*other[count]) == typeid(TempFigure) && p.y < lh - dim.h)
+               || (typeid(*other[count]) == typeid(GrabbableFigure)
+                     && p.y < lh - dim.h)))
+      inAir = true;
 }
 
 void PlayerFigure::xMovement(vector<Figure*>& other, int deltaTicks) {

@@ -27,4 +27,5 @@ src/test/windowResizing \
 src/test/gameSaves \
 src/test/alphaBlending \
 src/main \
+src/main/Figures \
 

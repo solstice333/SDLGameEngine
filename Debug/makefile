@@ -11,6 +11,7 @@ RM := rm -rf
 -include src/test/windowResizing/subdir.mk
 -include src/test/gameSaves/subdir.mk
 -include src/test/alphaBlending/subdir.mk
+-include src/main/Figures/subdir.mk
 -include src/main/subdir.mk
 -include subdir.mk
 -include objects.mk

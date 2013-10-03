@@ -8,12 +8,7 @@
 #include <iostream>
 #include "SDLAbstractionLayer.h"
 #include "Exception.h"
-#include "Figure.h"
-#include "RectBoundaryFigure.h"
-#include "CircBoundaryFigure.h"
-#include "TempFigure.h"
-#include "PlayerFigure.h"
-#include "GrabbableFigure.h"
+#include "Objects.h"
 #include "SDL/SDL.h"
 #include "SDL/SDL_image.h"
 #include "SDL/SDL_ttf.h"

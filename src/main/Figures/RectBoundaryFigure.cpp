@@ -7,6 +7,8 @@
 
 #include "RectBoundaryFigure.h"
 
+//TODO document this for other developers
+
 RectBoundaryFigure::RectBoundaryFigure() {
 }
 

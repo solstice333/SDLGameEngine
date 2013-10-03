@@ -8,7 +8,6 @@
 #ifndef PLAYERFIGURE_H_
 #define PLAYERFIGURE_H_
 
-#include "SDLAbstractionLayer.h"
 #include "Figure.h"
 #include "RectBoundaryFigure.h"
 #include "CircBoundaryFigure.h"
@@ -106,7 +105,12 @@ public:
    virtual void handleInput(SDL_Event& event);
 
    /*
-    * TODO doc
+    * Description: move handles the movement of the PlayerFigure based on the given
+    * input, grabstate conditions, and grabstate conditions
+    *
+    * Parameter: vector<Figure*>& other is the collisions vector
+    * Parameter: int deltaTicks is the timestep to induce time-based
+    * frame-independent movement
     */
    virtual void move(vector<Figure*>& other, int deltaTicks);
 
@@ -121,7 +125,9 @@ public:
    virtual void resolveCollision(Figure* other, double timeStep, Component dir);
 
    /*
-    * TODO description
+    * Description: renders the PlayerFigure to screen
+    * Parameter: SDL_Rect* otherCamera is the relative camera. Not
+    * really needed in this case. Better off keeping this NULL
     */
    virtual void show(SDL_Rect* otherCamera = NULL);
 };
