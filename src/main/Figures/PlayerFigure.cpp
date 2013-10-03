@@ -112,7 +112,7 @@ void PlayerFigure::yMovement(vector<Figure*>& other, int deltaTicks) {
       p.y = lh - dim.h;
 }
 
-PlayerFigure::PlayerFigure() {
+PlayerFigure::PlayerFigure() : RectFigure() {
 }
 
 PlayerFigure::PlayerFigure(int x, int y, Surface& image, SDL_Surface* screen,

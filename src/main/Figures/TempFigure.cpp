@@ -7,7 +7,7 @@
 
 #include "TempFigure.h"
 
-TempFigure::TempFigure() {
+TempFigure::TempFigure() : RectFigure() {
 }
 
 TempFigure::TempFigure(int x, int y, Surface& image, SDL_Surface* screen,

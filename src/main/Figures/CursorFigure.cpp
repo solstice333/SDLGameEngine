@@ -8,7 +8,7 @@
 #include "CursorFigure.h"
 
 CursorFigure::CursorFigure() :
-      offset(NULL), gf(NULL) {
+      CircFigure(), offset(NULL), gf(NULL) {
 }
 
 CursorFigure::CursorFigure(int x, int y, Surface& image, SDL_Surface* screen,

@@ -7,7 +7,7 @@
 
 #include "GrabbableFigure.h"
 
-GrabbableFigure::GrabbableFigure() {
+GrabbableFigure::GrabbableFigure() : RectBoundaryFigure() {
 }
 
 GrabbableFigure::GrabbableFigure(int x, int y, Surface& image,

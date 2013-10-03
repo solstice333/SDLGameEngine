@@ -507,16 +507,17 @@ bool Figure::operator!=(const Figure& other) {
 }
 
 Figure::~Figure() {
-   if (camera != NULL)
+   if (camera != NULL) {
       delete camera;
 
-   for (int i = 0; i < TOTAL_PARTICLES; i++) {
-      if (particles[i] != NULL)
-         delete particles[i];
-   }
+      for (int i = 0; i < TOTAL_PARTICLES; i++) {
+         if (particles[i] != NULL)
+            delete particles[i];
+      }
 
-   delete[] cl;
-   delete[] cr;
+      delete[] cl;
+      delete[] cr;
+   }
 }
 
 RectFigure::RectFigure() {
@@ -793,21 +794,21 @@ bool CircFigure::checkCollision(CircFigure* c) {
 }
 
 int Figure::getGravEnable() {
-	return gravityEnabled;
+   return gravityEnabled;
 }
 
 string Figure::getFilePath() {
-	return image->getFilePath();
+   return image->getFilePath();
 }
 
-int Figure::getColorKey(){
-	return image->getColorKey();
+int Figure::getColorKey() {
+   return image->getColorKey();
 }
 
 int Figure::getNumClips() {
-	return numClips;
+   return numClips;
 }
 
 void Figure::setGravEnable(Figure::Gravity grav) {
-	gravityEnabled = grav;
+   gravityEnabled = grav;
 }

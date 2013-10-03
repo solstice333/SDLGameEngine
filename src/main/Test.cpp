@@ -19,20 +19,12 @@ using namespace std;
 const int SCREEN_WIDTH = 900;
 const int SCREEN_HEIGHT = 550;
 
-const int FRAMERATE = 30;
-
-const int DOT_WIDTH = 20;
-const int DOT_HEIGHT = 20;
-
 const int LEVEL_WIDTH = 1191;
 const int LEVEL_HEIGHT = 670;
 
 const double FS = 200;
-const double CS = 1200;
-const double CJS = 11;
-const double FJS = 3;
+const double FJS = 3.2;
 const double G = 4;
-const int CNC = 1;
 const int FNC = 4;
 
 const bool OTHER_LEADER = false;
@@ -47,6 +39,8 @@ const Surface::Color FONT_COLOR = Surface::BLACK;
 
 const Figure::Gravity gravEnDis = Figure::GRAVITY_ENABLED;
 //const Figure::Gravity gravEnDis = Figure::GRAVITY_DISABLED;
+
+const bool BLANK = true;
 
 /*
  * Description: This client simply tests the API and its capabilities of creating a
@@ -70,18 +64,25 @@ int main(int argc, char* argv[]) {
    Surface shimmer("images/shimmer.bmp", Surface::CYAN);
 
    //convert images to Figures
-   RectBoundaryFigure rf1(300, 525, rect, screen, LEVEL_WIDTH, LEVEL_HEIGHT,
-         OTHER_NUMCLIPS);
-   RectBoundaryFigure rf2(500, 125, rect, screen, LEVEL_WIDTH, LEVEL_HEIGHT,
-         OTHER_NUMCLIPS);
-   CircBoundaryFigure cf1(700, 525, dot, screen, LEVEL_WIDTH, LEVEL_HEIGHT,
-         OTHER_NUMCLIPS);
-   CircBoundaryFigure cf2(900, 350, dot, screen, LEVEL_WIDTH, LEVEL_HEIGHT,
-         OTHER_NUMCLIPS);
-   TempFigure coin1(600, 300, coin, screen, LEVEL_WIDTH, LEVEL_HEIGHT);
+   RectBoundaryFigure rf1, rf2;
+   CircBoundaryFigure cf1, cf2;
+   TempFigure coin1;
+   GrabbableFigure g;
 
-   GrabbableFigure g(350, 100, cloud, screen, LEVEL_WIDTH, LEVEL_HEIGHT,
-         OTHER_NUMCLIPS);
+   if (!BLANK) {
+      rf1.setFigure(300, 525, rect, screen, LEVEL_WIDTH, LEVEL_HEIGHT,
+            OTHER_NUMCLIPS);
+      rf2.setFigure(500, 125, rect, screen, LEVEL_WIDTH, LEVEL_HEIGHT,
+            OTHER_NUMCLIPS);
+      cf1.setFigure(700, 525, dot, screen, LEVEL_WIDTH, LEVEL_HEIGHT,
+            OTHER_NUMCLIPS);
+      cf2.setFigure(900, 350, dot, screen, LEVEL_WIDTH, LEVEL_HEIGHT,
+            OTHER_NUMCLIPS);
+      coin1.setFigure(600, 300, coin, screen, LEVEL_WIDTH, LEVEL_HEIGHT);
+      g.setFigure(350, 100, cloud, screen, LEVEL_WIDTH, LEVEL_HEIGHT,
+            OTHER_NUMCLIPS);
+   }
+
    GrabbableFigure g1(1000, 50, cloud, screen, LEVEL_WIDTH, LEVEL_HEIGHT,
          OTHER_NUMCLIPS);
 
@@ -96,14 +97,17 @@ int main(int argc, char* argv[]) {
    //must be taken into account in regards to collision detection
    vector<Figure*> collisions;
 
-   collisions.push_back(&rf1);
-   collisions.push_back(&rf2);
-   collisions.push_back(&cf1);
-   collisions.push_back(&cf2);
-   collisions.push_back(&coin1);
-   collisions.push_back(&rf);
-   collisions.push_back(&g);
+   if (!BLANK) {
+      collisions.push_back(&rf1);
+      collisions.push_back(&rf2);
+      collisions.push_back(&cf1);
+      collisions.push_back(&cf2);
+      collisions.push_back(&coin1);
+      collisions.push_back(&g);
+   }
+
    collisions.push_back(&g1);
+   collisions.push_back(&rf);
 
    //Prepare bool quit variable, SDL_Event event, and Timer timer. All of these
    //variables will be used in the event loop
@@ -132,9 +136,6 @@ int main(int argc, char* argv[]) {
       //move Player Figure to new position based on input given
       rf.move(collisions, timer.getTicks());
 
-      //move rf2 Figure just for fun as an example to show dynamic properties
-      rf2.move(collisions, timer.getTicks());
-
       //restart timer since movement is time-based and independent of framerate
       timer.start();
 
@@ -143,22 +144,29 @@ int main(int argc, char* argv[]) {
 
       //show all other Figures with respect to the relative camera i.e. the Player
       //Figure's camera
-      rf1.show(rf.getCameraClip());
-      rf2.show(rf.getCameraClip());
-      cf1.show(rf.getCameraClip());
-      cf2.show(rf.getCameraClip());
-      g.show(rf.getCameraClip());
+      if (!BLANK) {
+         //move rf2 Figure just for fun as an example to show dynamic properties
+         if (!BLANK)
+            rf2.move(collisions, timer.getTicks());
+
+         rf1.show(rf.getCameraClip());
+         rf2.show(rf.getCameraClip());
+         cf1.show(rf.getCameraClip());
+         cf2.show(rf.getCameraClip());
+         g.show(rf.getCameraClip());
+
+         //we need to move coin1 so that collision detection is not
+         //ignored (although actual movement of coin1 doesn't happen because no input
+         //is received). First argument is the collision vector. Second argument is the
+         //delta ticks from the timer which is irrelevant since coin1 does not actually
+         //move. It just disappears when collided with the Player Figure
+         coin1.move(collisions, 0);
+
+         //show coin1 based on the update caused by move()
+         coin1.show(rf.getCameraClip());
+      }
+
       g1.show(rf.getCameraClip());
-
-      //we need to move coin1 so that collision detection is not
-      //ignored (although actual movement of coin1 doesn't happen because no input
-      //is received). First argument is the collision vector. Second argument is the
-      //delta ticks from the timer which is irrelevant since coin1 does not actually
-      //move. It just disappears when collided with the Player Figure
-      coin1.move(collisions, 0);
-
-      //show coin1 based on the update caused by move()
-      coin1.show(rf.getCameraClip());
 
       //show the Player Figure
       rf.show();

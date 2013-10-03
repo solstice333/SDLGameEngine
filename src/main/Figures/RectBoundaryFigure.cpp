@@ -9,7 +9,7 @@
 
 //TODO document this for other developers
 
-RectBoundaryFigure::RectBoundaryFigure() {
+RectBoundaryFigure::RectBoundaryFigure() : RectFigure() {
 }
 
 RectBoundaryFigure::RectBoundaryFigure(int x, int y, Surface& image,

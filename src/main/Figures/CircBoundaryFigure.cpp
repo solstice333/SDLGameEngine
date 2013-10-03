@@ -7,7 +7,7 @@
 
 #include "CircBoundaryFigure.h"
 
-CircBoundaryFigure::CircBoundaryFigure() {
+CircBoundaryFigure::CircBoundaryFigure() : CircFigure() {
 }
 
 CircBoundaryFigure::CircBoundaryFigure(int x, int y, Surface& image,
