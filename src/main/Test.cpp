@@ -23,7 +23,7 @@ const int LEVEL_WIDTH = 1191;
 const int LEVEL_HEIGHT = 670;
 
 const double FS = 200;
-const double FJS = 3.2;
+const double FJS = 3;
 const double G = 4;
 const int FNC = 4;
 
@@ -146,14 +146,7 @@ int main(int argc, char* argv[]) {
       //Figure's camera
       if (!BLANK) {
          //move rf2 Figure just for fun as an example to show dynamic properties
-         if (!BLANK)
-            rf2.move(collisions, timer.getTicks());
-
-         rf1.show(rf.getCameraClip());
-         rf2.show(rf.getCameraClip());
-         cf1.show(rf.getCameraClip());
-         cf2.show(rf.getCameraClip());
-         g.show(rf.getCameraClip());
+         rf2.move(collisions, timer.getTicks());
 
          //we need to move coin1 so that collision detection is not
          //ignored (although actual movement of coin1 doesn't happen because no input
@@ -161,6 +154,12 @@ int main(int argc, char* argv[]) {
          //delta ticks from the timer which is irrelevant since coin1 does not actually
          //move. It just disappears when collided with the Player Figure
          coin1.move(collisions, 0);
+
+         rf1.show(rf.getCameraClip());
+         rf2.show(rf.getCameraClip());
+         cf1.show(rf.getCameraClip());
+         cf2.show(rf.getCameraClip());
+         g.show(rf.getCameraClip());
 
          //show coin1 based on the update caused by move()
          coin1.show(rf.getCameraClip());

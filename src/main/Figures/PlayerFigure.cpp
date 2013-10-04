@@ -11,6 +11,9 @@ const double MULTIPLIER = 300;
 const double MAX = 7;
 const double MIN = 0.2;
 
+SDL_mutex* lock;
+SDL_cond* canTest;
+
 void PlayerFigure::determineGrabX(int deltaTicks) {
    if (grabstate) {
       double unitDir = (B.x - A.x) / abs(B.x - A.x);
@@ -112,7 +115,10 @@ void PlayerFigure::yMovement(vector<Figure*>& other, int deltaTicks) {
       p.y = lh - dim.h;
 }
 
-PlayerFigure::PlayerFigure() : RectFigure() {
+PlayerFigure::PlayerFigure() :
+      RectFigure(), thread(NULL) {
+   lock = NULL;
+   canTest = NULL;
 }
 
 PlayerFigure::PlayerFigure(int x, int y, Surface& image, SDL_Surface* screen,
@@ -122,10 +128,15 @@ PlayerFigure::PlayerFigure(int x, int y, Surface& image, SDL_Surface* screen,
       RectFigure(x, y, image, screen, GRAVITY_ENABLED, levelWidth, levelHeight,
             true, speed, gravity, jumpStrength, numClips, p1, p2, p3, p4), target(
             "images/target2.png", Surface::CYAN), cursor(x, y, target, screen,
-            camera), grabstate(false), multiplier(MULTIPLIER), resetVelY(true) {
+            camera), grabstate(false), multiplier(MULTIPLIER), resetVelY(true), thread(
+            SDL_CreateThread(testThread, NULL)) {
+
    A.x = A.y = 0;
    B.x = B.y = 0;
    grabVel.x = grabVel.y = 0;
+
+   lock = SDL_CreateMutex();
+   canTest = SDL_CreateCond();
 }
 
 void PlayerFigure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
@@ -145,6 +156,10 @@ void PlayerFigure::setFigure(int x, int y, Surface& image, SDL_Surface* screen,
    A.x = A.y = 0;
    B.x = B.y = 0;
    grabVel.x = grabVel.y = 0;
+
+   thread = SDL_CreateThread(testThread, NULL);
+   lock = SDL_CreateMutex();
+   canTest = SDL_CreateCond();
 }
 
 void PlayerFigure::handleInput(SDL_Event& event) {
@@ -277,4 +292,20 @@ void PlayerFigure::show(SDL_Rect* otherCamera) {
 
       cursor.show();
    }
+
+   if (grabstate) {
+      //TODO signal thread to perform A* algorithm
+      SDL_CondSignal(canTest);
+   }
+}
+
+int testThread(void* data) {
+   while (true) {
+      SDL_mutexP(lock);
+      SDL_CondWait(canTest, lock);
+
+      cout << "inside testThread()" << endl;
+   }
+
+   return 0;
 }

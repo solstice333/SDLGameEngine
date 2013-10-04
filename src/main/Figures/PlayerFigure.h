@@ -13,7 +13,7 @@
 #include "CircBoundaryFigure.h"
 #include "CursorFigure.h"
 #include "TempFigure.h"
-
+#include "SDL/SDL_thread.h"
 
 //TODO arm animation is needed between the PlayerFigure sprite and the GrabbableFigure sprite
 //when grabstate is active
@@ -30,6 +30,8 @@ private:
    Point A, B;
    double multiplier;
    Velocity grabVel;
+
+   SDL_Thread* thread;
 
 protected:
    virtual void determineGrabX(int deltaTicks);
@@ -131,5 +133,8 @@ public:
     */
    virtual void show(SDL_Rect* otherCamera = NULL);
 };
+
+//TODO description
+int testThread(void* data);
 
 #endif /* PLAYERFIGURE_H_ */
